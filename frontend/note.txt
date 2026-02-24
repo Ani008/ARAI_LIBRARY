@@ -1,0 +1,36 @@
+upload excel and then load the data 
+
+table of the surgery record 
+
+
+import { PrismaClient } from "@prisma/client";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+copyright calyonix infotech
+support@calyonix.com
+
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=465
+EMAIL_USER=aniketchakke63@araiindia.com
+EMAIL_PASSWORD=xjtkfiaphaladquv

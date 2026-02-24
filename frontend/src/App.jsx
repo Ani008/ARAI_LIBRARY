@@ -1,28 +1,49 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Sidebar from "./Components/Sidebar";
-import DashboardPage from "./Pages/HospitalDashboard";
-import SurgeriesPage from "./Pages/SurgeryPage";
-import NewEntry from "./Pages/NewEntry";
-import SurgeryDetailsPage from "./Pages/SurgeryDetailsPage";
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import Layout from './Components/Layout';
+import Dashboard from './Pages/Dashboard';
+import Standards from './Pages/Standards';
+import Periodicals from './Pages/Periodicals';
+import Abstracts from './Pages/Abstracts';
+import LoginPage from './Pages/LoginPage';
+
+import KCMembers from './Pages/KCMembers';
+import RecentActivity from './Components/RecentActivity';
+import Reports from './Pages/Reports';
+import AJMTPapers from './Pages/AJMTPapersPage';
+import NewArrivalsAndNews from './Pages/NewArrivalsAndNews';
 
 function App() {
-  return (
-    <Router>
-      <div className="flex min-h-screen">
-        {/* Sidebar (left) */}
-        <Sidebar />
+  const location = useLocation();
 
-        {/* Main Page Area */}
-        <main className="flex-1 bg-gray-50 p-6">
+  // Check if current path is login
+  const isLoginPage = location.pathname === '/login';
+
+  return (
+    <>
+      {isLoginPage ? (
+        /* 1. Login Page: No Sidebar/Navbar */
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      ) : (
+        /* 2. All other pages: Show Sidebar/Navbar via Layout */
+        <Layout>
           <Routes>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/surgeries" element={<SurgeriesPage />} />
-            <Route path="/surgery/:id" element={<SurgeryDetailsPage />} />
-            <Route path="/newentry" element={<NewEntry />} />
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/standards" element={<Standards />} />
+            <Route path="/periodicals" element={<Periodicals />} />
+            <Route path="/abstracts" element={<Abstracts />} />
+            <Route path='/kcmembers' element={<KCMembers />} />
+            <Route path='/recentactivity' element={<RecentActivity />} />
+            <Route path='/reports' element={<Reports />} />
+            <Route path='/ajmtpapers' element={<AJMTPapers />} />
+            <Route path='/new-arrivals-news' element={<NewArrivalsAndNews />} />
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
-        </main>
-      </div>
-    </Router>
+        </Layout>
+      )}
+    </>
   );
 }
 
