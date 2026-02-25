@@ -25,7 +25,7 @@ const kcMemberSchema = new mongoose.Schema({
   membershipType: {
     type: String,
     required: [true, 'Membership Type is required'],
-    enum: ['Corporate', 'Educational Institution', 'Individual']
+    enum: ['Corporate', 'Educational Institution', 'Individual', 'Staff', 'Temp Membership', 'Student']
   },
   completeAddress: {
     type: String,
