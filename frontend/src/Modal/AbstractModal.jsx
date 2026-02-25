@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 // Adjusted to match common naming conventions for your Abstract model
-const API_BASE_URL = "http://localhost:5000/api/abstracts";
+const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api/abstracts`;
 
 const AbstractModal = ({ onClose, editingId, refreshData }) => {
   const [formData, setFormData] = useState({

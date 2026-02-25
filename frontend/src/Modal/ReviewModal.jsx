@@ -16,7 +16,8 @@ const ReviewModal = ({ isOpen, onClose, reviewer, paperId, onReviewAdded }) => {
 
 
 
-  const API_BASE_URL = 'http://localhost:5000/api/ajmtpapers';
+  // const API_BASE_URL = 'http://localhost:5000/api/ajmtpapers';
+  const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api/ajmtpapers`;
 
   // Check if reviewer already has a review
   const hasExistingReview = reviewer?.reviews && reviewer.reviews.length > 0;

@@ -2,46 +2,49 @@ import React, { useState } from "react";
 import { ShieldCheck, Lock, ChevronDown, Library } from "lucide-react";
 import libraryImage from "../assets/569.jpg";
 import { useNavigate } from "react-router-dom"; // Add this
+import logo from "../assets/logo.png";
 
 const LoginPage = () => {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const [role, setRole] = useState("USER");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
-  e.preventDefault();
-  setLoading(true);
+    e.preventDefault();
+    setLoading(true);
 
-  try {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role, password }),
-    });
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/auth/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ role, password }),
+        },
+      );
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (response.ok) { // Check if the status code is 200-299
-      console.log("Login Attempt Successful");
-      
+      if (response.ok) {
+        // Check if the status code is 200-299
+        console.log("Login Attempt Successful");
 
-      localStorage.setItem("token", data.token); 
+        localStorage.setItem("token", data.token);
 
-      // Navigate to the dashboard/home route
-      navigate("/"); 
-    } else {
-      // Handle login failure (wrong password, etc.)
-      alert(data.message || "Login failed. Please check your password.");
+        // Navigate to the dashboard/home route
+        navigate("/");
+      } else {
+        // Handle login failure (wrong password, etc.)
+        alert(data.message || "Login failed. Please check your password.");
+      }
+    } catch (error) {
+      console.error("Login Error:", error);
+      alert("Server error. Please try again later.");
+    } finally {
+      setLoading(false);
     }
-
-  } catch (error) {
-    console.error("Login Error:", error);
-    alert("Server error. Please try again later.");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="flex min-h-screen font-sans bg-white">
@@ -49,11 +52,12 @@ const LoginPage = () => {
       <div className="flex flex-col justify-center w-full px-8 md:w-1/2 lg:px-24">
         <div className="max-w-md mx-auto w-full">
           {/* Logo */}
-          <div className="flex items-center gap-2 mb-8">
-            <div className="bg-indigo-600 p-1.5 rounded-lg">
-              <ShieldCheck className="text-white w-6 h-6" />
-            </div>
-            <span className="text-2xl font-bold text-slate-800">ARAI</span>
+          <div className="flex items-center mb-8">
+            <img
+              src={logo}
+              alt="ARAI Logo"
+              className="h-15 w-auto object-contain"
+            />
           </div>
 
           <h1 className="text-4xl font-bold text-slate-900 mb-10">
@@ -113,11 +117,8 @@ const LoginPage = () => {
         </div>
       </div>
 
-      
       <div className="hidden md:flex flex-col items-center justify-center w-1/2 bg-[#f0f4ff] relative overflow-hidden">
-        
         <div className="w-full max-w-2xl p-4 flex justify-center items-center">
-          
           <img
             src={libraryImage}
             alt="Illustration"
@@ -127,6 +128,6 @@ const LoginPage = () => {
       </div>
     </div>
   );
- };
+};
 
 export default LoginPage;

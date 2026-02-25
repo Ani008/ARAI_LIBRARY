@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Calendar, ExternalLink, Image, Tag, AlertCircle } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api`;
 
 const NewArrivalsAndNewsModal = ({ isOpen, onClose, itemToEdit, onSuccess }) => {
   const [formData, setFormData] = useState({

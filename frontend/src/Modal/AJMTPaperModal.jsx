@@ -17,7 +17,7 @@ import ReviewModal from "./ReviewModal";
 
 const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
   const isEditMode = mode === "edit" && paper !== null;
-  const API_BASE_URL = "http://localhost:5000/api/ajmtpapers";
+  const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api/ajmtpapers`;
 
   // Form Data State
   const [formData, setFormData] = useState({

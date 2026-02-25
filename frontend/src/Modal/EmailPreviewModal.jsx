@@ -44,7 +44,7 @@ Academic Journal Management Tool`);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
 
-  const API_BASE_URL = 'http://localhost:5000/api/ajmtpapers';
+  const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api/ajmtpapers`;
 
   const handleSend = async () => {
     if (!paperId || !reviewer) {
