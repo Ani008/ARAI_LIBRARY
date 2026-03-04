@@ -10,6 +10,7 @@ import {
   Globe,
   Download,
   FileText,
+  Upload,
 } from "lucide-react";
 import AbstractModal from "../Modal/AbstractModal"; // Pointing to your new modal
 import { useNavigate } from "react-router-dom";
@@ -23,7 +24,7 @@ const Abstracts = () => {
   const [viewingAbstract, setViewingAbstract] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const limit = 5; // records per page
+  const [limit, setLimit] = useState(25);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("");
@@ -32,7 +33,7 @@ const Abstracts = () => {
 
   const fetchAbstracts = async () => {
     try {
-      const response = await axios.get(API_BASE_URL,{
+      const response = await axios.get(API_BASE_URL, {
         params: {
           page: currentPage,
           limit: limit,
@@ -74,6 +75,19 @@ const Abstracts = () => {
         alert("Failed to delete record.");
       }
     }
+  };
+
+  const getVisiblePages = () => {
+    const pages = [];
+
+    const start = Math.max(1, currentPage - 2);
+    const end = Math.min(totalPages, currentPage + 2);
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    return pages;
   };
 
   const filteredAbstracts = abstracts.filter((item) => {
@@ -126,6 +140,14 @@ const Abstracts = () => {
           >
             <Download className="w-4 h-4 mr-2" />
             Reports
+          </button>
+
+          <button
+            onClick={() => navigate("/uploadExcel")}
+            className="flex items-center px-4 py-2 border border-rose-600 text-rose-600 rounded-md hover:bg-rose-50 transition shadow-sm font-medium"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Upload
           </button>
         </div>
       </div>
@@ -263,18 +285,36 @@ const Abstracts = () => {
         </table>
 
         {/* Pagination */}
-        <div className="flex justify-center items-center gap-2 py-6">
-          <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((prev) => prev - 1)}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            Prev
-          </button>
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 py-6 px-6">
+          {/* Records Dropdown */}
+          <div className="flex items-center gap-2 text-sm">
+            <span>Show</span>
 
-          {[...Array(totalPages)].map((_, index) => {
-            const page = index + 1;
-            return (
+            <select
+              value={limit}
+              onChange={(e) => setLimit(Number(e.target.value))}
+              className="border px-2 py-1 rounded"
+            >
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={75}>75</option>
+              <option value={100}>100</option>
+            </select>
+
+            <span>records</span>
+          </div>
+
+          {/* Page Controls */}
+          <div className="flex items-center gap-2">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => prev - 1)}
+              className="px-3 py-1 border rounded disabled:opacity-40"
+            >
+              Prev
+            </button>
+
+            {getVisiblePages().map((page) => (
               <button
                 key={page}
                 onClick={() => setCurrentPage(page)}
@@ -284,16 +324,16 @@ const Abstracts = () => {
               >
                 {page}
               </button>
-            );
-          })}
+            ))}
 
-          <button
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((prev) => prev + 1)}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            Next
-          </button>
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((prev) => prev + 1)}
+              className="px-3 py-1 border rounded disabled:opacity-40"
+            >
+              Next
+            </button>
+          </div>
         </div>
 
         {abstracts.length === 0 && (

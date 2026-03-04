@@ -33,7 +33,7 @@ const abstractSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
-    publicationYear: {
+    publicationMonth: {
       type: String,
       trim: true,
       default: "",

@@ -11,6 +11,7 @@ import RecentActivity from './Components/RecentActivity';
 import Reports from './Pages/Reports';
 import AJMTPapers from './Pages/AJMTPapersPage';
 import NewArrivalsAndNews from './Pages/NewArrivalsAndNews';
+import UploadExcel from './Pages/UploadExcel';
 
 function App() {
   const location = useLocation();
@@ -39,6 +40,7 @@ function App() {
             <Route path='/reports' element={<Reports />} />
             <Route path='/ajmtpapers' element={<AJMTPapers />} />
             <Route path='/new-arrivals-news' element={<NewArrivalsAndNews />} />
+            <Route path='/uploadExcel' element={<UploadExcel />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Layout>

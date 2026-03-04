@@ -3,10 +3,6 @@ const { logStandardDelete } = require("../controllers/activityLogController");
 const { logStandardCreate } = require("../controllers/activityLogController");
 const { logStandardUpdate } = require("../controllers/activityLogController");
 
-// @route   GET /api/standards
-// @route   GET /api/standards
-// Example:
-// /api/standards?page=1&limit=5&search=iso&department=Mechanical&category=ASTM&status=Active
 
 exports.getAllStandards = async (req, res, next) => {
   try {

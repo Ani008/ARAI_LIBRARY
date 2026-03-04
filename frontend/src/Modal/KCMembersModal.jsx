@@ -29,12 +29,7 @@ const KCModal = ({ onClose, editingId, refreshData }) => {
     website: "",
     membershipStartDate: "",
     membershipEndDate: "",
-    subscriptionTypes: {
-      automotiveAbstracts: false,
-      araiJournal: false,
-      kcMembershipOption1: false,
-      kcMembershipOption2: false,
-    },
+    subscriptionTypes: "",
     fees: "",
     paymentFrequency: "",
     paymentStatus: "",
@@ -55,6 +50,7 @@ const KCModal = ({ onClose, editingId, refreshData }) => {
 
           setFormData({
             ...item,
+            subscriptionType: item.subscriptionType || "",
             membershipStartDate: formatDate(item.membershipStartDate),
             membershipEndDate: formatDate(item.membershipEndDate),
             lastPaymentDate: formatDate(item.lastPaymentDate),
@@ -302,32 +298,22 @@ const KCModal = ({ onClose, editingId, refreshData }) => {
                 title="Subscription Types"
                 color="text-orange-600"
               />
-              <div className="grid grid-cols-2 gap-y-3">
-                {Object.keys(formData.subscriptionTypes).map((type) => (
-                  <label
-                    key={type}
-                    className="flex items-center space-x-3 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500"
-                      checked={formData.subscriptionTypes[type]}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          subscriptionTypes: {
-                            ...formData.subscriptionTypes,
-                            [type]: e.target.checked,
-                          },
-                        })
-                      }
-                    />
-                    <span className="text-sm text-slate-600 capitalize">
-                      {type.replace(/([A-Z])/g, " $1")}
-                    </span>
-                  </label>
-                ))}
-              </div>
+              <select
+                className={inputClass}
+                value={formData.subscriptionType || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    subscriptionType: e.target.value,
+                  })
+                }
+              >
+                <option value="">Select Subscription</option>
+                <option>Automotive Abstracts</option>
+                <option>ARAI Journal</option>
+                <option>KC Membership Option 1</option>
+                <option>KC Membership Option 2</option>
+              </select>
             </div>
           </section>
 

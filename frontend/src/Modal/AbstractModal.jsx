@@ -24,7 +24,7 @@ const AbstractModal = ({ onClose, editingId, refreshData }) => {
     volume: "",
     issue: "",
     year: "",
-    publicationYear: "",
+    publicationMonth: "",
     subject: [""],
     summary: "",
     publishedInAA: "",
@@ -344,14 +344,14 @@ const AbstractModal = ({ onClose, editingId, refreshData }) => {
                 />
               </div>
               <div>
-                <label className={labelClass}>Pub. Year (Full)</label>
+                <label className={labelClass}>Pub. Month</label>
                 <input
                   className={inputClass}
-                  value={formData.publicationYear}
+                  value={formData.publicationMonth}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      publicationYear: e.target.value,
+                      publicationMonth: e.target.value,
                     })
                   }
                 />

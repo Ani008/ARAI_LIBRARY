@@ -10,6 +10,21 @@ const {
   deleteStandard
 } = require('../controllers/standardController');
 
+const { uploadExcel, handleUploadError } = require('../middleware/upload');
+
+const {
+  importStandardsExcel
+} = require("../controllers/excelUpload/excelStandardController");
+
+router.post(
+  '/import-excel',
+  protect,                  // only logged in
+  authorize('ADMIN'),       // only admin
+  uploadExcel,
+  handleUploadError,
+  importStandardsExcel
+);
+
 router.route('/')
   .get(getAllStandards)
   .post(protect, authorize('ADMIN'), createStandard);

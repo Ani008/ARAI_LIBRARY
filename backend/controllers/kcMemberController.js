@@ -83,15 +83,7 @@ exports.createKCMember = async (req, res, next) => {
       website: req.body.website,
       membershipStartDate: req.body.membershipStartDate,
       membershipEndDate: req.body.membershipEndDate,
-      subscriptionTypes: {
-        automotiveAbstracts:
-          req.body.subscriptionTypes?.automotiveAbstracts || false,
-        araiJournal: req.body.subscriptionTypes?.araiJournal || false,
-        kcMembershipOption1:
-          req.body.subscriptionTypes?.kcMembershipOption1 || false,
-        kcMembershipOption2:
-          req.body.subscriptionTypes?.kcMembershipOption2 || false,
-      },
+      subscriptionType: req.body.subscriptionType || "",
       fees: req.body.fees,
       paymentFrequency: req.body.paymentFrequency,
       paymentStatus: req.body.paymentStatus,
@@ -143,15 +135,7 @@ exports.updateKCMember = async (req, res, next) => {
       website: req.body.website,
       membershipStartDate: req.body.membershipStartDate,
       membershipEndDate: req.body.membershipEndDate,
-      subscriptionTypes: {
-        automotiveAbstracts:
-          req.body.subscriptionTypes?.automotiveAbstracts || false,
-        araiJournal: req.body.subscriptionTypes?.araiJournal || false,
-        kcMembershipOption1:
-          req.body.subscriptionTypes?.kcMembershipOption1 || false,
-        kcMembershipOption2:
-          req.body.subscriptionTypes?.kcMembershipOption2 || false,
-      },
+      subscriptionType: req.body.subscriptionType || "",
       fees: req.body.fees,
       paymentFrequency: req.body.paymentFrequency,
       paymentStatus: req.body.paymentStatus,

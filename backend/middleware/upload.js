@@ -5,7 +5,8 @@ const fs = require('fs');
 // Ensure upload directory exists
 const uploadDir = 'uploads/papers';
 if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+  fs.mkdirSync(uploadDir, { recursive:
+     true });
 }
 
 // Configure storage
@@ -44,29 +45,74 @@ const upload = multer({
 // Middleware for single PDF upload
 const uploadPaperPDF = upload.single('paperFile');
 
-// Error handling middleware
+
+// const handleUploadError = (err, req, res, next) => {
+//   if (err instanceof multer.MulterError) {
+//     if (err.code === 'LIMIT_FILE_SIZE') {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'File too large. Maximum size is 10MB'
+//       });
+//     }
+//     return res.status(400).json({
+//       success: false,
+//       message: 'File upload error: ' + err.message
+//     });
+//   } else if (err) {
+//     return res.status(400).json({
+//       success: false,
+//       message: err.message
+//     });
+//   }
+//   next();
+// };
+
+
+const excelStorage = multer.memoryStorage();
+
+const excelFilter = (req, file, cb) => {
+  const allowed =
+    file.mimetype.includes('spreadsheet') ||
+    file.originalname.endsWith('.xlsx') ||
+    file.originalname.endsWith('.xls');
+
+  if (allowed) cb(null, true);
+  else cb(new Error('Only Excel files allowed'), false);
+};
+
+const excelUpload = multer({
+  storage: excelStorage,
+  fileFilter: excelFilter,
+  limits: { fileSize: 20 * 1024 * 1024 }
+});
+
+const uploadExcel = excelUpload.single('file');
+
+
+/* ===============================
+   ERROR HANDLER
+=================================*/
+
 const handleUploadError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
-    if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({
-        success: false,
-        message: 'File too large. Maximum size is 10MB'
-      });
-    }
-    return res.status(400).json({
-      success: false,
-      message: 'File upload error: ' + err.message
-    });
-  } else if (err) {
     return res.status(400).json({
       success: false,
       message: err.message
     });
   }
+
+  if (err) {
+    return res.status(400).json({
+      success: false,
+      message: err.message
+    });
+  }
+
   next();
 };
 
 module.exports = {
   uploadPaperPDF,
+  uploadExcel,
   handleUploadError
 };

@@ -80,7 +80,7 @@ exports.createAbstract = async (req, res, next) => {
       volume: req.body.volume,
       issue: req.body.issue,
       year: req.body.year,
-      publicationYear: req.body.publicationYear,
+      publicationMonth: req.body.publicationMonth,
       subject: req.body.subject || [],
       summary: req.body.summary,
       status: req.body.status || "Draft", // Default to "Draft" if not provided
@@ -113,7 +113,7 @@ exports.updateAbstract = async (req, res, next) => {
       volume: req.body.volume,
       issue: req.body.issue,
       year: req.body.year,
-      publicationYear: req.body.publicationYear,
+      publicationMonth: req.body.publicationMonth,
       subject: req.body.subject || [],
       summary: req.body.summary,
       status: req.body.status,

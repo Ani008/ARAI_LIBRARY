@@ -208,11 +208,10 @@ const KCMembers = () => {
 
                   <td className="px-6 py-4">
                     <div className="flex gap-1 flex-wrap">
-                      {item.subscriptionTypes?.automotiveAbstracts && (
-                        <Badge text="Abstracts" />
-                      )}
-                      {item.subscriptionTypes?.araiJournal && (
-                        <Badge text="Journal" />
+                      {item.subscriptionType ? (
+                        <Badge text={item.subscriptionType} />
+                      ) : (
+                        <span className="text-xs text-slate-400">N/A</span>
                       )}
                     </div>
                   </td>
@@ -262,38 +261,40 @@ const KCMembers = () => {
           </table>
 
           {/* Pagination */}
-        <div className="flex justify-center items-center gap-2 py-6">
-          <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((prev) => prev - 1)}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            Prev
-          </button>
+          <div className="flex justify-center items-center gap-2 py-6">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => prev - 1)}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Prev
+            </button>
 
-          {[...Array(totalPages)].map((_, index) => {
-            const page = index + 1;
-            return (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`px-3 py-1 border rounded ${
-                  currentPage === page ? "bg-green-600 text-white" : "bg-white"
-                }`}
-              >
-                {page}
-              </button>
-            );
-          })}
+            {[...Array(totalPages)].map((_, index) => {
+              const page = index + 1;
+              return (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-1 border rounded ${
+                    currentPage === page
+                      ? "bg-green-600 text-white"
+                      : "bg-white"
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            })}
 
-          <button
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((prev) => prev + 1)}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((prev) => prev + 1)}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
         </div>
 
         {members.length === 0 && (

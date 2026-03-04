@@ -61,23 +61,9 @@ const kcMemberSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
-  subscriptionTypes: {
-    automotiveAbstracts: {
-      type: Boolean,
-      default: false
-    },
-    araiJournal: {
-      type: Boolean,
-      default: false
-    },
-    kcMembershipOption1: {
-      type: Boolean,
-      default: false
-    },
-    kcMembershipOption2: {
-      type: Boolean,
-      default: false
-    }
+  subscriptionType: {
+    type: String,
+    default: ''
   },
   fees: {
     type: Number,
