@@ -1,6 +1,8 @@
 import { FileText, BookOpen, Car } from "lucide-react";
 import { useState } from "react";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const UploadCards = () => {
   const [files, setFiles] = useState({
     standards: null,
@@ -16,8 +18,8 @@ const UploadCards = () => {
   };
 
   const uploadRoutes = {
-    standards: "http://localhost:5000/api/standards/import-excel",
-    abstracts: "http://localhost:5000/api/abstracts/import-excel",
+    standards: `${API_URL}/api/standards/import-excel`,
+    abstracts: `${API_URL}/api/abstracts/import-excel`,
   };
 
   const validateFileName = (type, file) => {

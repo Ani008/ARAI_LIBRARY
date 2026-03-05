@@ -25,7 +25,7 @@ const Dashboard = () => {
       try {
         const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/standards`);
         if (response.data && response.data.success) {
-          setStandardsCount(response.data.count);
+          setStandardsCount(response.data.totalRecords);
         }
       } catch (error) {
         console.error("Error fetching standards count:", error);
@@ -36,7 +36,7 @@ const Dashboard = () => {
       try {
         const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/periodicals`);
         if (response.data && response.data.success) {
-          setPeriodicalsCount(response.data.count);
+          setPeriodicalsCount(response.data.totalRecords);
         }
       } catch (error) {
         console.error("Error fetching periodicals count:", error);
@@ -47,7 +47,7 @@ const Dashboard = () => {
       try {
         const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/abstracts`);
         if (response.data && response.data.success) {
-          setAbstractsCount(response.data.count);
+          setAbstractsCount(response.data.totalRecords);
         }
       } catch (error) {
         console.error("Error fetching abstracts count:", error);
@@ -58,7 +58,7 @@ const Dashboard = () => {
       try {
         const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/kcmembers`);
         if (response.data && response.data.success) {
-          setKCMembersCount(response.data.count);
+          setKCMembersCount(response.data.totalRecords);
         }
       } catch (error) {
         console.error("Error fetching KC Members count:", error);
