@@ -82,341 +82,445 @@ exports.standardsDepartmentWiseReport = async (req, res, next) => {
   }
 };
 
-// 2. Category-wise Standards Report
-exports.standardsCategoryWiseReport = async (req, res, next) => {
+// 2. Requisition Number-wise Report
+exports.standardsRequisitionWiseReport = async (req, res, next) => {
   try {
-    const { category } = req.query;
-
+    const { requisition_no } = req.query;
     let filter = {};
-    if (category) {
-      filter.category = category;
+    if (requisition_no) {
+      filter.requisition_no = requisition_no;
     }
 
-    const standards = await Standard.find(filter).sort({
-      category: 1,
-      icnNumber: 1,
-    });
+    const standards = await Standard.find(filter).sort({ requisition_no: 1 });
 
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Category-wise Standards");
+    const worksheet = workbook.addWorksheet("Requisition-wise Report");
 
     worksheet.columns = [
+      { header: "Requisition No", key: "requisition_no", width: 20 },
       { header: "ICN Number", key: "icnNumber", width: 15 },
       { header: "Standard Number", key: "standardNumber", width: 20 },
       { header: "Title", key: "title", width: 40 },
-      { header: "Category", key: "category", width: 15 },
-      { header: "Department", key: "department", width: 20 },
-      { header: "Created Date", key: "createdAt", width: 20 },
+      { header: "PO No", key: "po_no", width: 15 },
+      { header: "Amount", key: "amount", width: 12 },
     ];
 
+    // Royal Blue Header
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    worksheet.getRow(1).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FF70AD47" },
-    };
+    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2E75B6" } };
 
-    standards.forEach((standard) => {
+    standards.forEach((s) => {
       worksheet.addRow({
-        icnNumber: standard.icnNumber,
-        standardNumber: standard.standardNumber,
-        title: standard.title,
-        category: standard.category,
-        department: standard.department,
-        createdAt: standard.createdAt
-          ? new Date(standard.createdAt).toLocaleDateString()
-          : "",
+        requisition_no: s.requisition_no || "N/A",
+        icnNumber: s.icnNumber,
+        standardNumber: s.standardNumber,
+        title: s.title,
+        po_no: s.po_no,
+        amount: s.amount,
       });
     });
 
-    worksheet.columns.forEach((column) => {
-      column.alignment = { vertical: "middle", wrapText: true };
-    });
-
     const buffer = await workbook.xlsx.writeBuffer();
-
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    );
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=Standards_Category_Report_${Date.now()}.xlsx`,
-    );
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=Requisition_Report_${Date.now()}.xlsx`);
     res.send(buffer);
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 };
 
-// 3. Amendments History Report
-exports.standardsAmendmentsReport = async (req, res, next) => {
+// 3. Status-wise Report (Active, Superseded, Withdrawn)
+exports.standardsStatusWiseReport = async (req, res, next) => {
   try {
-    const standards = await Standard.find().sort({ updatedAt: -1 });
+    const { status } = req.query;
+    let filter = {};
+    if (status) filter.status = status;
+
+    const standards = await Standard.find(filter).sort({ status: 1, standardNumber: 1 });
 
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Amendments History");
+    const worksheet = workbook.addWorksheet("Status-wise Report");
 
     worksheet.columns = [
-      { header: "ICN Number", key: "icnNumber", width: 15 },
+      { header: "Status", key: "status", width: 15 },
       { header: "Standard Number", key: "standardNumber", width: 20 },
       { header: "Title", key: "title", width: 40 },
       { header: "Department", key: "department", width: 20 },
-      { header: "Category", key: "category", width: 15 },
-      { header: "Created Date", key: "createdAt", width: 20 },
-      { header: "Last Modified", key: "updatedAt", width: 20 },
+      { header: "ICN", key: "icnNumber", width: 10 },
     ];
 
+    // Purple Header
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    worksheet.getRow(1).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FFED7D31" },
-    };
+    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF7030A0" } };
 
-    standards.forEach((standard) => {
+    standards.forEach((s) => {
       worksheet.addRow({
-        icnNumber: standard.icnNumber,
-        standardNumber: standard.standardNumber,
-        title: standard.title,
-        department: standard.department,
-        category: standard.category,
-        createdAt: standard.createdAt
-          ? new Date(standard.createdAt).toLocaleDateString()
-          : "",
-        updatedAt: standard.updatedAt
-          ? new Date(standard.updatedAt).toLocaleString()
-          : "",
+        status: s.status,
+        standardNumber: s.standardNumber,
+        title: s.title,
+        department: s.department,
+        icnNumber: s.icnNumber,
       });
     });
 
-    worksheet.columns.forEach((column) => {
-      column.alignment = { vertical: "middle", wrapText: true };
+    const buffer = await workbook.xlsx.writeBuffer();
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=Status_Report_${Date.now()}.xlsx`);
+    res.send(buffer);
+  } catch (error) { next(error); }
+};
+
+// 4. Standard Number-wise Report (Specific Search/Filter)
+exports.standardsNumberWiseReport = async (req, res, next) => {
+  try {
+    const { standardNumber } = req.query;
+    let filter = {};
+    if (standardNumber) {
+      filter.standardNumber = { $regex: standardNumber, $options: "i" }; // Partial match
+    }
+
+    const standards = await Standard.find(filter).sort({ standardNumber: 1 });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Standard Number Report");
+
+    worksheet.columns = [
+      { header: "Standard Number", key: "standardNumber", width: 25 },
+      { header: "Title", key: "title", width: 45 },
+      { header: "ICN", key: "icnNumber", width: 12 },
+      { header: "Edition", key: "edition", width: 12 },
+      { header: "Publisher", key: "publisher", width: 20 },
+    ];
+
+    // Dark Grey Header
+    worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF3B3838" } };
+
+    standards.forEach((s) => {
+      worksheet.addRow({
+        standardNumber: s.standardNumber,
+        title: s.title,
+        icnNumber: s.icnNumber,
+        edition: s.edition,
+        publisher: s.publisher,
+      });
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
-
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    );
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=Standards_Amendments_Report_${Date.now()}.xlsx`,
-    );
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=Standard_Number_Report_${Date.now()}.xlsx`);
     res.send(buffer);
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
+};
+
+// 5. Complete Directory (All Fields)
+exports.standardsCompleteDirectoryReport = async (req, res, next) => {
+  try {
+    const standards = await Standard.find().sort({ icnNumber: 1 });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Complete Standards Directory");
+
+    // Comprehensive column list based on your StandardModal
+    worksheet.columns = [
+      { header: "ICN", key: "icnNumber", width: 10 },
+      { header: "Standard No", key: "standardNumber", width: 20 },
+      { header: "Title", key: "title", width: 35 },
+      { header: "Department", key: "department", width: 15 },
+      { header: "Category", key: "category", width: 15 },
+      { header: "Status", key: "status", width: 12 },
+      { header: "Req No", key: "requisition_no", width: 15 },
+      { header: "PO No", key: "po_no", width: 15 },
+      { header: "Amount", key: "amount", width: 10 },
+      { header: "Publisher", key: "publisher", width: 15 },
+      { header: "Accn No", key: "accnNumber", width: 15 },
+      { header: "Keywords", key: "keywords", width: 25 },
+    ];
+
+    // Gold/Dark Yellow Header for Directory
+    worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC65911" } };
+
+    standards.forEach((s) => {
+      worksheet.addRow({
+        icnNumber: s.icnNumber,
+        standardNumber: s.standardNumber,
+        title: s.title,
+        department: s.department,
+        category: s.category,
+        status: s.status,
+        requisition_no: s.requisition_no,
+        po_no: s.po_no,
+        amount: s.amount,
+        publisher: s.publisher,
+        accnNumber: s.accnNumber,
+        keywords: s.keywords,
+      });
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=Complete_Standards_Directory_${Date.now()}.xlsx`);
+    res.send(buffer);
+  } catch (error) { next(error); }
 };
 
 // ==================== PERIODICALS REPORTS ====================
 
-// 4. Year-wise Periodicals Report
-exports.periodicalsYearWiseReport = async (req, res, next) => {
+exports.periodicalsSubscriptionDateReport = async (req, res, next) => {
   try {
-    const { year } = req.query;
-
+    const { startDate, endDate } = req.query;
     let filter = {};
-    if (year) {
-      const startDate = new Date(`${year}-01-01`);
-      const endDate = new Date(`${year}-12-31`);
-      filter.subscriptionDate = { $gte: startDate, $lte: endDate };
+    if (startDate && endDate) {
+      filter.subscriptionDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
     }
 
-    const periodicals = await Periodical.find(filter).sort({
-      subscriptionDate: -1,
-    });
+    const periodicals = await Periodical.find(filter).sort({ subscriptionDate: 1 });
 
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Year-wise Periodicals");
+    const worksheet = workbook.addWorksheet("Subscription Date Report");
 
     worksheet.columns = [
+      { header: "Subscription Date", key: "subscriptionDate", width: 20 },
       { header: "Title", key: "title", width: 30 },
       { header: "Publisher", key: "publisher", width: 25 },
-      { header: "ISSN", key: "issn", width: 15 },
       { header: "Frequency", key: "frequency", width: 15 },
-      { header: "Volume", key: "volume", width: 10 },
-      { header: "Issue", key: "issue", width: 10 },
-      { header: "Subscription Date", key: "subscriptionDate", width: 20 },
-      { header: "Receipt Date", key: "receiptDate", width: 20 },
-      { header: "Status", key: "status", width: 15 },
+      { header: "PO No", key: "poNo", width: 15 },
+      { header: "Amount", key: "amount", width: 12 },
     ];
 
+    // Blue Header
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    worksheet.getRow(1).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FF5B9BD5" },
-    };
+    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF4472C4" } };
 
-    periodicals.forEach((periodical) => {
+    periodicals.forEach((p) => {
       worksheet.addRow({
-        title: periodical.title,
-        publisher: periodical.publisher,
-        issn: periodical.issn || "",
-        frequency: periodical.frequency,
-        volume: periodical.volume || "",
-        issue: periodical.issue || "",
-        subscriptionDate: periodical.subscriptionDate
-          ? new Date(periodical.subscriptionDate).toLocaleDateString()
-          : "",
-        receiptDate: periodical.receiptDate
-          ? new Date(periodical.receiptDate).toLocaleDateString()
-          : "",
-        status: periodical.status || "",
+        subscriptionDate: p.subscriptionDate ? new Date(p.subscriptionDate).toLocaleDateString() : "N/A",
+        title: p.title,
+        publisher: p.publisher,
+        frequency: p.frequency,
+        poNo: p.poNo,
+        amount: p.paymentDetails?.amount || 0,
       });
     });
 
-    worksheet.columns.forEach((column) => {
-      column.alignment = { vertical: "middle", wrapText: true };
-    });
-
     const buffer = await workbook.xlsx.writeBuffer();
-
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    );
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=Periodicals_Year_Report_${Date.now()}.xlsx`,
-    );
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=Subscription_Date_Report_${Date.now()}.xlsx`);
     res.send(buffer);
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 };
 
-// 5. Frequency-wise Periodicals Report
+// 2. Frequency-wise Report (Frequency Column First)
 exports.periodicalsFrequencyWiseReport = async (req, res, next) => {
   try {
     const { frequency } = req.query;
+    let filter = frequency ? { frequency } : {};
 
-    let filter = {};
-    if (frequency) {
-      filter.frequency = frequency;
-    }
-
-    const periodicals = await Periodical.find(filter).sort({
-      frequency: 1,
-      title: 1,
-    });
+    const periodicals = await Periodical.find(filter).sort({ frequency: 1, title: 1 });
 
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Frequency-wise Periodicals");
+    const worksheet = workbook.addWorksheet("Frequency Report");
 
     worksheet.columns = [
+      { header: "Frequency", key: "frequency", width: 15 },
       { header: "Title", key: "title", width: 30 },
       { header: "Publisher", key: "publisher", width: 25 },
-      { header: "Frequency", key: "frequency", width: 15 },
       { header: "ISSN", key: "issn", width: 15 },
-      { header: "Volume", key: "volume", width: 10 },
-      { header: "Issue", key: "issue", width: 10 },
-      { header: "Last Receipt Date", key: "receiptDate", width: 20 },
-      { header: "Department", key: "departmentToIssue", width: 20 },
+      { header: "Dept to Issue", key: "departmentToIssue", width: 20 },
     ];
 
+    // Orange Header
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    worksheet.getRow(1).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FFC65911" },
-    };
+    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFED7D31" } };
 
-    periodicals.forEach((periodical) => {
+    periodicals.forEach((p) => {
       worksheet.addRow({
-        title: periodical.title,
-        publisher: periodical.publisher,
-        frequency: periodical.frequency,
-        issn: periodical.issn || "",
-        volume: periodical.volume || "",
-        issue: periodical.issue || "",
-        receiptDate: periodical.receiptDate
-          ? new Date(periodical.receiptDate).toLocaleDateString()
-          : "",
-        departmentToIssue: periodical.departmentToIssue || "",
+        frequency: p.frequency,
+        title: p.title,
+        publisher: p.publisher,
+        issn: p.issn,
+        departmentToIssue: p.departmentToIssue,
       });
     });
 
-    worksheet.columns.forEach((column) => {
-      column.alignment = { vertical: "middle", wrapText: true };
+    const buffer = await workbook.xlsx.writeBuffer();
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=Frequency_Report_${Date.now()}.xlsx`);
+    res.send(buffer);
+  } catch (error) { next(error); }
+};
+
+// 3. Title-wise Report (Title Column First)
+exports.periodicalsTitleWiseReport = async (req, res, next) => {
+  try {
+    const { title } = req.query;
+    let filter = title ? { title: { $regex: title, $options: "i" } } : {};
+
+    const periodicals = await Periodical.find(filter).sort({ title: 1 });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Title-wise Report");
+
+    worksheet.columns = [
+      { header: "Title", key: "title", width: 40 },
+      { header: "Subtitle", key: "subtitle", width: 30 },
+      { header: "Publisher", key: "publisher", width: 25 },
+      { header: "ISSN", key: "issn", width: 15 },
+      { header: "Status", key: "status", width: 15 },
+    ];
+
+    // Green Header
+    worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF70AD47" } };
+
+    periodicals.forEach((p) => {
+      worksheet.addRow({
+        title: p.title,
+        subtitle: p.subtitle,
+        publisher: p.publisher,
+        issn: p.issn,
+        status: p.status,
+      });
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
-
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    );
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=Periodicals_Frequency_Report_${Date.now()}.xlsx`,
-    );
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=Title_Report_${Date.now()}.xlsx`);
     res.send(buffer);
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 };
 
-// 6. Missing Issues Report
+// 4. Status-wise Report (Status Column First)
+exports.periodicalsStatusWiseReport = async (req, res, next) => {
+  try {
+    const { status } = req.query;
+    let filter = status ? { status } : {};
+
+    const periodicals = await Periodical.find(filter).sort({ status: 1 });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Status-wise Report");
+
+    worksheet.columns = [
+      { header: "Status", key: "status", width: 15 },
+      { header: "Title", key: "title", width: 35 },
+      { header: "Publisher", key: "publisher", width: 25 },
+      { header: "Mode", key: "mode", width: 15 },
+      { header: "Language", key: "language", width: 15 },
+    ];
+
+    // Purple Header
+    worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF7030A0" } };
+
+    periodicals.forEach((p) => {
+      worksheet.addRow({
+        status: p.status,
+        title: p.title,
+        publisher: p.publisher,
+        mode: p.mode,
+        language: p.language,
+      });
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=Status_Report_${Date.now()}.xlsx`);
+    res.send(buffer);
+  } catch (error) { next(error); }
+};
+
+// 5. Complete Directory (Comprehensive Data)
+exports.periodicalsCompleteDirectoryReport = async (req, res, next) => {
+  try {
+    const periodicals = await Periodical.find().sort({ title: 1 });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Complete Directory");
+
+    worksheet.columns = [
+      { header: "Title", key: "title", width: 30 },
+      { header: "Publisher", key: "publisher", width: 20 },
+      { header: "ISSN", key: "issn", width: 15 },
+      { header: "Frequency", key: "frequency", width: 15 },
+      { header: "Volume", key: "volume", width: 10 },
+      { header: "Issue", key: "issue", width: 10 },
+      { header: "Subscription Date", key: "subscriptionDate", width: 15 },
+      { header: "Amount", key: "amount", width: 10 },
+      { header: "PO No", key: "poNo", width: 15 },
+      { header: "Vendor Name", key: "vendorName", width: 20 },
+      { header: "Status", key: "status", width: 12 },
+    ];
+
+    // Dark Blue/Navy Header
+    worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF203764" } };
+
+    periodicals.forEach((p) => {
+      worksheet.addRow({
+        title: p.title,
+        publisher: p.publisher,
+        issn: p.issn,
+        frequency: p.frequency,
+        volume: p.volume,
+        issue: p.issue,
+        subscriptionDate: p.subscriptionDate ? new Date(p.subscriptionDate).toLocaleDateString() : "",
+        amount: p.paymentDetails?.amount || 0,
+        poNo: p.poNo,
+        vendorName: p.vendorDetails?.name || "",
+        status: p.status,
+      });
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=Complete_Directory_${Date.now()}.xlsx`);
+    res.send(buffer);
+  } catch (error) { next(error); }
+};
+
+// 6. Missing Issues Report (Overdue Only)
 exports.periodicalsMissingIssuesReport = async (req, res, next) => {
   try {
+    // Only fetch periodicals that have a previous receipt date to calculate the next one
     const periodicals = await Periodical.find({
       receiptDate: { $ne: null },
+      status: "Active" // Usually you only track missing issues for active subscriptions
     }).sort({ receiptDate: 1 });
 
     const currentDate = new Date();
     const missingIssues = [];
 
     periodicals.forEach((periodical) => {
-      if (!periodical.receiptDate) return;
-
       const lastReceiptDate = new Date(periodical.receiptDate);
-      let expectedNextDate;
-      let daysDifference;
+      let expectedNextDate = new Date(lastReceiptDate);
 
       // Calculate expected next receipt based on frequency
       switch (periodical.frequency) {
         case "Daily":
-          expectedNextDate = new Date(lastReceiptDate);
           expectedNextDate.setDate(expectedNextDate.getDate() + 1);
-          daysDifference = 1;
           break;
         case "Weekly":
-          expectedNextDate = new Date(lastReceiptDate);
           expectedNextDate.setDate(expectedNextDate.getDate() + 7);
-          daysDifference = 7;
           break;
         case "Bi-Monthly":
-          expectedNextDate = new Date(lastReceiptDate);
           expectedNextDate.setMonth(expectedNextDate.getMonth() + 2);
-          daysDifference = 60;
           break;
         case "Monthly":
-          expectedNextDate = new Date(lastReceiptDate);
           expectedNextDate.setMonth(expectedNextDate.getMonth() + 1);
-          daysDifference = 30;
           break;
         case "Quarterly":
-          expectedNextDate = new Date(lastReceiptDate);
           expectedNextDate.setMonth(expectedNextDate.getMonth() + 3);
-          daysDifference = 90;
           break;
         case "Annual":
-          expectedNextDate = new Date(lastReceiptDate);
           expectedNextDate.setFullYear(expectedNextDate.getFullYear() + 1);
-          daysDifference = 365;
           break;
         default:
           return;
       }
 
-      // Check if issue is overdue
+      // ONLY include if the current date has passed the expected date
       if (currentDate > expectedNextDate) {
-        const daysOverdue = Math.floor(
-          (currentDate - expectedNextDate) / (1000 * 60 * 60 * 24),
-        );
+        const daysOverdue = Math.floor((currentDate - expectedNextDate) / (1000 * 60 * 60 * 24));
         missingIssues.push({
           ...periodical.toObject(),
           expectedNextDate,
@@ -426,42 +530,36 @@ exports.periodicalsMissingIssuesReport = async (req, res, next) => {
     });
 
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Missing Issues");
+    const worksheet = workbook.addWorksheet("Missing Issues Only");
 
+    // "Expected Date" and "Days Overdue" columns first as requested
     worksheet.columns = [
-      { header: "Title", key: "title", width: 30 },
-      { header: "Publisher", key: "publisher", width: 25 },
-      { header: "Frequency", key: "frequency", width: 15 },
-      { header: "Last Receipt Date", key: "receiptDate", width: 20 },
       { header: "Expected Next Date", key: "expectedNextDate", width: 20 },
       { header: "Days Overdue", key: "daysOverdue", width: 15 },
-      { header: "ISSN", key: "issn", width: 15 },
-      { header: "Volume", key: "volume", width: 10 },
+      { header: "Title", key: "title", width: 30 },
+      { header: "Frequency", key: "frequency", width: 15 },
+      { header: "Last Receipt Date", key: "receiptDate", width: 20 },
+      { header: "Publisher", key: "publisher", width: 25 },
+      { header: "Vendor Phone", key: "vendorPhone", width: 15 },
     ];
 
+    // Sharp Red Header for visibility
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    worksheet.getRow(1).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FFC00000" },
-    };
+    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC00000" } };
 
-    missingIssues.forEach((periodical) => {
+    missingIssues.forEach((p) => {
       const row = worksheet.addRow({
-        title: periodical.title,
-        publisher: periodical.publisher,
-        frequency: periodical.frequency,
-        receiptDate: new Date(periodical.receiptDate).toLocaleDateString(),
-        expectedNextDate: new Date(
-          periodical.expectedNextDate,
-        ).toLocaleDateString(),
-        daysOverdue: periodical.daysOverdue,
-        issn: periodical.issn || "",
-        volume: periodical.volume || "",
+        expectedNextDate: p.expectedNextDate.toLocaleDateString(),
+        daysOverdue: p.daysOverdue,
+        title: p.title,
+        frequency: p.frequency,
+        receiptDate: new Date(p.receiptDate).toLocaleDateString(),
+        publisher: p.publisher,
+        vendorPhone: p.vendorDetails?.phone || "N/A",
       });
 
-      // Highlight overdue rows in red
-      if (periodical.daysOverdue > 30) {
+      // Conditional formatting: If more than 30 days overdue, highlight the row light red
+      if (p.daysOverdue > 30) {
         row.fill = {
           type: "pattern",
           pattern: "solid",
@@ -470,242 +568,230 @@ exports.periodicalsMissingIssuesReport = async (req, res, next) => {
       }
     });
 
-    worksheet.columns.forEach((column) => {
-      column.alignment = { vertical: "middle", wrapText: true };
-    });
-
     const buffer = await workbook.xlsx.writeBuffer();
-
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    );
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=Periodicals_Missing_Issues_${Date.now()}.xlsx`,
-    );
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=Missing_Issues_Only_${Date.now()}.xlsx`);
     res.send(buffer);
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 };
 
 // ==================== ABSTRACTS REPORTS ====================
 
-// 7. Department-wise Abstracts Report
-exports.abstractsDepartmentWiseReport = async (req, res, next) => {
+exports.abstractsSubjectWiseReport = async (req, res, next) => {
   try {
-    const { department } = req.query;
-
+    const { subject } = req.query;
     let filter = {};
-    if (department) {
-      filter.department = department;
+    if (subject) {
+      filter.subject = { $in: [subject] }; // Since subject is an array in your model
     }
 
-    const abstracts = await Abstract.find(filter).sort({
-      department: 1,
-      createdAt: -1,
-    });
+    const abstracts = await Abstract.find(filter).sort({ subject: 1, title: 1 });
 
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Department-wise Abstracts");
+    const worksheet = workbook.addWorksheet("Subject-wise Abstracts");
 
     worksheet.columns = [
-      { header: "Title", key: "title", width: 35 },
+      { header: "Subject", key: "subject", width: 25 },
+      { header: "Title", key: "title", width: 40 },
       { header: "Authors", key: "authors", width: 30 },
-      { header: "Department", key: "department", width: 20 },
       { header: "Journal", key: "journal", width: 25 },
       { header: "Year", key: "year", width: 10 },
-      { header: "Subject", key: "subject", width: 25 },
-      { header: "Keywords", key: "keyword", width: 30 },
       { header: "Status", key: "status", width: 15 },
     ];
 
+    // Purple Header
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    worksheet.getRow(1).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FF7030A0" },
-    };
+    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF7030A0" } };
 
-    abstracts.forEach((abstract) => {
+    abstracts.forEach((a) => {
       worksheet.addRow({
-        title: abstract.title,
-        authors: abstract.authors ? abstract.authors.join(", ") : "",
-        department: abstract.department || "",
-        journal: abstract.journal || "",
-        year: abstract.year || "",
-        subject: abstract.subject || "",
-        keyword: abstract.keyword || "",
-        status: abstract.status || "",
+        subject: a.subject ? a.subject.join(", ") : "",
+        title: a.title,
+        authors: a.authors ? a.authors.join(", ") : "",
+        journal: a.journal,
+        year: a.year,
+        status: a.status,
       });
     });
 
-    worksheet.columns.forEach((column) => {
-      column.alignment = { vertical: "middle", wrapText: true };
-    });
-
     const buffer = await workbook.xlsx.writeBuffer();
-
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    );
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=Abstracts_Department_Report_${Date.now()}.xlsx`,
-    );
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=Abstracts_Subject_Report_${Date.now()}.xlsx`);
     res.send(buffer);
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 };
 
-// 8. Year-wise Abstracts Report
-exports.abstractsYearWiseReport = async (req, res, next) => {
+// 2. Yearly Archives Report
+exports.abstractsYearlyArchivesReport = async (req, res, next) => {
   try {
     const { year } = req.query;
-
-    let filter = {};
-    if (year) {
-      filter.year = year;
-    }
+    let filter = year ? { year } : {};
 
     const abstracts = await Abstract.find(filter).sort({ year: -1, title: 1 });
 
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Year-wise Abstracts");
+    const worksheet = workbook.addWorksheet("Yearly Archives");
 
     worksheet.columns = [
-      { header: "Title", key: "title", width: 35 },
-      { header: "Authors", key: "authors", width: 30 },
       { header: "Year", key: "year", width: 10 },
-      { header: "Publication Year", key: "publicationYear", width: 15 },
+      { header: "Title", key: "title", width: 40 },
       { header: "Journal", key: "journal", width: 25 },
       { header: "Volume", key: "volume", width: 10 },
       { header: "Issue", key: "issue", width: 10 },
+      { header: "Month", key: "publicationMonth", width: 15 },
+    ];
+
+    // Slate Blue Header
+    worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF44546A" } };
+
+    abstracts.forEach((a) => {
+      worksheet.addRow({
+        year: a.year,
+        title: a.title,
+        journal: a.journal,
+        volume: a.volume,
+        issue: a.issue,
+        publicationMonth: a.publicationMonth,
+      });
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=Abstracts_Yearly_Archive_${Date.now()}.xlsx`);
+    res.send(buffer);
+  } catch (error) { next(error); }
+};
+
+// 3. Published In AA Report (Filter for non-empty publishedInAA)
+exports.abstractsPublishedInAAReport = async (req, res, next) => {
+  try {
+    // Only fetch records where PublishedInAA is actually filled
+    const abstracts = await Abstract.find({
+      publishedInAA: { $exists: true, $ne: "" }
+    }).sort({ createdAt: -1 });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Published In AA");
+
+    worksheet.columns = [
+      { header: "Published In AA Details", key: "publishedInAA", width: 40 },
+      { header: "Title", key: "title", width: 40 },
+      { header: "Source", key: "source", width: 30 },
+      { header: "Journal", key: "journal", width: 25 },
+      { header: "URL", key: "url", width: 30 },
+    ];
+
+    // Rose/Crimson Header
+    worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE11D48" } };
+
+    abstracts.forEach((a) => {
+      worksheet.addRow({
+        publishedInAA: a.publishedInAA,
+        title: a.title,
+        source: a.source,
+        journal: a.journal,
+        url: a.url,
+      });
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=Published_In_AA_Report_${Date.now()}.xlsx`);
+    res.send(buffer);
+  } catch (error) { next(error); }
+};
+
+// 4. Status-wise Report
+exports.abstractsStatusWiseReport = async (req, res, next) => {
+  try {
+    const { status } = req.query;
+    let filter = status ? { status } : {};
+
+    const abstracts = await Abstract.find(filter).sort({ status: 1, title: 1 });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Status-wise Abstracts");
+
+    worksheet.columns = [
+      { header: "Status", key: "status", width: 15 },
+      { header: "Title", key: "title", width: 40 },
+      { header: "Authors", key: "authors", width: 30 },
       { header: "Subject", key: "subject", width: 25 },
     ];
 
+    // Dark Green Header
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    worksheet.getRow(1).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FF44546A" },
-    };
+    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF00B050" } };
 
-    abstracts.forEach((abstract) => {
+    abstracts.forEach((a) => {
       worksheet.addRow({
-        title: abstract.title,
-        authors: abstract.authors ? abstract.authors.join(", ") : "",
-        year: abstract.year || "",
-        publicationYear: abstract.publicationYear || "",
-        journal: abstract.journal || "",
-        volume: abstract.volume || "",
-        issue: abstract.issue || "",
-        subject: abstract.subject || "",
+        status: a.status,
+        title: a.title,
+        authors: a.authors ? a.authors.join(", ") : "",
+        subject: a.subject ? a.subject.join(", ") : "",
       });
     });
 
-    worksheet.columns.forEach((column) => {
-      column.alignment = { vertical: "middle", wrapText: true };
-    });
-
     const buffer = await workbook.xlsx.writeBuffer();
-
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    );
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=Abstracts_Year_Report_${Date.now()}.xlsx`,
-    );
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=Abstracts_Status_Report_${Date.now()}.xlsx`);
     res.send(buffer);
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 };
 
-// 9. Keyword Analysis Report
-exports.abstractsKeywordAnalysisReport = async (req, res, next) => {
+// 5. Complete Directory (Comprehensive All-Field Report)
+exports.abstractsCompleteDirectoryReport = async (req, res, next) => {
   try {
-    const abstracts = await Abstract.find({ keyword: { $ne: "" } });
-
-    // Analyze keywords
-    const keywordMap = new Map();
-
-    abstracts.forEach((abstract) => {
-      if (abstract.keyword) {
-        const keywords = abstract.keyword
-          .split(",")
-          .map((k) => k.trim().toLowerCase());
-        keywords.forEach((keyword) => {
-          if (keyword) {
-            if (keywordMap.has(keyword)) {
-              keywordMap.get(keyword).count++;
-              keywordMap.get(keyword).abstracts.push(abstract.title);
-            } else {
-              keywordMap.set(keyword, {
-                keyword: keyword,
-                count: 1,
-                abstracts: [abstract.title],
-              });
-            }
-          }
-        });
-      }
-    });
-
-    // Convert to array and sort by count
-    const keywordAnalysis = Array.from(keywordMap.values()).sort(
-      (a, b) => b.count - a.count,
-    );
+    const abstracts = await Abstract.find().sort({ createdAt: -1 });
 
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Keyword Analysis");
+    const worksheet = workbook.addWorksheet("Complete Abstract Directory");
 
     worksheet.columns = [
-      { header: "Keyword", key: "keyword", width: 25 },
-      { header: "Frequency", key: "count", width: 15 },
-      { header: "Related Abstracts", key: "abstracts", width: 60 },
+      { header: "Title", key: "title", width: 35 },
+      { header: "Authors", key: "authors", width: 25 },
+      { header: "Journal", key: "journal", width: 20 },
+      { header: "Source", key: "source", width: 20 },
+      { header: "Keywords", key: "keyword", width: 20 },
+      { header: "Vol", key: "volume", width: 8 },
+      { header: "Issue", key: "issue", width: 8 },
+      { header: "Year", key: "year", width: 8 },
+      { header: "Month", key: "publicationMonth", width: 12 },
+      { header: "Subject", key: "subject", width: 20 },
+      { header: "Status", key: "status", width: 12 },
+      { header: "Published In AA", key: "publishedInAA", width: 25 },
+      { header: "Remarks", key: "remarks", width: 20 },
     ];
 
+    // Gold/Navy Header
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    worksheet.getRow(1).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FF00B050" },
-    };
+    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF203764" } };
 
-    keywordAnalysis.forEach((item) => {
+    abstracts.forEach((a) => {
       worksheet.addRow({
-        keyword: item.keyword,
-        count: item.count,
-        abstracts:
-          item.abstracts.slice(0, 5).join("; ") +
-          (item.abstracts.length > 5 ? "..." : ""),
+        title: a.title,
+        authors: a.authors ? a.authors.join(", ") : "",
+        journal: a.journal,
+        source: a.source,
+        keyword: a.keyword ? a.keyword.join(", ") : "",
+        volume: a.volume,
+        issue: a.issue,
+        year: a.year,
+        publicationMonth: a.publicationMonth,
+        subject: a.subject ? a.subject.join(", ") : "",
+        status: a.status,
+        publishedInAA: a.publishedInAA,
+        remarks: a.remarks,
       });
     });
 
-    worksheet.columns.forEach((column) => {
-      column.alignment = { vertical: "middle", wrapText: true };
-    });
-
     const buffer = await workbook.xlsx.writeBuffer();
-
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    );
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=Abstracts_Keyword_Analysis_${Date.now()}.xlsx`,
-    );
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=Complete_Abstract_Directory_${Date.now()}.xlsx`);
     res.send(buffer);
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 };
 
 // ==================== KC MEMBERSHIP REPORTS ====================

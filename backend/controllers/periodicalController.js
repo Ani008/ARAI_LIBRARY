@@ -13,7 +13,7 @@ exports.getAllPeriodicals = async (req, res, next) => {
       const skip = (page - 1) * limit;
   
       // 2️⃣ Extract filters
-      const { search, frequency, language } = req.query;
+      const { search, frequency, language, status } = req.query;
   
       // 3️⃣ Build dynamic query object
       const query = {};
@@ -36,6 +36,7 @@ exports.getAllPeriodicals = async (req, res, next) => {
   
       if (frequency) query.frequency = frequency;
       if (language) query.language = language;
+      if (status) query.status = status;
   
       // 4️⃣ Get total filtered count
       const totalRecords = await Periodical.countDocuments(query);
@@ -92,6 +93,7 @@ exports.createPeriodical = async (req, res, next) => {
       issn: req.body.issn,
       volume: req.body.volume,
       issue: req.body.issue,
+      periodicalYear: req.body.periodicalYear,
       series: req.body.series,
       notes: req.body.notes,
       subscriptionDate: req.body.subscriptionDate,
@@ -138,6 +140,7 @@ exports.updatePeriodical = async (req, res, next) => {
       issn: req.body.issn,
       volume: req.body.volume,
       issue: req.body.issue,
+      periodicalYear: req.body.periodicalYear,
       series: req.body.series,
       notes: req.body.notes,
       subscriptionDate: req.body.subscriptionDate,

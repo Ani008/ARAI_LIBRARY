@@ -15,6 +15,7 @@ const PeriodicalManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [frequencyFilter, setFrequencyFilter] = useState("");
   const [languageFilter, setLanguageFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -56,7 +57,7 @@ const PeriodicalManagement = () => {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        `${API_BASE}/periodicals?page=${page}&limit=${limit}&search=${searchTerm}&frequency=${frequencyFilter}&language=${languageFilter}`,
+        `${API_BASE}/periodicals?page=${page}&limit=${limit}&search=${searchTerm}&frequency=${frequencyFilter}&language=${languageFilter}&status=${statusFilter}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -77,11 +78,11 @@ const PeriodicalManagement = () => {
 
   useEffect(() => {
     fetchPeriodicals(currentPage);
-  }, [currentPage, searchTerm, frequencyFilter, languageFilter]);
+  }, [currentPage, searchTerm, frequencyFilter, languageFilter, statusFilter]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, frequencyFilter, languageFilter]);
+  }, [searchTerm, frequencyFilter, languageFilter, statusFilter]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -183,6 +184,7 @@ const PeriodicalManagement = () => {
       issn: "",
       volume: "",
       issue: "",
+      periodicalYear: "",
       series: "",
       notes: "",
       subscriptionDate: "",
@@ -206,6 +208,7 @@ const PeriodicalManagement = () => {
 
   const frequencyOptions = [
     "Daily",
+    "Weekly",
     "Monthly",
     "Quarterly",
     "Bi-Monthly",
@@ -219,6 +222,7 @@ const PeriodicalManagement = () => {
     "Electrical",
     "Automotive",
   ];
+  const statusOptions = ["Active", "Disposal", "Issued"];
   const modeOptions = ["Subscription", "Exchange", "Free", "Membership"];
 
   return (
@@ -308,6 +312,18 @@ const PeriodicalManagement = () => {
                 >
                   <option value="">All Languages</option>
                   {languageOptions.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+                                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">All Statuses</option>
+                  {statusOptions.map((opt) => (
                     <option key={opt} value={opt}>
                       {opt}
                     </option>

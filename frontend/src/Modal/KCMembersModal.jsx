@@ -28,10 +28,10 @@ const KCModal = ({ onClose, editingId, refreshData }) => {
     alternatePhone: "",
     website: "",
     membershipStartDate: "",
+    membershipStatus: "",
     membershipEndDate: "",
     subscriptionTypes: "",
     fees: "",
-    paymentFrequency: "",
     paymentStatus: "",
     lastPaymentDate: "",
     notes: "",
@@ -150,7 +150,7 @@ const KCModal = ({ onClose, editingId, refreshData }) => {
               </div>
 
               <div className="md:col-span-1">
-                <label className={labelClass}>Name</label>
+                <label className={labelClass}>Name of Institution</label>
                 <input
                   required
                   className={inputClass}
@@ -176,6 +176,24 @@ const KCModal = ({ onClose, editingId, refreshData }) => {
                     })
                   }
                 />
+              </div>
+
+              <div>
+                <label className={labelClass}>Membership Status</label>
+                <select
+                  className={inputClass}
+                  value={formData.membershipStatus || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      membershipStatus: e.target.value,
+                    })
+                  }
+                >
+                  <option value="">Membership Status</option>
+                  <option>Active</option>
+                  <option>Inactive</option>
+                </select>
               </div>
             </div>
           </section>
@@ -231,7 +249,7 @@ const KCModal = ({ onClose, editingId, refreshData }) => {
                 />
               </div>
               <div>
-                <label className={labelClass}>Alternate Phone</label>
+                <label className={labelClass}>Undertaking Email</label>
                 <input
                   className={inputClass}
                   value={formData.alternatePhone}
@@ -336,25 +354,7 @@ const KCModal = ({ onClose, editingId, refreshData }) => {
                   }
                 />
               </div>
-              <div>
-                <label className={labelClass}>Frequency</label>
-                <select
-                  className={inputClass}
-                  value={formData.paymentFrequency}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      paymentFrequency: e.target.value,
-                    })
-                  }
-                >
-                  <option value="">Select</option>
-                  <option value="Daily">Daily</option>
-                  <option value="Weekly">Weekly</option>
-                  <option value="Monthly">Monthly</option>
-                  <option value="Yearly">Yearly</option>
-                </select>
-              </div>
+
               <div>
                 <label className={labelClass}>Status</label>
                 <select

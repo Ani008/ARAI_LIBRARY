@@ -424,7 +424,7 @@ const AbstractModal = ({ onClose, editingId, refreshData }) => {
 
                 {/* Remarks */}
                 <div>
-                  <label className={labelClass}>Remarks</label>
+                  <label className={labelClass}>AA Number</label>
                   <input
                     className={inputClass}
                     value={formData.remarks}

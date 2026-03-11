@@ -27,7 +27,7 @@ const Abstracts = () => {
   const [limit, setLimit] = useState(25);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [subjectFilter, setSubjectFilter] = useState("");
+  const [publishedOnly, setPublishedOnly] = useState(false);
 
   const navigate = useNavigate();
 
@@ -38,8 +38,8 @@ const Abstracts = () => {
           page: currentPage,
           limit: limit,
           search: search,
-          subject: subjectFilter,
           status: statusFilter,
+          onlyPublished: publishedOnly,
         },
       });
 
@@ -58,11 +58,11 @@ const Abstracts = () => {
 
   useEffect(() => {
     fetchAbstracts(currentPage);
-  }, [currentPage, search, subjectFilter, statusFilter]);
+  }, [currentPage, search, statusFilter, publishedOnly]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, subjectFilter, statusFilter]);
+  }, [search, statusFilter, publishedOnly]);
 
   const handleDelete = async (id) => {
     if (
@@ -102,8 +102,6 @@ const Abstracts = () => {
       return false;
 
     if (statusFilter && item.status !== statusFilter) return false;
-
-    if (subjectFilter && item.subject !== subjectFilter) return false;
 
     return true;
   });
@@ -165,19 +163,19 @@ const Abstracts = () => {
             />
           </div>
 
-          {/* Subject */}
-          <select
-            value={subjectFilter}
-            onChange={(e) => setSubjectFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-200 rounded-md text-sm min-w-[180px]"
+          <button
+            onClick={() => {
+              setPublishedOnly(!publishedOnly);
+              setCurrentPage(1); // Reset to first page when filtering
+            }}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 border ${
+              publishedOnly
+                ? "bg-rose-500 text-white border-rose-500 shadow-md"
+                : "bg-transparent text-rose-500 border-rose-500 hover:bg-rose-50"
+            }`}
           >
-            <option value="">Subject</option>
-            <option>Powertrain</option>
-            <option>EV</option>
-            <option>Safety</option>
-            <option>Materials</option>
-            <option>General</option>
-          </select>
+            {publishedOnly ? "✓ Published in AA" : "Published in AA"}
+          </button>
 
           {/* Status */}
           <select

@@ -41,7 +41,7 @@ const KCMembers = () => {
           limit,
           search,
           membershipType,
-          status,
+          membershipStatus: status,
         },
         headers: {
           Authorization: `Bearer ${token}`,
@@ -110,7 +110,7 @@ const KCMembers = () => {
               onClick={() => setShowCountModal(true)}
               className="flex items-center px-4 py-2 border border-green-600 text-green-600 rounded-md hover:bg-green-50 transition shadow-sm font-medium"
             >
-              Total Summary
+              Total Subscription Details
             </button>
 
             <button
@@ -170,9 +170,9 @@ const KCMembers = () => {
                 onChange={(e) => setStatus(e.target.value)}
                 className="px-3 py-2 border border-gray-200 rounded-md text-sm min-w-[140px]"
               >
-                <option value="">Status</option>
-                <option value="Paid">Paid</option>
-                <option value="Unpaid">Unpaid</option>
+                <option value="">Membership Status</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
               </select>
             </div>
           </div>
@@ -183,6 +183,7 @@ const KCMembers = () => {
           <table className="w-full">
             <thead className="bg-slate-50 text-xs uppercase text-slate-500">
               <tr>
+                <th className="px-6 py-4 text-left">Membership ID</th>
                 <th className="px-6 py-4 text-left">Organization & Contact</th>
                 <th className="px-6 py-4">Type</th>
                 <th className="px-6 py-4">Subscriptions</th>
@@ -195,6 +196,12 @@ const KCMembers = () => {
             <tbody className="divide-y">
               {members.map((item) => (
                 <tr key={item._id} className="hover:bg-green-50/40 transition">
+                  <td className="px-6 py-4">
+                    <div className="font-semibold text-slate-800">
+                      {item.membershipId}
+                    </div>
+                  </td>
+
                   <td className="px-6 py-4">
                     <div className="font-semibold text-slate-800">
                       {item.institutionName}
@@ -217,11 +224,28 @@ const KCMembers = () => {
                   </td>
 
                   <td className="px-6 py-4 text-xs text-slate-500">
-                    {item.membershipStartDate
-                      ? new Date(item.membershipStartDate).toLocaleDateString(
-                          "en-GB",
-                        )
-                      : "N/A"}
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-1">
+                        <span className="font-semibold text-slate-400">Start Date: </span>
+                        <span>
+                          {item.membershipStartDate
+                            ? new Date(
+                                item.membershipStartDate,
+                              ).toLocaleDateString("en-GB")
+                            : "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="font-semibold text-slate-400">End Date: </span>
+                        <span>
+                          {item.membershipEndDate
+                            ? new Date(
+                                item.membershipEndDate,
+                              ).toLocaleDateString("en-GB")
+                            : "N/A"}
+                        </span>
+                      </div>
+                    </div>
                   </td>
 
                   <td className="px-6 py-4 text-center">

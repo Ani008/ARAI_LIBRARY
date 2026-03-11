@@ -8,7 +8,7 @@ const MembershipCountModal = ({ onClose, data }) => (
     <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold text-slate-800">
-          Membership Count Summary
+          Subscription Type Summary
         </h2>
         <button
           onClick={onClose}
@@ -22,7 +22,7 @@ const MembershipCountModal = ({ onClose, data }) => (
         <thead className="bg-slate-50 text-slate-600 uppercase text-xs">
           <tr>
             <th className="px-4 py-2 text-left border border-slate-300">
-              Membership Type
+              Subscription Type
             </th>
             <th className="px-4 py-2 text-right border border-slate-300">
               Total Count

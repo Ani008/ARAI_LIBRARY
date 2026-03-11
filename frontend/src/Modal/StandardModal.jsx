@@ -14,7 +14,7 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
 
     standardNumber: "",
     title: "",
-    author: "",
+    accnNumber: "",
     department: "Mechanical",
     category: "ISO",
     edition: "",
@@ -112,7 +112,7 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
             <div className="flex items-center gap-2 mb-4 text-amber-600 border-b pb-2">
               <ClipboardList size={18} />
               <h3 className="font-bold text-sm uppercase tracking-widest">
-                Procurement Information
+                Requisition Information
               </h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -141,6 +141,29 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
                 />
               </div>
               <div>
+                <label className={labelClass}>Department</label>
+                <input
+                  type="text"
+                  className={inputClass}
+                  value={formData.department || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, department: e.target.value })
+                  }
+                  placeholder="Enter Department"
+                />
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <div className="flex items-center gap-2 mb-4 text-amber-500 border-b pb-2">
+              <PlusCircle size={18} />
+              <h3 className="font-bold text-sm uppercase tracking-widest">
+                Procurement Information
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
                 <label className={labelClass}>PR Number</label>
                 <input
                   className={inputClass}
@@ -160,6 +183,7 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
                   }
                 />
               </div>
+
               <div>
                 <label className={labelClass}>Amount (₹)</label>
                 <input
@@ -172,7 +196,7 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
                 />
               </div>
               <div>
-                <label className={labelClass}>Date Received</label>
+                <label className={labelClass}>Date Sent To Department</label>
                 <input
                   type="date"
                   className={inputClass}
@@ -220,7 +244,7 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
                 </select>
               </div>
               <div className="md:col-span-2">
-                <label className={labelClass}>Title *</label>
+                <label className={labelClass}>Title</label>
                 <input
                   required
                   className={inputClass}
@@ -231,12 +255,12 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
                 />
               </div>
               <div>
-                <label className={labelClass}>Author(s)</label>
+                <label className={labelClass}>ACCN Number</label>
                 <input
                   className={inputClass}
-                  value={formData.author}
+                  value={formData.accnNumber}
                   onChange={(e) =>
-                    setFormData({ ...formData, author: e.target.value })
+                    setFormData({ ...formData, accnNumber: e.target.value })
                   }
                 />
               </div>
@@ -249,56 +273,6 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
                     setFormData({ ...formData, publisher: e.target.value })
                   }
                 />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className={labelClass}>Department</label>
-                  <input
-                    type="text"
-                    className={inputClass}
-                    value={formData.department || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, department: e.target.value })
-                    }
-                    placeholder="Enter Department"
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Category</label>
-                  <select
-                    className={inputClass}
-                    value={formData.category}
-                    onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
-                    }
-                  >
-                    {["ASTM", "BIS", "DIN", "ISO", "SAE"].map((c) => (
-                      <option key={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className={labelClass}>Edition</label>
-                  <input
-                    className={inputClass}
-                    value={formData.edition}
-                    onChange={(e) =>
-                      setFormData({ ...formData, edition: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Pages</label>
-                  <input
-                    className={inputClass}
-                    value={formData.pages}
-                    onChange={(e) =>
-                      setFormData({ ...formData, pages: e.target.value })
-                    }
-                  />
-                </div>
               </div>
             </div>
           </section>

@@ -7,9 +7,10 @@ exports.getAllKCMembers = async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 5;
     const skip = (page - 1) * limit;
 
-    const { search, membersType, status } = req.query;
-
+    const { search, membersType, membershipType, membershipStatus} = req.query;
     const query = {};
+
+ 
 
     // 🔎 Global search
     if (search && search.trim() !== "") {
@@ -22,7 +23,9 @@ exports.getAllKCMembers = async (req, res, next) => {
     }
 
     if (membersType) query.membershipType = membersType;
-    if (status) query.status = status;
+    if (membershipStatus) {query.membershipStatus = membershipStatus; }
+
+
 
     const totalRecords = await KCMember.countDocuments(query);
 
@@ -39,7 +42,6 @@ exports.getAllKCMembers = async (req, res, next) => {
       count: kcMembers.length,
       data: kcMembers,
     });
-
   } catch (error) {
     next(error);
   }
@@ -85,7 +87,7 @@ exports.createKCMember = async (req, res, next) => {
       membershipEndDate: req.body.membershipEndDate,
       subscriptionType: req.body.subscriptionType || "",
       fees: req.body.fees,
-      paymentFrequency: req.body.paymentFrequency,
+      membershipStatus: req.body.membershipStatus || "",
       paymentStatus: req.body.paymentStatus,
       lastPaymentDate: req.body.lastPaymentDate,
       transactionId: req.body.transactionId,
@@ -137,7 +139,7 @@ exports.updateKCMember = async (req, res, next) => {
       membershipEndDate: req.body.membershipEndDate,
       subscriptionType: req.body.subscriptionType || "",
       fees: req.body.fees,
-      paymentFrequency: req.body.paymentFrequency,
+      membershipStatus: req.body.membershipStatus || "",
       paymentStatus: req.body.paymentStatus,
       lastPaymentDate: req.body.lastPaymentDate,
       transactionId: req.body.transactionId,

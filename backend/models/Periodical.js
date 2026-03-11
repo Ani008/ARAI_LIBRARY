@@ -34,6 +34,11 @@ const periodicalSchema = new mongoose.Schema({
     trim: true,
     default: ''
   },
+  periodicalYear: {
+    type: Number,
+    trim: true,
+    default: null
+  },
   series: {
     type: String,
     trim: true,
@@ -51,7 +56,7 @@ const periodicalSchema = new mongoose.Schema({
   frequency: {
     type: String,
     required: [true, 'Frequency is required'],
-    enum: ['Daily', 'Monthly', 'Quarterly', 'Bi-Monthly', 'Annual']
+    enum: ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Bi-Monthly', 'Annual']
   },
   receiptDate: {
     type: Date,
@@ -129,7 +134,7 @@ const periodicalSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Active', 'Disposal', ''],
+    enum: ['Active', 'Disposal', 'Inactive'],
     default: 'Active'
   }
 }, {

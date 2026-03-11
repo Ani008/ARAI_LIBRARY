@@ -4,18 +4,25 @@ const { protect } = require('../middleware/auth');
 const {
   // Standards Reports
   standardsDepartmentWiseReport,
-  standardsCategoryWiseReport,
-  standardsAmendmentsReport,
+  standardsRequisitionWiseReport, 
+  standardsStatusWiseReport,
+  standardsNumberWiseReport,
+  standardsCompleteDirectoryReport,
   
   // Periodicals Reports
-  periodicalsYearWiseReport,
+  periodicalsSubscriptionDateReport,
   periodicalsFrequencyWiseReport,
+  periodicalsTitleWiseReport,
+  periodicalsStatusWiseReport,
+  periodicalsCompleteDirectoryReport,
   periodicalsMissingIssuesReport,
   
   // Abstracts Reports
-  abstractsDepartmentWiseReport,
-  abstractsYearWiseReport,
-  abstractsKeywordAnalysisReport,
+  abstractsSubjectWiseReport,
+  abstractsYearlyArchivesReport,
+  abstractsPublishedInAAReport,
+  abstractsStatusWiseReport,
+  abstractsCompleteDirectoryReport,
   
   // KC Members Reports
   kcMembersCompleteReport,
@@ -34,18 +41,25 @@ const {
 
 // ==================== STANDARDS REPORTS ====================
 router.get('/standards/department-wise', protect, standardsDepartmentWiseReport);
-router.get('/standards/category-wise', protect, standardsCategoryWiseReport);
-router.get('/standards/amendments', protect, standardsAmendmentsReport);
+router.get('/standards/requisition-wise', protect, standardsRequisitionWiseReport);
+router.get('/standards/status-wise', protect, standardsStatusWiseReport);
+router.get('/standards/number-wise', protect, standardsNumberWiseReport);
+router.get('/standards/complete-directory', protect, standardsCompleteDirectoryReport);
 
 // ==================== PERIODICALS REPORTS ====================
-router.get('/periodicals/year-wise', protect, periodicalsYearWiseReport);
+router.get('/periodicals/subscription-date', protect, periodicalsSubscriptionDateReport);
 router.get('/periodicals/frequency-wise', protect, periodicalsFrequencyWiseReport);
 router.get('/periodicals/missing-issues', protect, periodicalsMissingIssuesReport);
+router.get('/periodicals/title-wise', protect, periodicalsTitleWiseReport);
+router.get('/periodicals/status-wise', protect, periodicalsStatusWiseReport);
+router.get('/periodicals/complete-directory', protect, periodicalsCompleteDirectoryReport);
 
 // ==================== ABSTRACTS REPORTS ====================
-router.get('/abstracts/department-wise', protect, abstractsDepartmentWiseReport);
-router.get('/abstracts/year-wise', protect, abstractsYearWiseReport);
-router.get('/abstracts/keyword-analysis', protect, abstractsKeywordAnalysisReport);
+router.get('/abstracts/subject-wise', protect, abstractsSubjectWiseReport);
+router.get('/abstracts/year-wise', protect, abstractsYearlyArchivesReport);
+router.get('/abstracts/published-in-aa', protect, abstractsPublishedInAAReport);
+router.get('/abstracts/status-wise', protect, abstractsStatusWiseReport);
+router.get('/abstracts/complete-directory', protect, abstractsCompleteDirectoryReport);
 
 // ==================== KC MEMBERS REPORTS ====================
 router.get('/kcmembers/complete', protect, kcMembersCompleteReport);

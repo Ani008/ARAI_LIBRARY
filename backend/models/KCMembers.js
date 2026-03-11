@@ -69,9 +69,9 @@ const kcMemberSchema = new mongoose.Schema({
     type: Number,
     default: null
   },
-  paymentFrequency: {
+  membershipStatus: {
     type: String,
-    enum: ['Daily', 'Weekly', 'Monthly', 'Yearly', ''],
+    enum: ['Active', 'Inactive',''],
     default: ''
   },
   paymentStatus: {

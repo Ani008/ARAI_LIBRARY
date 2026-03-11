@@ -92,29 +92,51 @@ const Reports = () => {
                 downloadReport(
                   "/api/reports/standards/department-wise",
                   "Standards_Dept",
-                  "xlsx"
+                  "xlsx",
                 )
               }
             />
             <ReportAction
               icon={Tag}
-              label="Category-wise"
+              label="Requisition-wise"
               onClick={() =>
                 downloadReport(
-                  "/api/reports/standards/category-wise",
-                  "Standards_Category",
-                  "xlsx"
+                  "/api/reports/standards/requisition-wise",
+                  "Standards_Requisition",
+                  "xlsx",
                 )
               }
             />
             <ReportAction
               icon={History}
-              label="Amendments History"
+              label="Status-wise"
               onClick={() =>
                 downloadReport(
-                  "/api/reports/standards/amendments",
-                  "Standards_Amendments",
-                  "xlsx"
+                  "/api/reports/standards/status-wise",
+                  "Standards_Status",
+                  "xlsx",
+                )
+              }
+            />
+            <ReportAction
+              icon={Tag}
+              label="Number-wise"
+              onClick={() =>
+                downloadReport(
+                  "/api/reports/standards/number-wise",
+                  "Standards_Number",
+                  "xlsx",
+                )
+              }
+            />
+            <ReportAction
+              icon={FileText}
+              label="Complete Directory"
+              onClick={() =>
+                downloadReport(
+                  "/api/reports/standards/complete-directory",
+                  "Standards_Complete",
+                  "xlsx",
                 )
               }
             />
@@ -129,12 +151,12 @@ const Reports = () => {
           >
             <ReportAction
               icon={Calendar}
-              label="Year-wise Analysis"
+              label="Subscription Date Wise"
               onClick={() =>
                 downloadReport(
-                  "/api/reports/periodicals/year-wise",
-                  "Periodicals_Year",
-                  "xlsx"
+                  "/api/reports/periodicals/subscription-date",
+                  "Periodicals_Subscription_Date",
+                  "xlsx",
                 )
               }
             />
@@ -145,7 +167,7 @@ const Reports = () => {
                 downloadReport(
                   "/api/reports/periodicals/frequency-wise",
                   "Periodicals_Freq",
-                  "xlsx"
+                  "xlsx",
                 )
               }
             />
@@ -156,7 +178,40 @@ const Reports = () => {
                 downloadReport(
                   "/api/reports/periodicals/missing-issues",
                   "Missing_Issues",
-                  "xlsx"
+                  "xlsx",
+                )
+              }
+            />
+            <ReportAction
+              icon={AlertCircle}
+              label="Title Wise"
+              onClick={() =>
+                downloadReport(
+                  "/api/reports/periodicals/title-wise",
+                  "Title_Wise",
+                  "xlsx",
+                )
+              }
+            />
+            <ReportAction
+              icon={AlertCircle}
+              label="Status Wise"
+              onClick={() =>
+                downloadReport(
+                  "/api/reports/periodicals/status-wise",
+                  "Status_Wise",
+                  "xlsx",
+                )
+              }
+            />
+            <ReportAction
+              icon={AlertCircle}
+              label="Complete Directory"
+              onClick={() =>
+                downloadReport(
+                  "/api/reports/periodicals/complete-directory",
+                  "Periodicals_Complete",
+                  "xlsx",
                 )
               }
             />
@@ -171,34 +226,56 @@ const Reports = () => {
           >
             <ReportAction
               icon={Layers}
-              label="Department Summary"
+              label="Subject Wise"
               onClick={() =>
                 downloadReport(
-                  "/api/reports/abstracts/department-wise",
-                  "Abstracts_Dept",
-                  "xlsx"
+                  "/api/reports/abstracts/subject-wise",
+                  "Abstracts_Subject",
+                  "xlsx",
                 )
               }
             />
             <ReportAction
               icon={Calendar}
-              label="Yearly Archives"
+              label="Yearly Wise"
               onClick={() =>
                 downloadReport(
                   "/api/reports/abstracts/year-wise",
                   "Abstracts_Year",
-                  "xlsx"
+                  "xlsx",
                 )
               }
             />
             <ReportAction
               icon={Tag}
-              label="Keyword Analysis"
+              label="Published In AA"
               onClick={() =>
                 downloadReport(
-                  "/api/reports/abstracts/keyword-analysis",
-                  "Keyword_Analysis",
-                  "xlsx"
+                  "/api/reports/abstracts/published-in-aa",
+                  "Abstract_Published_In_AA",
+                  "xlsx",
+                )
+              }
+            />
+            <ReportAction
+              icon={Tag}
+              label="Status Wise"
+              onClick={() =>
+                downloadReport(
+                  "/api/reports/abstracts/status-wise",
+                  "Status_Wise",
+                  "xlsx",
+                )
+              }
+            />
+            <ReportAction
+              icon={Tag}
+              label="Complete Directory"
+              onClick={() =>
+                downloadReport(
+                  "/api/reports/abstracts/complete-directory",
+                  "Abstract_Complete_Directory",
+                  "xlsx",
                 )
               }
             />
@@ -218,7 +295,7 @@ const Reports = () => {
                 downloadReport(
                   "/api/reports/kcmembers/complete",
                   "Member_Directory",
-                  "xlsx"
+                  "xlsx",
                 )
               }
             />
@@ -229,7 +306,7 @@ const Reports = () => {
                 downloadReport(
                   "/api/reports/kcmembers/overdue",
                   "Overdue_Report",
-                  "xlsx"
+                  "xlsx",
                 )
               }
             />
@@ -240,7 +317,7 @@ const Reports = () => {
                 downloadReport(
                   "/api/reports/kcmembers/upcoming-renewals",
                   "Renewals",
-                  "xlsx"
+                  "xlsx",
                 )
               }
             />
@@ -251,7 +328,7 @@ const Reports = () => {
                 downloadReport(
                   "/api/reports/kcmembers/address-labels",
                   "Address_Labels",
-                  "xlsx"
+                  "xlsx",
                 )
               }
             />
@@ -308,7 +385,7 @@ const Reports = () => {
                       downloadReport(
                         `/api/reports/arrivals-news/category-wise?category=${encodeURIComponent(cat)}`,
                         `Arrivals_Category_${cat}`,
-                        "pdf"
+                        "pdf",
                       )
                     }
                   />
@@ -334,7 +411,7 @@ const Reports = () => {
                       downloadReport(
                         `/api/reports/arrivals-news/type-wise?type=${encodeURIComponent(type)}`,
                         `Arrivals_Type_${type}`,
-                        "pdf"
+                        "pdf",
                       )
                     }
                   />

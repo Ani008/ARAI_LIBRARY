@@ -25,7 +25,7 @@ const standardSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
-    author: { type: String, trim: true, default: "" },
+    accnNumber: { type: String, trim: true, default: "" },
     department: {
       type: String,
       required: true,

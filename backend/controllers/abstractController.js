@@ -7,14 +7,24 @@ exports.getAllAbstracts = async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 5;
     const skip = (page - 1) * limit;
 
-    const { search, subject, status } = req.query;
+    // Destructure onlyPublished from query
+    const { search, subject, onlyPublished, status } = req.query;
 
     const query = {};
 
-    // 🔎 Global Search
+    // 1. Published In AA Filter
+    // If onlyPublished is true, we filter for records where the field has actual text content
+    // Check for the string "true" from the query params
+    if (req.query.onlyPublished === "true") {
+      query.publishedInAA = { $exists: true, $ne: "" };
+    }
+    if (status && status !== "") {
+      query.status = status;
+    }
+
+    // 2. Global Search
     if (search && search.trim() !== "") {
       const searchValue = search.trim();
-
       query.$or = [
         { title: { $regex: searchValue, $options: "i" } },
         { authors: { $regex: searchValue, $options: "i" } },
@@ -22,13 +32,13 @@ exports.getAllAbstracts = async (req, res, next) => {
       ];
     }
 
+    // 3. Subject Filter
     if (subject) query.subject = subject;
-    if (status) query.status = status;
 
     const totalRecords = await Abstract.countDocuments(query);
 
     const abstracts = await Abstract.find(query)
-      .sort({ createdAt: -1 }) // safer sort
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
@@ -40,12 +50,10 @@ exports.getAllAbstracts = async (req, res, next) => {
       count: abstracts.length,
       data: abstracts,
     });
-
   } catch (error) {
     next(error);
   }
 };
-
 
 // Get single abstract
 exports.getAbstractById = async (req, res, next) => {
