@@ -31,35 +31,20 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
     hardcopyDate: "",
     status: "Draft",
     remarks: "",
+    plagiarismPercentage: ""
   });
 
-  const [authors, setAuthors] = useState([
-    {
-      authorName: "",
-      authorEmail: "",
-      authorAddress: "",
-      authorCity: "",
-      authorInstitution: "",
-      authorPhone: "",
-    },
-  ]);
-
+  const [authors, setAuthors] = useState([{authorName: "",authorEmail: "",authorAddress: "",authorCity: "",authorInstitution: "",authorPhone: "",},]);
   const [reviewers, setReviewers] = useState([]);
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfFileName, setPdfFileName] = useState("");
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [activeTab, setActiveTab] = useState("basic");
   const [fieldErrors, setFieldErrors] = useState({});
-
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [selectedReviewer, setSelectedReviewer] = useState(null);
-
-  const [reviewModalOpen, setReviewModalOpen] = useState(false);
-  const [reviewingReviewer, setReviewingReviewer] = useState(null);
-
   const [originalData, setOriginalData] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -84,6 +69,7 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
         hardcopyDate: formatDate(paper.hardcopyDate),
         status: paper.status || "Draft",
         remarks: paper.remarks || "",
+        plagiarismPercentage: paper.plagiarismPercentage || "",
       };
 
       setFormData(formValues);
@@ -170,7 +156,7 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value })); 
     if (fieldErrors[name]) setFieldErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
@@ -215,7 +201,6 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
           reviewerName: "",
           reviewerEmail: "",
           emailSent: false,
-          reviews: [],
         },
       ]);
     }
@@ -405,35 +390,6 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
       setReviewers(newReviewers);
     }
   };
-
-  const openReviewModal = (reviewer) => {
-    setReviewingReviewer(reviewer);
-    setReviewModalOpen(true);
-  };
-
-  const handleReviewAdded = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/${paper._id}`);
-      const data = await response.json();
-      if (data.success) setReviewers(data.data.reviewers || []);
-    } catch (err) {
-      console.error("Error refreshing paper:", err);
-    }
-  };
-
-  const calculateTotalPlagiarism = () => {
-    let total = 0;
-    reviewers.forEach((reviewer) => {
-      if (reviewer.reviews && reviewer.reviews.length > 0) {
-        reviewer.reviews.forEach((review) => {
-          if (review.plagiarismPercentage) total += review.plagiarismPercentage;
-        });
-      }
-    });
-    return total.toFixed(2);
-  };
-
-  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
@@ -703,6 +659,20 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Plagiarism Percentage (%)
+                  </label>
+                  <input
+                    type="number"
+                    name="plagiarismPercentage"
+                    value={formData.plagiarismPercentage}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                    placeholder="Enter percentage (e.g. 15)"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Status
                   </label>
                   <select
@@ -918,27 +888,9 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
                   )}
                 </div>
 
-                {/* Total Plagiarism Display */}
-                {reviewers.some((r) => r.reviews && r.reviews.length > 0) && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-blue-800">
-                        Total Plagiarism Score:
-                      </span>
-                      <span className="text-2xl font-bold text-blue-900">
-                        {calculateTotalPlagiarism()}%
-                      </span>
-                    </div>
-                    <p className="text-xs text-blue-600 mt-1">
-                      Sum of all reviewers' plagiarism percentages
-                    </p>
-                  </div>
-                )}
-
                 {!isEditMode && (
                   <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg text-sm">
                     💡 Save the paper first before sending emails to reviewers
-                    or adding reviews
                   </div>
                 )}
 
@@ -1013,43 +965,6 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
                         </div>
                       </div>
 
-                      {/* Review Summary */}
-                      {reviewer.reviews && reviewer.reviews.length > 0 && (
-                        <div className="bg-white border border-gray-200 rounded p-3 mb-3">
-                          <h4 className="text-xs font-semibold text-gray-700 uppercase mb-2">
-                            Review Details
-                          </h4>
-                          {reviewer.reviews.map((review, revIndex) => (
-                            <div key={revIndex} className="text-sm">
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="text-gray-600">
-                                  Plagiarism:
-                                </span>
-                                <span className="font-semibold text-gray-900">
-                                  {review.plagiarismPercentage}%
-                                </span>
-                              </div>
-                              {review.sentDate && (
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="text-gray-600">Date:</span>
-                                  <span className="font-medium text-gray-900">
-                                    {new Date(
-                                      review.sentDate,
-                                    ).toLocaleDateString()}
-                                  </span>
-                                </div>
-                              )}
-                              {review.remarks && (
-                                <div className="mt-2 text-xs text-gray-600">
-                                  <span className="font-medium">Remarks:</span>{" "}
-                                  {review.remarks}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
                       {/* Action Buttons */}
                       {isEditMode && paper && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -1071,29 +986,6 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
                               <>
                                 <Eye className="mr-2" size={16} />
                                 Preview & Send Email
-                              </>
-                            )}
-                          </button>
-
-                          {/* Add Review Button */}
-                          <button
-                            type="button"
-                            onClick={() => openReviewModal(reviewer)}
-                            disabled={
-                              !reviewer._id ||
-                              (reviewer.reviews && reviewer.reviews.length > 0)
-                            }
-                            className="flex items-center justify-center py-2 px-4 rounded font-medium text-sm transition bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {reviewer.reviews && reviewer.reviews.length > 0 ? (
-                              <>
-                                <Check className="mr-2" size={16} />
-                                Review Submitted
-                              </>
-                            ) : (
-                              <>
-                                <Plus className="mr-2" size={16} />
-                                Add Review
                               </>
                             )}
                           </button>
@@ -1170,20 +1062,6 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
             .filter(Boolean)
             .join(", ")}
           onEmailSent={handleEmailSent}
-        />
-      )}
-
-      {/* Review Modal */}
-      {reviewingReviewer && (
-        <ReviewModal
-          isOpen={reviewModalOpen}
-          onClose={() => {
-            setReviewModalOpen(false);
-            setReviewingReviewer(null);
-          }}
-          reviewer={reviewingReviewer}
-          paperId={paper?._id}
-          onReviewAdded={handleReviewAdded}
         />
       )}
     </div>

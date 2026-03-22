@@ -17,7 +17,6 @@ const periodicalSchema = new mongoose.Schema({
   }],
   publisher: {
     type: String,
-    required: [true, 'Publisher is required'],
     trim: true
   },
   issn: {
@@ -26,7 +25,8 @@ const periodicalSchema = new mongoose.Schema({
     default: ''
   },
   volume: {
-    type: Number,
+    type: String,
+    trim: true,
     default: null
   },
   issue: {
@@ -34,8 +34,13 @@ const periodicalSchema = new mongoose.Schema({
     trim: true,
     default: ''
   },
+  periodicalMonth: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   periodicalYear: {
-    type: Number,
+    type: String,
     trim: true,
     default: null
   },
@@ -55,7 +60,6 @@ const periodicalSchema = new mongoose.Schema({
   },
   frequency: {
     type: String,
-    required: [true, 'Frequency is required'],
     enum: ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Bi-Monthly', 'Annual']
   },
   receiptDate: {

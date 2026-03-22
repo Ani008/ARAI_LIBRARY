@@ -1,4 +1,72 @@
 const KCMember = require("../models/KCMembers");
+const Counter = require("../models/Counter");
+
+exports.getMembershipIdPreview = async (req, res, next) => {
+  try {
+    const { membershipType, subscriptionType } = req.query;
+
+    if (!membershipType || !subscriptionType) {
+      return res.status(400).json({ message: "Missing types" });
+    }
+
+    const typeKey = `${membershipType}_${subscriptionType}`;
+
+    // ✅ ONLY READ (NO increment)
+    const counter = await Counter.findById(typeKey);
+
+    const nextSeq = (counter ? counter.sequence_value : 0) + 1;
+
+    let prefix = "";
+    let startValue = 0;
+    let padding = 0;
+
+    switch (typeKey) {
+      case "Automotive Abstract_Subscribers":
+        prefix = "SUB";
+        break;
+      case "Automotive Abstract_Exchange":
+        prefix = "EXC";
+        break;
+      case "Automotive Abstract_GOI":
+        prefix = "GOI";
+        break;
+      case "KC Membership Option 1_Individual":
+        startValue = 10000;
+        break;
+      case "KC Membership Option 1_Educational":
+        startValue = 12000;
+        break;
+      case "KC Membership Option 1_Company":
+        startValue = 11000;
+        break;
+      case "KC Membership Option 2_Educational":
+        prefix = "ERB";
+        padding = 5;
+        break;
+      case "KC Membership Option 2_ARAI Member Company":
+        prefix = "MCB";
+        padding = 5;
+        break;
+      case "KC Membership Option 2_Other Company":
+        prefix = "OCB";
+        padding = 4;
+        break;
+      default:
+        prefix = "MEM";
+    }
+
+    const finalNum = nextSeq + startValue;
+
+    const previewId =
+      padding > 0
+        ? prefix + finalNum.toString().padStart(padding, "0")
+        : prefix + finalNum;
+
+    res.json({ success: true, previewId });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // Get all KC members
 exports.getAllKCMembers = async (req, res, next) => {
@@ -7,26 +75,40 @@ exports.getAllKCMembers = async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 5;
     const skip = (page - 1) * limit;
 
-    const { search, membersType, membershipType, membershipStatus} = req.query;
+    // 1. Extract parameters from req.query
+    const {
+      search,
+      membershipType, // Changed from membersType to match frontend
+      membershipStatus,
+      subscriptionType,
+    } = req.query;
+
     const query = {};
 
- 
-
-    // 🔎 Global search
+    // 2. Global search (Institution Name or Membership ID)
     if (search && search.trim() !== "") {
       const searchValue = search.trim();
-
       query.$or = [
         { institutionName: { $regex: searchValue, $options: "i" } },
         { membershipId: { $regex: searchValue, $options: "i" } },
       ];
     }
 
-    if (membersType) query.membershipType = membersType;
-    if (membershipStatus) {query.membershipStatus = membershipStatus; }
+    // 3. Exact Match Filters
+    // These only get added to the 'query' object if they exist in req.query
+    if (membershipType) {
+      query.membershipType = membershipType;
+    }
 
+    if (subscriptionType) {
+      query.subscriptionType = subscriptionType;
+    }
 
+    if (membershipStatus) {
+      query.membershipStatus = membershipStatus;
+    }
 
+    // 4. Database Operations
     const totalRecords = await KCMember.countDocuments(query);
 
     const kcMembers = await KCMember.find(query)
@@ -34,6 +116,7 @@ exports.getAllKCMembers = async (req, res, next) => {
       .skip(skip)
       .limit(limit);
 
+    // 5. Response
     res.json({
       success: true,
       currentPage: page,
@@ -73,7 +156,6 @@ exports.createKCMember = async (req, res, next) => {
   try {
     // 1. Prepare Data
     const kcMemberData = {
-      membershipId: req.body.membershipId,
       institutionName: req.body.institutionName,
       contactPerson: req.body.contactPerson,
       designation: req.body.designation,
@@ -96,7 +178,10 @@ exports.createKCMember = async (req, res, next) => {
     };
 
     // 2. Save to Database
-    const kcMember = await KCMember.create(kcMemberData);
+    const kcMember = await KCMember.create({
+      ...kcMemberData,
+      membershipId: req.body.membershipId, // 🔥 IMPORTANT
+    });
 
     // 3. LOG THE ACTIVITY (Crucial change: use kcMember variable)
     try {
@@ -125,7 +210,6 @@ exports.createKCMember = async (req, res, next) => {
 exports.updateKCMember = async (req, res, next) => {
   try {
     const updateData = {
-      membershipId: req.body.membershipId,
       institutionName: req.body.institutionName,
       contactPerson: req.body.contactPerson,
       designation: req.body.designation,

@@ -1,4 +1,5 @@
 const Standard = require("../models/Standard");
+const Counter = require("../models/Counter");
 const { logStandardDelete } = require("../controllers/activityLogController");
 const { logStandardCreate } = require("../controllers/activityLogController");
 const { logStandardUpdate } = require("../controllers/activityLogController");
@@ -13,7 +14,7 @@ exports.getAllStandards = async (req, res, next) => {
     const skip = (page - 1) * limit;
 
     // 2️⃣ Extract filters
-    const { search, department, category, status } = req.query;
+    const { search, department, publisher, status } = req.query;
 
     // 3️⃣ Build dynamic query object
     const query = {};
@@ -25,6 +26,7 @@ exports.getAllStandards = async (req, res, next) => {
       query.$or = [
         { title: { $regex: searchValue, $options: "i" } },
         { standardNumber: { $regex: searchValue, $options: "i" } },
+        { requisition_no: { $regex: searchValue, $options: "i" } }, // ✅ NEW
       ];
 
       // If search is a number, also match icnNumber exactly
@@ -34,7 +36,7 @@ exports.getAllStandards = async (req, res, next) => {
     }
 
     if (department) query.department = department;
-    if (category) query.category = category;
+    if (publisher) query.publisher = publisher;
     if (status) query.status = status;
 
     // 4️⃣ Get total filtered count
@@ -161,6 +163,44 @@ exports.deleteStandard = async (req, res, next) => {
     res.json({
       success: true,
       message: "Standard deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /api/standards/next-icn
+exports.getNextIcn = async (req, res, next) => {
+  try {
+    const counter = await Counter.findOne({ _id: "icnNumber" });
+    // If no counter exists yet, start at 1, otherwise next is current + 1
+    const nextIcn = counter ? counter.sequence_value + 1 : 1;
+    
+    res.status(200).json({
+      success: true,
+      nextIcn: nextIcn
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /api/standards/unique-values/:field
+exports.getUniqueFieldValues = async (req, res, next) => {
+  try {
+    const { field } = req.params;
+    
+    // Safety check: only allow certain fields to be queried
+    const allowedFields = ["department", "publisher",];
+    if (!allowedFields.includes(field)) {
+      return res.status(400).json({ success: false, message: "Invalid field" });
+    }
+
+    const values = await Standard.distinct(field);
+    
+    res.json({
+      success: true,
+      data: values.filter(Boolean).sort() // Removes empty values and sorts A-Z
     });
   } catch (error) {
     next(error);

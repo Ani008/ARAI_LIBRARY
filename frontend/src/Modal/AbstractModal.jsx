@@ -314,7 +314,7 @@ const AbstractModal = ({ onClose, editingId, refreshData }) => {
               <div>
                 <label className={labelClass}>Volume</label>
                 <input
-                  type="number"
+                  type="text"
                   className={inputClass}
                   value={formData.volume}
                   onChange={(e) =>

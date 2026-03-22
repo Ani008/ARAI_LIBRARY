@@ -15,13 +15,24 @@ import {
 
 const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api/kcmembers`;
 
+const SUBSCRIPTION_MAP = {
+  "Automotive Abstract": ["Subscribers", "Exchange", "GOI"],
+  "KC Membership Option 1": ["Individual", "Educational", "Company"],
+  "KC Membership Option 2": [
+    "Educational",
+    "ARAI Member Company",
+    "Other Company",
+  ],
+  "ARAI Journal": ["Standard"],
+};
+
 const KCModal = ({ onClose, editingId, refreshData }) => {
   const [formData, setFormData] = useState({
     membershipId: "",
     institutionName: "",
     contactPerson: "",
     designation: "",
-    membershipType: "Corporate", // Matches Enum
+    membershipType: "Automotive Abstract", // Matches Enum
     completeAddress: "",
     email: "",
     phone: "",
@@ -30,7 +41,7 @@ const KCModal = ({ onClose, editingId, refreshData }) => {
     membershipStartDate: "",
     membershipStatus: "",
     membershipEndDate: "",
-    subscriptionTypes: "",
+    subscriptionType: "",
     fees: "",
     paymentStatus: "",
     lastPaymentDate: "",
@@ -63,9 +74,65 @@ const KCModal = ({ onClose, editingId, refreshData }) => {
     }
   }, [editingId]);
 
+  const fetchIdPreview = async (mType, sType) => {
+    if (!mType || !sType) return;
+    try {
+      const res = await axios.get(`${API_BASE_URL}/preview-id`, {
+        params: { membershipType: mType, subscriptionType: sType },
+      });
+      setFormData((prev) => ({ ...prev, membershipId: res.data.previewId }));
+    } catch (err) {
+      console.error("Preview failed", err);
+      setFormData((prev) => ({ ...prev, membershipId: "Error generating ID" }));
+    }
+  };
+
+  const handleMembershipTypeChange = (e) => {
+    const selectedType = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      membershipType: selectedType,
+      subscriptionType: "", // Reset second dropdown
+      membershipId: "", // Clear ID while user is choosing
+    }));
+  };
+
+  const handleSubscriptionChange = async (e) => {
+    const selectedSub = e.target.value;
+
+    // Update local state first
+    setFormData((prev) => ({ ...prev, subscriptionType: selectedSub }));
+
+    // Immediately fetch the ID using the NEW value (selectedSub)
+    // instead of waiting for formData state to update
+    if (!editingId && selectedSub && formData.membershipType) {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/preview-id`, {
+          params: {
+            membershipType: formData.membershipType,
+            subscriptionType: selectedSub,
+          },
+        });
+
+        // Update the visual ID immediately
+        setFormData((prev) => ({ ...prev, membershipId: res.data.previewId }));
+      } catch (err) {
+        console.error("Preview failed", err);
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Create a copy to send to the server
+      const dataToSubmit = { ...formData };
+
+      // If creating new, let backend handle the ID entirely
+      if (!editingId) {
+        delete dataToSubmit.membershipId;
+      }
+
       if (editingId) {
         await axios.put(`${API_BASE_URL}/${editingId}`, formData);
       } else {
@@ -117,39 +184,62 @@ const KCModal = ({ onClose, editingId, refreshData }) => {
               color="text-green-600"
             />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <div className="md:col-span-1">
-                <label className={labelClass}>Membership Type</label>
+              {/* ROW 1: MEMBERSHIP IDENTITY */}
+              <div>
+                <label className={labelClass}>Subscription Type</label>
                 <select
                   className={inputClass}
                   value={formData.membershipType}
-                  onChange={(e) =>
-                    setFormData({ ...formData, membershipType: e.target.value })
-                  }
+                  onChange={handleMembershipTypeChange}
                 >
-                  <option value="Corporate">Corporate</option>
-                  <option value="Educational Institution">
-                    Educational Institution
-                  </option>
-                  <option value="Individual">Individual</option>
-                  <option value="Staff">Staff</option>
-                  <option value="Temp Membership">Temp Membership</option>
-                  <option value="Student">Student</option>
+                  {Object.keys(SUBSCRIPTION_MAP).map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
                 </select>
               </div>
 
-              <div className="md:col-span-2">
-                <label className={labelClass}>Membership ID</label>
-                <input
+              <div>
+                <label className={labelClass}>Membership Type</label>
+                <select
                   required
                   className={inputClass}
-                  value={formData.membershipId}
-                  onChange={(e) =>
-                    setFormData({ ...formData, membershipId: e.target.value })
-                  }
-                />
+                  value={formData.subscriptionType}
+                  onChange={handleSubscriptionChange}
+                >
+                  <option value="">Select Membership</option>
+                  {SUBSCRIPTION_MAP[formData.membershipType]?.map((sub) => (
+                    <option key={sub} value={sub}>
+                      {sub}
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              <div className="md:col-span-1">
+              <div>
+                <label className={labelClass}>
+                  Membership ID (Auto-Generated)
+                </label>
+                <div className="relative">
+                  <input
+                    readOnly
+                    className={`${inputClass} font-mono font-bold text-emerald-700 bg-emerald-50 border-emerald-200`}
+                    value={formData.membershipId}
+                    placeholder="ID will appear here..."
+                  />
+                  {!editingId &&
+                    formData.membershipId &&
+                    formData.membershipId !== "Select Subscription..." && (
+                      <span className="absolute right-3 top-2 text-[10px] bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded-full uppercase">
+                        Next
+                      </span>
+                    )}
+                </div>
+              </div>
+
+              {/* ROW 2: INSTITUTION INFO */}
+              <div className="md:col-span-2">
                 <label className={labelClass}>Name of Institution</label>
                 <input
                   required
@@ -161,20 +251,7 @@ const KCModal = ({ onClose, editingId, refreshData }) => {
                       institutionName: e.target.value,
                     })
                   }
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className={labelClass}>Complete Address</label>
-                <input
-                  className={inputClass}
-                  value={formData.completeAddress}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      completeAddress: e.target.value,
-                    })
-                  }
+                  placeholder="Enter institution name"
                 />
               </div>
 
@@ -190,10 +267,26 @@ const KCModal = ({ onClose, editingId, refreshData }) => {
                     })
                   }
                 >
-                  <option value="">Membership Status</option>
+                  <option value="">Select Status</option>
                   <option>Active</option>
                   <option>Inactive</option>
                 </select>
+              </div>
+
+              {/* ROW 3: FULL WIDTH ADDRESS */}
+              <div className="md:col-span-3">
+                <label className={labelClass}>Complete Address</label>
+                <input
+                  className={inputClass}
+                  value={formData.completeAddress}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      completeAddress: e.target.value,
+                    })
+                  }
+                  placeholder="Enter full physical address"
+                />
               </div>
             </div>
           </section>
@@ -309,29 +402,6 @@ const KCModal = ({ onClose, editingId, refreshData }) => {
                   />
                 </div>
               </div>
-            </div>
-            <div>
-              <HeaderSection
-                icon={<BookOpen size={18} />}
-                title="Subscription Types"
-                color="text-orange-600"
-              />
-              <select
-                className={inputClass}
-                value={formData.subscriptionType || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    subscriptionType: e.target.value,
-                  })
-                }
-              >
-                <option value="">Select Subscription</option>
-                <option>Automotive Abstracts</option>
-                <option>ARAI Journal</option>
-                <option>KC Membership Option 1</option>
-                <option>KC Membership Option 2</option>
-              </select>
             </div>
           </section>
 

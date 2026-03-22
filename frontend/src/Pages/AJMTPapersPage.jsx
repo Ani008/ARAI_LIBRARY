@@ -28,7 +28,7 @@ const AJMTPapersPage = () => {
     status: "",
     paperType: "",
     page: 1,
-    limit: 20,
+    limit: 25,
   });
 
   // Pagination
@@ -39,7 +39,6 @@ const AJMTPapersPage = () => {
   });
 
   const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api/ajmtpapers`;
-
 
   // Fetch papers
   const fetchPapers = async () => {
@@ -76,7 +75,7 @@ const AJMTPapersPage = () => {
 
   useEffect(() => {
     fetchPapers();
-  }, [filters.status, filters.paperType, filters.page]);
+  }, [filters.status, filters.paperType, filters.page, filters.limit]);
 
   // Filter papers by search
   const filteredPapers = papers.filter((paper) => {
@@ -163,6 +162,20 @@ const AJMTPapersPage = () => {
       Published: "bg-purple-100 text-purple-800 border-purple-300",
     };
     return colors[status] || "bg-gray-100 text-gray-800 border-gray-300";
+  };
+
+  const getVisiblePages = () => {
+    const { totalPages, currentPage } = pagination;
+    const pages = [];
+    const range = 2;
+    const start = Math.max(1, currentPage - range);
+    const end = Math.min(totalPages, start + range * 2);
+    const finalStart = Math.max(1, Math.min(start, totalPages - range * 2));
+
+    for (let i = finalStart; i <= end; i++) {
+      if (i > 0) pages.push(i);
+    }
+    return pages;
   };
 
   return (
@@ -301,7 +314,6 @@ const AJMTPapersPage = () => {
 
                   {/* Date */}
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 align-middle">
-                      
                     {formatDate(paper.date)}
                   </td>
 
@@ -312,7 +324,7 @@ const AJMTPapersPage = () => {
 
                   {/* Score */}
                   <td className="px-6 py-4 text-sm font-semibold text-slate-800">
-                    {paper.totalScore}%
+                    {paper.plagiarismPercentage}%
                   </td>
 
                   {/* Actions */}
@@ -336,11 +348,78 @@ const AJMTPapersPage = () => {
               ))}
             </tbody>
           </table>
+          {/* If there are no papers, show a message */}
+          {filteredPapers.length === 0 && !loading && (
+            <div className="p-12 text-center text-slate-500">
+              No research papers found matching your criteria.
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Pagination stays same */}
-      {/* Modal stays same */}
+      <div className="max-w-7xl mx-auto px-6 pb-12">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 py-4 px-6 bg-white rounded-xl shadow-sm border border-gray-100">
+          {/* Left Side: Records per page */}
+          <div className="flex items-center gap-2 text-sm text-slate-600">
+            <span>Show</span>
+            <select
+              value={filters.limit}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  limit: Number(e.target.value),
+                  page: 1,
+                }))
+              }
+              className="border border-gray-200 px-2 py-1.5 rounded-lg bg-slate-50 outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+            >
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+            <span>records</span>
+          </div>
+
+          {/* Right Side: Navigation Buttons */}
+          <div className="flex items-center gap-2">
+            <button
+              disabled={pagination.currentPage === 1}
+              onClick={() =>
+                setFilters((prev) => ({ ...prev, page: prev.page - 1 }))
+              }
+              className="px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm font-medium disabled:opacity-40 hover:bg-gray-50 transition shadow-sm"
+            >
+              Prev
+            </button>
+
+            <div className="flex items-center gap-1.5">
+              {getVisiblePages().map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setFilters((prev) => ({ ...prev, page }))}
+                  className={`min-w-[40px] h-10 flex items-center justify-center border rounded-lg text-sm font-semibold transition-all ${
+                    pagination.currentPage === page
+                      ? "bg-emerald-600 text-white border-emerald-600 shadow-md scale-105"
+                      : "bg-white text-slate-600 border-gray-200 hover:border-emerald-500 hover:text-emerald-600"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+
+            <button
+              disabled={pagination.currentPage === pagination.totalPages}
+              onClick={() =>
+                setFilters((prev) => ({ ...prev, page: prev.page + 1 }))
+              }
+              className="px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm font-medium disabled:opacity-40 hover:bg-gray-50 transition shadow-sm"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
 
       {isModalOpen && (
         <AJMTPaperModal

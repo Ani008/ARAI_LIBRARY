@@ -5,13 +5,15 @@ import {
   Plus,
   Edit3,
   Trash2,
-  Eye,
-  BookCopy,
   Globe,
   Download,
   FileText,
   Upload,
+  BookCopy,
+  CheckSquare,
+  Square,
 } from "lucide-react";
+import * as XLSX from "xlsx";
 import AbstractModal from "../Modal/AbstractModal"; // Pointing to your new modal
 import { useNavigate } from "react-router-dom";
 
@@ -28,6 +30,7 @@ const Abstracts = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [publishedOnly, setPublishedOnly] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
 
   const navigate = useNavigate();
 
@@ -63,6 +66,83 @@ const Abstracts = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [search, statusFilter, publishedOnly]);
+
+  const handleSelectOne = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
+  const handleSelectAllOnPage = () => {
+    const currentPageIds = abstracts.map((item) => item._id);
+    const allSelectedOnPage = currentPageIds.every((id) =>
+      selectedIds.includes(id),
+    );
+
+    if (allSelectedOnPage) {
+      // Remove only current page IDs from selection
+      setSelectedIds((prev) =>
+        prev.filter((id) => !currentPageIds.includes(id)),
+      );
+    } else {
+      // Add current page IDs to selection (avoiding duplicates)
+      setSelectedIds((prev) => [...new Set([...prev, ...currentPageIds])]);
+    }
+  };
+
+  const handleDownloadExcel = async () => {
+    if (selectedIds.length === 0) {
+      alert("Please select at least one record to download.");
+      return;
+    }
+
+    try {
+      // Calling the unprotected route
+      const response = await axios.post(`${API_BASE_URL}/export-data`, {
+        ids: selectedIds,
+      });
+
+      if (response.data?.success) {
+        const fullData = response.data.data;
+
+        // Map every single field from your Mongoose Schema
+        const dataToExport = fullData.map((item) => ({
+          "Research Title": item.title || "",
+          Authors: item.authors?.length > 0 ? item.authors.join(", ") : "N/A",
+          Journal: item.journal || "",
+          Source: item.source || "",
+          Keywords: item.keyword?.length > 0 ? item.keyword.join(", ") : "",
+          Volume: item.volume || "",
+          Issue: item.issue || "",
+          Year: item.year || "",
+          "Pub Month": item.publicationMonth || "",
+          Subject:
+            item.subject?.length > 0 ? item.subject.join(", ") : "General",
+          Summary: item.summary || "",
+          Status: item.status || "",
+          "Published in AA": item.publishedInAA || "No",
+          Remarks: item.remarks || "",
+          URL: item.url || "",
+          "Date Added": new Date(item.createdAt).toLocaleDateString(),
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Selected Abstracts");
+
+        // Auto-size columns slightly for better look
+        worksheet["!cols"] = [{ wch: 50 }, { wch: 30 }, { wch: 20 }];
+
+        XLSX.writeFile(workbook, `Automotive_Abstracts_Report.xlsx`);
+
+        // Optional: Clear selection after download
+        // setSelectedIds([]);
+      }
+    } catch (error) {
+      console.error("Export failed:", error);
+      alert("Failed to export data. Check if the server is running.");
+    }
+  };
 
   const handleDelete = async (id) => {
     if (
@@ -118,9 +198,26 @@ const Abstracts = () => {
           <p className="text-sm text-slate-500 mt-1">
             Manage automotive research abstracts and publications.
           </p>
+          <p className="text-sm text-slate-500 mt-1">
+            Selected:{" "}
+            <span className="font-bold text-rose-600">
+              {selectedIds.length}
+            </span>{" "}
+            records.
+          </p>
         </div>
 
         <div className="flex gap-3">
+          {/* 🔥 DOWNLOAD BUTTON (Visible when items selected) */}
+          {selectedIds.length > 0 && (
+            <button
+              onClick={handleDownloadExcel}
+              className="flex items-center px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition shadow-sm font-medium animate-in fade-in zoom-in duration-200"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Download Excel
+            </button>
+          )}
           <button
             onClick={() => {
               setEditingId(null);
@@ -196,6 +293,17 @@ const Abstracts = () => {
         <table className="w-full text-left">
           <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
             <tr>
+              <th className="px-6 py-4 w-10">
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-300 text-rose-600 focus:ring-rose-500 h-4 w-4"
+                  onChange={handleSelectAllOnPage}
+                  checked={
+                    abstracts.length > 0 &&
+                    abstracts.every((item) => selectedIds.includes(item._id))
+                  }
+                />
+              </th>
               <th className="px-6 py-4">Research Title & Authors</th>
               <th className="px-6 py-4">Journal / Source</th>
               <th className="px-6 py-4 text-center">Pub. Year</th>
@@ -208,6 +316,16 @@ const Abstracts = () => {
           <tbody className="divide-y divide-gray-100">
             {abstracts.map((item) => (
               <tr key={item._id} className="hover:bg-rose-50/30 transition">
+                {/* 🔥 INDIVIDUAL CHECKBOX */}
+                <td className="px-6 py-4">
+                  <input
+                    type="checkbox"
+                    className="rounded border-gray-300 text-rose-600 focus:ring-rose-500 h-4 w-4"
+                    checked={selectedIds.includes(item._id)}
+                    onChange={() => handleSelectOne(item._id)}
+                  />
+                </td>
+
                 {/* Title & Authors */}
                 <td className="px-6 py-4">
                   <div className="font-semibold text-slate-800">

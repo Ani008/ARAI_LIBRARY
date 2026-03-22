@@ -72,7 +72,6 @@ const reviewerSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
     },
-    reviews: [reviewSchema],
     emailSent: {
       type: Boolean,
       default: false,
@@ -113,6 +112,8 @@ const ajmtPaperSchema = new mongoose.Schema(
       type: Date,
       required: [true, "Date is required"],
     },
+    plagiarismPercentage: { type: Number, min: 0, max: 100, default: 0 },
+    reviewDate: { type: Date },
     paperFile: {
       type: String, // Stores file path: /uploads/papers/filename.pdf
       required: false, // Not required initially, can be added later
@@ -146,11 +147,6 @@ const ajmtPaperSchema = new mongoose.Schema(
         },
         message: "Maximum 3 reviewers allowed",
       },
-    },
-    totalScore: {
-      type: Number,
-      default: 0,
-      min: 0,
     },
     tentativeDateOfPublication: {
       type: Date,
@@ -203,35 +199,6 @@ ajmtPaperSchema.methods.calculateTotalScore = function () {
   });
 
   return total;
-};
-
-// Method to add a new author
-ajmtPaperSchema.methods.addAuthor = function (authorData) {
-  this.authors.push(authorData);
-  return this.save();
-};
-
-// Method to add a reviewer
-ajmtPaperSchema.methods.addReviewer = function (reviewerData) {
-  if (this.reviewers.length >= 3) {
-    throw new Error("Maximum 3 reviewers allowed");
-  }
-  this.reviewers.push(reviewerData);
-  return this.save();
-};
-
-// Method to add a review to a specific reviewer
-ajmtPaperSchema.methods.addReview = function (reviewerId, reviewData) {
-  const reviewer = this.reviewers.id(reviewerId);
-  if (!reviewer) {
-    throw new Error("Reviewer not found");
-  }
-  reviewer.reviews.push(reviewData);
-  return this.save();
-};
-
-ajmtPaperSchema.methods.hasPaperFile = function () {
-  return !!this.paperFile;
 };
 
 ajmtPaperSchema.methods.getReviewerByNumber = function (reviewerNumber) {

@@ -188,7 +188,16 @@ exports.standardsNumberWiseReport = async (req, res, next) => {
       { header: "ICN", key: "icnNumber", width: 12 },
       { header: "Edition", key: "edition", width: 12 },
       { header: "Publisher", key: "publisher", width: 20 },
+      { header: "Department", key: "department", width: 15 },
+      { header: "Category", key: "category", width: 15 },
+      { header: "Status", key: "status", width: 12 },
+      { header: "Req No", key: "requisition_no", width: 15 },
+      { header: "PO No", key: "po_no", width: 15 },
+      { header: "Amount", key: "amount", width: 10 },
+      { header: "Accn No", key: "accnNumber", width: 15 },
+      { header: "Keywords", key: "keywords", width: 25 },
     ];
+
 
     // Dark Grey Header
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
@@ -201,6 +210,14 @@ exports.standardsNumberWiseReport = async (req, res, next) => {
         icnNumber: s.icnNumber,
         edition: s.edition,
         publisher: s.publisher,
+        department: s.department,
+        category: s.category,
+        status: s.status,
+        requisition_no: s.requisition_no,
+        po_no: s.po_no,
+        amount: s.amount,
+        accnNumber: s.accnNumber,
+        keywords: s.keywords,
       });
     });
 

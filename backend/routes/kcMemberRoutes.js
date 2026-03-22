@@ -5,13 +5,19 @@ const {
   getKCMemberById,
   createKCMember,
   updateKCMember,
-  deleteKCMember
+  deleteKCMember,
+  getMembershipIdPreview 
 } = require('../controllers/kcMemberController');
 
+// Global routes
 router.route('/')
   .get(getAllKCMembers)
   .post(createKCMember);
 
+
+router.get('/preview-id', getMembershipIdPreview);
+
+// Dynamic ID routes
 router.route('/:id')
   .get(getKCMemberById)
   .put(updateKCMember)

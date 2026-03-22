@@ -24,6 +24,7 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
     pages: "",
     isbn_issn: "",
     doi_url: "",
+    oldIcnNumber: "",
 
     amendment_date: "",
     amendment_remarks: "",
@@ -58,7 +59,19 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
         }
       };
       fetchSingle();
-    }
+    } else {
+    // NEW LOGIC: Fetch the next available ICN for new entries
+    const fetchNextIcn = async () => {
+      try {
+        const res = await api.get("/standards/next-icn");
+        setIcnDisplay(res.data.nextIcn);
+      } catch (error) {
+        console.error("Error fetching next ICN", error);
+        setIcnDisplay("Auto"); // Fallback text
+      }
+    };
+    fetchNextIcn();
+  }
   }, [editingId]);
 
   const handleSubmit = async (e) => {
@@ -108,14 +121,16 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
         {/* Scrollable Content */}
         <form onSubmit={handleSubmit} className="overflow-y-auto p-8 space-y-8">
           {/* Section 1: Procurement */}
-          <section>
+          <section className="w-full">
             <div className="flex items-center gap-2 mb-4 text-amber-600 border-b pb-2">
               <ClipboardList size={18} />
               <h3 className="font-bold text-sm uppercase tracking-widest">
                 Requisition Information
               </h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            {/* Changed to grid-cols-4 to force one line on medium screens and up */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
               <div>
                 <label className={labelClass}>Requisition No</label>
                 <input
@@ -126,6 +141,7 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
                   }
                 />
               </div>
+
               <div>
                 <label className={labelClass}>Requisition Date</label>
                 <input
@@ -140,6 +156,7 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
                   }
                 />
               </div>
+
               <div>
                 <label className={labelClass}>Department</label>
                 <input
@@ -149,7 +166,19 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
                   onChange={(e) =>
                     setFormData({ ...formData, department: e.target.value })
                   }
-                  placeholder="Enter Department"
+                  placeholder="Dept"
+                />
+              </div>
+
+              <div>
+                <label className={labelClass}>Date Sent To Dept</label>
+                <input
+                  type="date"
+                  className={inputClass}
+                  value={formData.date_received}
+                  onChange={(e) =>
+                    setFormData({ ...formData, date_received: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -162,7 +191,9 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
                 Procurement Information
               </h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            {/* Changed to grid-cols-3 for single-line layout on medium screens */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className={labelClass}>PR Number</label>
                 <input
@@ -173,6 +204,7 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
                   }
                 />
               </div>
+
               <div>
                 <label className={labelClass}>PO Number</label>
                 <input
@@ -195,17 +227,6 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
                   }
                 />
               </div>
-              <div>
-                <label className={labelClass}>Date Sent To Department</label>
-                <input
-                  type="date"
-                  className={inputClass}
-                  value={formData.date_received}
-                  onChange={(e) =>
-                    setFormData({ ...formData, date_received: e.target.value })
-                  }
-                />
-              </div>
             </div>
           </section>
 
@@ -217,8 +238,11 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
                 Bibliographic Information
               </h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-1">
+
+            {/* Organized into a consistent 3-column grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {/* Row 1 */}
+              <div>
                 <label className={labelClass}>Standard Number *</label>
                 <input
                   required
@@ -229,7 +253,8 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
                   }
                 />
               </div>
-              <div className="md:col-span-1">
+
+              <div>
                 <label className={labelClass}>Status</label>
                 <select
                   className={inputClass}
@@ -243,17 +268,7 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
                   <option>Withdrawn</option>
                 </select>
               </div>
-              <div className="md:col-span-2">
-                <label className={labelClass}>Title</label>
-                <input
-                  required
-                  className={inputClass}
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                />
-              </div>
+
               <div>
                 <label className={labelClass}>ACCN Number</label>
                 <input
@@ -264,6 +279,21 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
                   }
                 />
               </div>
+
+              {/* Row 2 */}
+              <div className="md:col-span-2">
+                <label className={labelClass}>Title</label>
+                <input
+                  required
+                  className={inputClass}
+                  placeholder="Enter document title..."
+                  value={formData.title}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
+                />
+              </div>
+
               <div>
                 <label className={labelClass}>Publisher</label>
                 <input
@@ -271,6 +301,17 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
                   value={formData.publisher}
                   onChange={(e) =>
                     setFormData({ ...formData, publisher: e.target.value })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className={labelClass}>Old ICN Number</label>
+                <input
+                  className={inputClass}
+                  value={formData.oldIcnNumber}
+                  onChange={(e) =>
+                    setFormData({ ...formData, oldIcnNumber: e.target.value })
                   }
                 />
               </div>
@@ -286,35 +327,13 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
               </h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass}>Amendment Date</label>
-                <input
-                  type="date"
-                  className={inputClass}
-                  value={formData.amendment_date}
-                  onChange={(e) =>
-                    setFormData({ ...formData, amendment_date: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Keywords</label>
-                <input
-                  className={inputClass}
-                  placeholder="e.g. Steel, ISO, Quality"
-                  value={formData.keywords}
-                  onChange={(e) =>
-                    setFormData({ ...formData, keywords: e.target.value })
-                  }
-                />
-              </div>
               <div className="md:col-span-2">
                 <label className={labelClass}>Summary / Remarks</label>
                 <textarea
                   className={`${inputClass} h-20`}
-                  value={formData.remarks || ""}
+                  value={formData.summary || ""}
                   onChange={(e) =>
-                    setFormData({ ...formData, remarks: e.target.value })
+                    setFormData({ ...formData, summary: e.target.value })
                   }
                 />
               </div>

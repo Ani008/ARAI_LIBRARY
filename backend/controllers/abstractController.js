@@ -172,3 +172,25 @@ exports.deleteAbstract = async (req, res, next) => {
     next(error);
   }
 };
+
+// Add this to abstractController.js
+
+exports.getAbstractsByIds = async (req, res, next) => {
+  try {
+    const { ids } = req.body;
+    
+    // Validate that ids is an array
+    if (!ids || !Array.isArray(ids)) {
+      return res.status(400).json({ success: false, message: "Please provide an array of IDs" });
+    }
+
+    const abstracts = await Abstract.find({ _id: { $in: ids } });
+
+    res.json({
+      success: true,
+      data: abstracts,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

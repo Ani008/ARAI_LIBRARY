@@ -7,7 +7,9 @@ const {
   getStandardById,
   createStandard,
   updateStandard,
-  deleteStandard
+  deleteStandard,
+  getNextIcn,
+  getUniqueFieldValues
 } = require('../controllers/standardController');
 
 const { uploadExcel, handleUploadError } = require('../middleware/upload');
@@ -25,6 +27,9 @@ router.post(
   importStandardsExcel
 );
 
+router.get('/next-icn', getNextIcn);
+router.get('/unique-values/:field', getUniqueFieldValues);
+
 router.route('/')
   .get(getAllStandards)
   .post(protect, authorize('ADMIN'), createStandard);
@@ -33,6 +38,8 @@ router.route('/:id')
   .get(getStandardById)
   .put(protect, authorize('ADMIN'), updateStandard)
   .delete(protect, authorize('ADMIN'), deleteStandard);
+
+
 
 
 module.exports = router;

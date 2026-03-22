@@ -20,8 +20,9 @@ const abstractSchema = new mongoose.Schema(
     },
     keyword: [{ type: String }],
     volume: {
-      type: Number,
+      type: String,
       default: null,
+      default: "",
     },
     issue: {
       type: String,

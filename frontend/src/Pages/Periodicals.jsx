@@ -10,7 +10,8 @@ const PeriodicalManagement = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const limit = 5; // records per page
+  // Replace the old const limit = 5; with this:
+  const [limit, setLimit] = useState(25);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [frequencyFilter, setFrequencyFilter] = useState("");
@@ -78,11 +79,11 @@ const PeriodicalManagement = () => {
 
   useEffect(() => {
     fetchPeriodicals(currentPage);
-  }, [currentPage, searchTerm, frequencyFilter, languageFilter, statusFilter]);
+  }, [currentPage, limit, searchTerm, frequencyFilter, languageFilter, statusFilter]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, frequencyFilter, languageFilter, statusFilter]);
+  }, [searchTerm, frequencyFilter, languageFilter, statusFilter, limit]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -225,6 +226,21 @@ const PeriodicalManagement = () => {
   const statusOptions = ["Active", "Disposal", "Issued"];
   const modeOptions = ["Subscription", "Exchange", "Free", "Membership"];
 
+  const getVisiblePages = () => {
+    const pages = [];
+    const range = 2;
+    const start = Math.max(1, currentPage - range);
+    const end = Math.min(totalPages, start + range * 2);
+
+    // Adjust start if we're near the end
+    const finalStart = Math.max(1, Math.min(start, totalPages - range * 2));
+
+    for (let i = finalStart; i <= end; i++) {
+      if (i > 0) pages.push(i);
+    }
+    return pages;
+  };
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       {/* Sidebar would go here */}
@@ -317,7 +333,7 @@ const PeriodicalManagement = () => {
                     </option>
                   ))}
                 </select>
-                                <select
+                <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -413,39 +429,57 @@ const PeriodicalManagement = () => {
                 </div>
               )}
             </div>
-            <div className="flex justify-center items-center gap-2 py-6">
-              <button
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((prev) => prev - 1)}
-                className="px-3 py-1 border rounded disabled:opacity-50"
-              >
-                Prev
-              </button>
 
-              {[...Array(totalPages)].map((_, index) => {
-                const page = index + 1;
-                return (
+            {/* Updated Pagination Logic */}
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 py-6 px-6 bg-gray-50 border-t border-gray-200">
+              {/* Records Dropdown */}
+              <div className="flex items-center gap-2 text-sm text-slate-600">
+                <span>Show</span>
+                <select
+                  value={limit}
+                  onChange={(e) => setLimit(Number(e.target.value))}
+                  className="border border-gray-300 px-2 py-1 rounded bg-white outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+                <span>records</span>
+              </div>
+
+              {/* Page Controls */}
+              <div className="flex items-center gap-2">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((prev) => prev - 1)}
+                  className="px-3 py-1 border border-gray-300 rounded bg-white text-sm disabled:opacity-40 hover:bg-gray-100 transition"
+                >
+                  Prev
+                </button>
+
+                {getVisiblePages().map((page) => (
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`px-3 py-1 border rounded ${
+                    className={`px-3 py-1 border rounded text-sm transition ${
                       currentPage === page
-                        ? "bg-blue-500 text-white"
-                        : "bg-white"
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-white text-slate-600 border-gray-300 hover:bg-gray-100"
                     }`}
                   >
                     {page}
                   </button>
-                );
-              })}
+                ))}
 
-              <button
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((prev) => prev + 1)}
-                className="px-3 py-1 border rounded disabled:opacity-50"
-              >
-                Next
-              </button>
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
+                  className="px-3 py-1 border border-gray-300 rounded bg-white text-sm disabled:opacity-40 hover:bg-gray-100 transition"
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
+const Counter = require('./Counter');
 
 const kcMemberSchema = new mongoose.Schema({
   membershipId: {
     type: String,
-    required: [true, 'Membership ID is required'],
     unique: true,
     trim: true
   },
@@ -25,7 +25,12 @@ const kcMemberSchema = new mongoose.Schema({
   membershipType: {
     type: String,
     required: [true, 'Membership Type is required'],
-    enum: ['Corporate', 'Educational Institution', 'Individual', 'Staff', 'Temp Membership', 'Student']
+    enum: ['Automotive Abstract', 'ARAI Journal', 'KC Membership Option 1', 'KC Membership Option 2'],
+  },
+  subscriptionType: {
+    type: String,
+    required: [true, 'Subscription Type is required'],
+    default: ''
   },
   completeAddress: {
     type: String,
@@ -102,4 +107,51 @@ const kcMemberSchema = new mongoose.Schema({
   timestamps: true
 });
 
+kcMemberSchema.pre("save", async function () {
+  if (!this.isNew) return;
+
+  try {
+    // 1. Create a unique key for this specific membership combination
+    const typeKey = `${this.membershipType}_${this.subscriptionType}`;
+
+    // 2. Update the counter using that unique key as the _id
+    const counter = await Counter.findByIdAndUpdate(
+      { _id: typeKey }, 
+      { $inc: { sequence_value: 1 } },
+      { new: true, upsert: true }
+    );
+
+    // 3. Logic to determine prefix/startValue
+    let prefix = "";
+    let startValue = 0;
+    let padding = 0;
+
+    switch (typeKey) {
+      case "Automotive Abstract_Subscribers": prefix = "SUB"; break;
+      case "Automotive Abstract_Exchange": prefix = "EXC"; break;
+      case "Automotive Abstract_GOI": prefix = "GOI"; break;
+      case "KC Membership Option 1_Individual": startValue = 10000; break;
+      case "KC Membership Option 1_Educational": startValue = 12000; break;
+      case "KC Membership Option 1_Company": startValue = 11000; break;
+      case "KC Membership Option 2_Educational": prefix = "ERB"; padding = 5; break;
+      case "KC Membership Option 2_ARAI Member Company": prefix = "MCB"; padding = 5; break;
+      case "KC Membership Option 2_Other Company": prefix = "OCB"; padding = 4; break;
+      default: prefix = "MEM"; // Fallback
+    }
+
+    // 4. Calculate Final ID (The Math Fix)
+    const finalNum = counter.sequence_value + startValue;
+    
+    // Formatting: Apply padding if needed, otherwise just join
+    this.membershipId = padding > 0 
+      ? prefix + finalNum.toString().padStart(padding, '0') 
+      : prefix + finalNum;
+
+  } catch (error) {
+    console.error("Counter Error:", error);
+    throw error;
+  }
+});
+
+// 3. COMPILE AND EXPORT LAST
 module.exports = mongoose.model('KCMember', kcMemberSchema);

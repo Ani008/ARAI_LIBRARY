@@ -3,9 +3,6 @@ const { sendReviewerEmail } = require('../services/emailService');
 const fs = require('fs');
 const path = require('path');
 
-// @desc    Get all AJMT papers
-// @route   GET /api/ajmt-papers
-// @access  Public/Private
 exports.getAllPapers = async (req, res) => {
   try {
     const { 
@@ -46,9 +43,6 @@ exports.getAllPapers = async (req, res) => {
   }
 };
 
-// @desc    Get single AJMT paper by ID
-// @route   GET /api/ajmt-papers/:id
-// @access  Public/Private
 exports.getPaperById = async (req, res) => {
   try {
     const paper = await AJMTPaper.findById(req.params.id);
@@ -73,14 +67,15 @@ exports.getPaperById = async (req, res) => {
   }
 };
 
-// @desc    Create new AJMT paper (with optional file upload)
-// @route   POST /api/ajmt-papers
-// @access  Private
 exports.createPaper = async (req, res) => {
   console.log("Body received:", req.body);
   try {
     // 1. Start with everything from the body to ensure uniqueId is included
     const paperData = { ...req.body };
+
+    if (paperData.plagiarismPercentage) {
+      paperData.plagiarismPercentage = Number(paperData.plagiarismPercentage);
+    }
 
     // 2. Parse authors if it's a JSON string (from form-data)
     if (typeof paperData.authors === 'string') {
@@ -123,22 +118,6 @@ exports.createPaper = async (req, res) => {
       paperData.status = 'Draft';
     }
 
-    // 6. Validate reviewers count
-    if (paperData.reviewers.length > 3) {
-      return res.status(400).json({
-        success: false,
-        message: 'Maximum 3 reviewers allowed'
-      });
-    }
-
-    // 7. Ensure reviewer numbers are set correctly
-    if (paperData.reviewers.length > 0) {
-      paperData.reviewers = paperData.reviewers.map((reviewer, index) => ({
-        ...reviewer,
-        reviewerNumber: reviewer.reviewerNumber || index + 1
-      }));
-    }
-
     // 8. Create the paper (This passes the whole cleaned object to Mongoose)
     const paper = await AJMTPaper.create(paperData);
 
@@ -165,9 +144,6 @@ exports.createPaper = async (req, res) => {
   }
 };
 
-// @desc    Upload or update PDF for existing paper
-// @route   POST /api/ajmt-papers/:id/upload-pdf
-// @access  Private
 exports.uploadPaperPDF = async (req, res) => {
   try {
     if (!req.file) {
@@ -227,9 +203,6 @@ exports.uploadPaperPDF = async (req, res) => {
   }
 };
 
-// @desc    Send email to specific reviewer
-// @route   POST /api/ajmt-papers/:id/send-email/:reviewerNumber
-// @access  Private
 exports.sendReviewerEmail = async (req, res) => {
   try {
     const { id, reviewerNumber } = req.params;
@@ -310,9 +283,6 @@ exports.sendReviewerEmail = async (req, res) => {
   }
 };
 
-// @desc    Update AJMT paper
-// @route   PUT /api/ajmt-papers/:id
-// @access  Private
 exports.updatePaper = async (req, res) => {
   try {
     // Validate reviewers count if provided
@@ -353,9 +323,6 @@ exports.updatePaper = async (req, res) => {
   }
 };
 
-// @desc    Delete AJMT paper
-// @route   DELETE /api/ajmt-papers/:id
-// @access  Private
 exports.deletePaper = async (req, res) => {
   try {
     const paper = await AJMTPaper.findById(req.params.id);
@@ -390,9 +357,6 @@ exports.deletePaper = async (req, res) => {
   }
 };
 
-// @desc    Add author to a paper
-// @route   POST /api/ajmt-papers/:id/authors
-// @access  Private
 exports.addAuthor = async (req, res) => {
   try {
     const paper = await AJMTPaper.findById(req.params.id);
@@ -430,9 +394,6 @@ exports.addAuthor = async (req, res) => {
   }
 };
 
-// @desc    Update author in a paper
-// @route   PUT /api/ajmt-papers/:id/authors/:authorId
-// @access  Private
 exports.updateAuthor = async (req, res) => {
   try {
     const paper = await AJMTPaper.findById(req.params.id);
@@ -477,9 +438,6 @@ exports.updateAuthor = async (req, res) => {
   }
 };
 
-// @desc    Delete author from a paper
-// @route   DELETE /api/ajmt-papers/:id/authors/:authorId
-// @access  Private
 exports.deleteAuthor = async (req, res) => {
   try {
     const paper = await AJMTPaper.findById(req.params.id);
@@ -508,9 +466,6 @@ exports.deleteAuthor = async (req, res) => {
   }
 };
 
-// @desc    Add reviewer to a paper
-// @route   POST /api/ajmt-papers/:id/reviewers
-// @access  Private
 exports.addReviewer = async (req, res) => {
   try {
     const paper = await AJMTPaper.findById(req.params.id);
@@ -533,7 +488,6 @@ exports.addReviewer = async (req, res) => {
       reviewerNumber: req.body.reviewerNumber || paper.reviewers.length + 1,
       reviewerName: req.body.reviewerName,
       reviewerEmail: req.body.reviewerEmail,
-      reviews: req.body.reviews || []
     };
 
     paper.reviewers.push(reviewerData);
@@ -553,9 +507,6 @@ exports.addReviewer = async (req, res) => {
   }
 };
 
-// @desc    Update reviewer in a paper
-// @route   PUT /api/ajmt-papers/:id/reviewers/:reviewerId
-// @access  Private
 exports.updateReviewer = async (req, res) => {
   try {
     const paper = await AJMTPaper.findById(req.params.id);
@@ -597,9 +548,6 @@ exports.updateReviewer = async (req, res) => {
   }
 };
 
-// @desc    Delete reviewer from a paper
-// @route   DELETE /api/ajmt-papers/:id/reviewers/:reviewerId
-// @access  Private
 exports.deleteReviewer = async (req, res) => {
   try {
     const paper = await AJMTPaper.findById(req.params.id);
@@ -623,192 +571,6 @@ exports.deleteReviewer = async (req, res) => {
     res.status(400).json({
       success: false,
       message: 'Error deleting reviewer',
-      error: error.message
-    });
-  }
-};
-
-// @desc    Add review to a specific reviewer
-// @route   POST /api/ajmt-papers/:id/reviewers/:reviewerId/reviews
-// @access  Private
-exports.addReview = async (req, res) => {
-  try {
-    const paper = await AJMTPaper.findById(req.params.id);
-
-    if (!paper) {
-      return res.status(404).json({
-        success: false,
-        message: 'Paper not found'
-      });
-    }
-
-    const reviewer = paper.reviewers.id(req.params.reviewerId);
-
-    if (!reviewer) {
-      return res.status(404).json({
-        success: false,
-        message: 'Reviewer not found'
-      });
-    }
-
-    const reviewData = {
-      plagiarismPercentage: req.body.plagiarismPercentage,
-      remarks: req.body.remarks,
-      sentDate: req.body.sentDate || new Date()
-    };
-
-    reviewer.reviews.push(reviewData);
-    
-    // Auto-calculate total score
-    paper.totalScore = paper.calculateTotalScore();
-    
-    await paper.save();
-
-    res.status(200).json({
-      success: true,
-      message: 'Review added successfully',
-      data: paper
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: 'Error adding review',
-      error: error.message
-    });
-  }
-};
-
-// @desc    Update review for a specific reviewer
-// @route   PUT /api/ajmt-papers/:id/reviewers/:reviewerId/reviews/:reviewId
-// @access  Private
-exports.updateReview = async (req, res) => {
-  try {
-    const paper = await AJMTPaper.findById(req.params.id);
-
-    if (!paper) {
-      return res.status(404).json({
-        success: false,
-        message: 'Paper not found'
-      });
-    }
-
-    const reviewer = paper.reviewers.id(req.params.reviewerId);
-
-    if (!reviewer) {
-      return res.status(404).json({
-        success: false,
-        message: 'Reviewer not found'
-      });
-    }
-
-    const review = reviewer.reviews.id(req.params.reviewId);
-
-    if (!review) {
-      return res.status(404).json({
-        success: false,
-        message: 'Review not found'
-      });
-    }
-
-    // Update review fields
-    if (req.body.plagiarismPercentage !== undefined) {
-      review.plagiarismPercentage = req.body.plagiarismPercentage;
-    }
-    if (req.body.remarks !== undefined) {
-      review.remarks = req.body.remarks;
-    }
-    if (req.body.sentDate !== undefined) {
-      review.sentDate = req.body.sentDate;
-    }
-
-    // Auto-calculate total score
-    paper.totalScore = paper.calculateTotalScore();
-
-    await paper.save();
-
-    res.status(200).json({
-      success: true,
-      message: 'Review updated successfully',
-      data: paper
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: 'Error updating review',
-      error: error.message
-    });
-  }
-};
-
-// @desc    Delete review from a specific reviewer
-// @route   DELETE /api/ajmt-papers/:id/reviewers/:reviewerId/reviews/:reviewId
-// @access  Private
-exports.deleteReview = async (req, res) => {
-  try {
-    const paper = await AJMTPaper.findById(req.params.id);
-
-    if (!paper) {
-      return res.status(404).json({
-        success: false,
-        message: 'Paper not found'
-      });
-    }
-
-    const reviewer = paper.reviewers.id(req.params.reviewerId);
-
-    if (!reviewer) {
-      return res.status(404).json({
-        success: false,
-        message: 'Reviewer not found'
-      });
-    }
-
-    reviewer.reviews.pull(req.params.reviewId);
-    
-    // Auto-calculate total score
-    paper.totalScore = paper.calculateTotalScore();
-    
-    await paper.save();
-
-    res.status(200).json({
-      success: true,
-      message: 'Review deleted successfully',
-      data: paper
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: 'Error deleting review',
-      error: error.message
-    });
-  }
-};
-
-// @desc    Get calculated total score
-// @route   GET /api/ajmt-papers/:id/total-score
-// @access  Public/Private
-exports.getTotalScore = async (req, res) => {
-  try {
-    const paper = await AJMTPaper.findById(req.params.id);
-
-    if (!paper) {
-      return res.status(404).json({
-        success: false,
-        message: 'Paper not found'
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      data: {
-        totalScore: paper.totalScore,
-        calculatedTotalScore: paper.calculateTotalScore()
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error calculating total score',
       error: error.message
     });
   }

@@ -20,6 +20,7 @@ const UploadCards = () => {
   const uploadRoutes = {
     standards: `${API_URL}/api/standards/import-excel`,
     abstracts: `${API_URL}/api/abstracts/import-excel`,
+    periodicals: `${API_URL}/api/periodicals/import-excel`,
   };
 
   const validateFileName = (type, file) => {
@@ -27,6 +28,11 @@ const UploadCards = () => {
 
     if (type === "standards" && !name.includes("standard")) {
       alert("Please upload a Standards Excel file.");
+      return false;
+    }
+
+    if (type === "periodicals" && !name.includes("periodical")) {
+      alert("Please upload a Periodicals Excel file.");
       return false;
     }
 
@@ -44,6 +50,11 @@ const UploadCards = () => {
       return;
     }
 
+    // 1. Validate file name BEFORE calling the API
+    if (!validateFileName(type, files[type])) {
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append("file", files[type]);
@@ -54,25 +65,24 @@ const UploadCards = () => {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
+          // Note: Do NOT set Content-Type header here; browser does it for FormData
         },
         body: formData,
       });
 
       const data = await res.json();
-      if (!validateFileName(type, files[type])) {
-        return;
-      }
 
-      // ❌ API failed
       if (!res.ok) {
         alert(data.message || "Upload failed");
         return;
       }
 
-      // ✅ API success
-      alert(
-        `${type === "standards" ? "Standards" : "Abstracts"} uploaded successfully`,
-      );
+      // Dynamic success message
+      const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
+      alert(`${typeLabel} uploaded successfully`);
+
+      // Optional: Clear the file state after success
+      setFiles((prev) => ({ ...prev, [type]: null }));
     } catch (err) {
       console.error(err);
       alert("Server error during upload");
@@ -106,7 +116,7 @@ const UploadCards = () => {
       </div>
 
       {/* Upload Periodicals */}
-      {/* <div className={cardStyle}>
+      <div className={cardStyle}>
         <div className="flex items-center gap-3 mb-3">
           <BookOpen className="text-blue-600" />
           <h3 className="font-semibold text-gray-800">Upload Periodicals</h3>
@@ -115,9 +125,7 @@ const UploadCards = () => {
         <input
           type="file"
           className="text-sm mb-3 bg-gray-50 border border-gray-300 rounded-md p-7"
-          onChange={(e) =>
-            handleFileChange("periodicals", e.target.files[0])
-          }
+          onChange={(e) => handleFileChange("periodicals", e.target.files[0])}
         />
 
         <button
@@ -126,7 +134,7 @@ const UploadCards = () => {
         >
           Upload Periodicals
         </button>
-      </div> */}
+      </div>
 
       {/* Upload Abstracts */}
       <div className={cardStyle}>

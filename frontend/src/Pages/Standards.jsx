@@ -22,15 +22,34 @@ const StandardsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [limit, setLimit] = useState(25);
+  
+  // Dynamic Lists for Dropdowns
+  const [availableDepts, setAvailableDepts] = useState([]);
+  const [availablePublishers, setAvailablePublishers] = useState([]);
 
   const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [publisherFilter, setPublisherFilter] = useState(""); // Changed from categoryFilter to match your intent
   const [statusFilter, setStatusFilter] = useState("");
 
-  // 🔥 Fetch Standards
+  // 1. Fetch Dynamic Filter Lists (Run only once on mount)
+  const fetchFilters = async () => {
+    try {
+      const [deptRes, pubRes] = await Promise.all([
+        api.get("/standards/unique-values/department"),
+        api.get("/standards/unique-values/publisher"),
+      ]);
+
+      if (deptRes.data.success) setAvailableDepts(deptRes.data.data);
+      if (pubRes.data.success) setAvailablePublishers(pubRes.data.data);
+    } catch (error) {
+      console.error("Error loading filters", error);
+    }
+  };
+
+  // 2. Fetch the Table Data
   const fetchStandards = async () => {
     try {
       const response = await api.get("/standards", {
@@ -39,7 +58,7 @@ const StandardsPage = () => {
           limit: limit,
           search: search,
           department: departmentFilter,
-          category: categoryFilter,
+          publisher: publisherFilter, // Use publisherFilter here
           status: statusFilter,
         },
       });
@@ -47,9 +66,6 @@ const StandardsPage = () => {
       if (response.data?.success) {
         setStandards(response.data.data || []);
         setTotalPages(response.data.totalPages);
-        setCurrentPage(response.data.currentPage);
-      } else {
-        setStandards([]);
       }
     } catch (error) {
       console.error("Error fetching standards:", error);
@@ -57,13 +73,20 @@ const StandardsPage = () => {
     }
   };
 
+  // INITIAL LOAD: Fetch dropdown options once
   useEffect(() => {
-    fetchStandards(currentPage);
-  }, [currentPage, search, departmentFilter, categoryFilter, statusFilter]);
+    fetchFilters();
+  }, []);
 
+  // DATA LOAD: Re-fetch table whenever filters or page change
+  useEffect(() => {
+    fetchStandards();
+  }, [currentPage, search, departmentFilter, publisherFilter, statusFilter]);
+
+  // RESET PAGE: Go back to page 1 if search/filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, departmentFilter, categoryFilter, statusFilter]);
+  }, [search, departmentFilter, publisherFilter, statusFilter]);
 
   // 🔥 Delete Standard
   const handleDelete = async (id) => {
@@ -149,7 +172,7 @@ const StandardsPage = () => {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by ICN, Standard No or Title..."
+              placeholder="Search by ICN, Standard No, Title or Requisition No."
               className="pl-9 pr-3 py-2 w-full rounded-md border border-gray-200 text-sm focus:ring-2 focus:ring-black outline-none"
             />
           </div>
@@ -160,26 +183,22 @@ const StandardsPage = () => {
             onChange={(e) => setDepartmentFilter(e.target.value)}
             className="px-3 py-2 border border-gray-200 rounded-md text-sm min-w-[180px]"
           >
-            <option value="">Department</option>
-            <option>Mechanical</option>
-            <option>Civil</option>
-            <option>Computer</option>
-            <option>Electrical</option>
-            <option>Automotive</option>
+            <option value="">All Departments</option>
+            {availableDepts.map((dept) => (
+              <option key={dept} value={dept}>{dept}</option>
+            ))}
           </select>
 
-          {/* Category */}
+          {/* Publisher */}
           <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-200 rounded-md text-sm min-w-[160px]"
+            value={publisherFilter}
+            onChange={(e) => setPublisherFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-200 rounded-md text-sm min-w-[180px]"
           >
-            <option value="">Category</option>
-            <option>ASTM</option>
-            <option>BIS</option>
-            <option>DIN</option>
-            <option>ISO</option>
-            <option>SAE</option>
+            <option value="">All Publishers</option>
+            {availablePublishers.map((pub) => (
+              <option key={pub} value={pub}>{pub}</option>
+            ))}
           </select>
 
           {/* Status */}

@@ -15,10 +15,6 @@ const {
   addReviewer,
   updateReviewer,
   deleteReviewer,
-  addReview,
-  updateReview,
-  deleteReview,
-  getTotalScore
 } = require('../controllers/ajmtPaperController');
 
 // Main Paper Routes
@@ -55,16 +51,5 @@ router.route('/:id/reviewers/:reviewerId')
   .put(updateReviewer)    // PUT /api/ajmt-papers/:id/reviewers/:reviewerId
   .delete(deleteReviewer);// DELETE /api/ajmt-papers/:id/reviewers/:reviewerId
 
-// Review Routes (nested under reviewers)
-router.route('/:id/reviewers/:reviewerId/reviews')
-  .post(addReview);       // POST /api/ajmt-papers/:id/reviewers/:reviewerId/reviews
-
-router.route('/:id/reviewers/:reviewerId/reviews/:reviewId')
-  .put(updateReview)      // PUT /api/ajmt-papers/:id/reviewers/:reviewerId/reviews/:reviewId
-  .delete(deleteReview);  // DELETE /api/ajmt-papers/:id/reviewers/:reviewerId/reviews/:reviewId
-
-// Utility Routes
-router.route('/:id/total-score')
-  .get(getTotalScore);    // GET /api/ajmt-papers/:id/total-score
 
 module.exports = router;

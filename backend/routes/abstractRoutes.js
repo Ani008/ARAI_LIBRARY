@@ -6,13 +6,16 @@ const {
   getAbstractById,
   createAbstract,
   updateAbstract,
-  deleteAbstract
+  deleteAbstract,
+  getAbstractsByIds
 } = require('../controllers/abstractController');
 
 const { uploadExcel, handleUploadError } = require('../middleware/upload');
 const {
   importAbstractsExcel
 } = require("../controllers/excelUpload/excelAbstractController");
+
+router.post('/export-data', getAbstractsByIds);
 
 router.post(
   '/import-excel',

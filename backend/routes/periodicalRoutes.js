@@ -9,6 +9,19 @@ const {
   updatePeriodical,
   deletePeriodical
 } = require('../controllers/periodicalController');
+const { uploadExcel, handleUploadError } = require('../middleware/upload');
+const {
+  importPeriodicalsExcel,
+} = require("../controllers/excelUpload/excelPeriodicalController");
+
+router.post(
+  '/import-excel',
+  protect,                  // only logged in
+  authorize('ADMIN'),       // only admin
+  uploadExcel,
+  handleUploadError,
+  importPeriodicalsExcel
+);
 
 router.route('/')
   .get(getAllPeriodicals)
