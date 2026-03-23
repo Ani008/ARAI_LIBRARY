@@ -1,4 +1,4 @@
-import { FileText, BookOpen, Car } from "lucide-react";
+import { FileText, BookOpen, Car, Users} from "lucide-react";
 import { useState } from "react";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -8,6 +8,7 @@ const UploadCards = () => {
     standards: null,
     periodicals: null,
     abstracts: null,
+    kcmembers: null,
   });
 
   const handleFileChange = (type, file) => {
@@ -21,6 +22,7 @@ const UploadCards = () => {
     standards: `${API_URL}/api/standards/import-excel`,
     abstracts: `${API_URL}/api/abstracts/import-excel`,
     periodicals: `${API_URL}/api/periodicals/import-excel`,
+    kcmembers: `${API_URL}/api/kcmembers/import-excel`
   };
 
   const validateFileName = (type, file) => {
@@ -38,6 +40,11 @@ const UploadCards = () => {
 
     if (type === "abstracts" && !name.includes("abstract")) {
       alert("Please upload an Abstracts Excel file.");
+      return false;
+    }
+
+    if (type === "kcmembers" && !name.includes("kc") && !name.includes("member")) {
+      alert("Please upload a KC Members Excel file.");
       return false;
     }
 
@@ -158,7 +165,28 @@ const UploadCards = () => {
           Upload Automotive Abstracts
         </button>
       </div>
+
+      <div className={cardStyle}>
+        <div>
+          <div className="flex items-center gap-3 mb-3">
+            <Users className="text-green-600" />
+            <h3 className="font-semibold text-gray-800">KC Memberships</h3>
+          </div>
+          <input
+            type="file"
+            className="text-sm mb-3 bg-gray-50 border border-gray-300 rounded-md p-4 w-full"
+            onChange={(e) => handleFileChange("kcmembers", e.target.files[0])}
+          />
+        </div>
+        <button
+          onClick={() => handleUpload("kcmembers")}
+          className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700"
+        >
+          Upload KC Members
+        </button>
+      </div>
     </div>
+
   );
 };
 

@@ -27,14 +27,20 @@ exports.standardsDepartmentWiseReport = async (req, res, next) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Department-wise Standards");
 
-    // Add header row
-    worksheet.columns = [
-      { header: "ICN Number", key: "icnNumber", width: 15 },
-      { header: "Standard Number", key: "standardNumber", width: 20 },
-      { header: "Title", key: "title", width: 40 },
-      { header: "Department", key: "department", width: 20 },
+      worksheet.columns = [
+      { header: "Department", key: "department", width: 15 },
+      { header: "ICN", key: "icnNumber", width: 10 },
+      { header: "Standard No", key: "standardNumber", width: 20 },
+      { header: "Title", key: "title", width: 35 },
+      
       { header: "Category", key: "category", width: 15 },
-      { header: "Created Date", key: "createdAt", width: 20 },
+      { header: "Status", key: "status", width: 12 },
+      { header: "Req No", key: "requisition_no", width: 15 },
+      { header: "PO No", key: "po_no", width: 15 },
+      { header: "Amount", key: "amount", width: 10 },
+      { header: "Publisher", key: "publisher", width: 15 },
+      { header: "Accn No", key: "accnNumber", width: 15 },
+      { header: "Keywords", key: "keywords", width: 25 },
     ];
 
     // Style header row
@@ -46,16 +52,20 @@ exports.standardsDepartmentWiseReport = async (req, res, next) => {
     };
 
     // Add data rows
-    standards.forEach((standard) => {
+    standards.forEach((s) => {
       worksheet.addRow({
-        icnNumber: standard.icnNumber,
-        standardNumber: standard.standardNumber,
-        title: standard.title,
-        department: standard.department,
-        category: standard.category,
-        createdAt: standard.createdAt
-          ? new Date(standard.createdAt).toLocaleDateString()
-          : "",
+        department: s.department,
+        icnNumber: s.icnNumber,
+        standardNumber: s.standardNumber,
+        title: s.title,
+        category: s.category,
+        status: s.status,
+        requisition_no: s.requisition_no,
+        po_no: s.po_no,
+        amount: s.amount,
+        publisher: s.publisher,
+        accnNumber: s.accnNumber,
+        keywords: s.keywords,
       });
     });
 
@@ -97,12 +107,18 @@ exports.standardsRequisitionWiseReport = async (req, res, next) => {
     const worksheet = workbook.addWorksheet("Requisition-wise Report");
 
     worksheet.columns = [
-      { header: "Requisition No", key: "requisition_no", width: 20 },
-      { header: "ICN Number", key: "icnNumber", width: 15 },
-      { header: "Standard Number", key: "standardNumber", width: 20 },
-      { header: "Title", key: "title", width: 40 },
+      { header: "Req No", key: "requisition_no", width: 15 },
+      { header: "ICN", key: "icnNumber", width: 10 },
+      { header: "Standard No", key: "standardNumber", width: 20 },
+      { header: "Title", key: "title", width: 35 },
+      { header: "Department", key: "department", width: 15 },
+      { header: "Category", key: "category", width: 15 },
+      { header: "Status", key: "status", width: 12 },
       { header: "PO No", key: "po_no", width: 15 },
-      { header: "Amount", key: "amount", width: 12 },
+      { header: "Amount", key: "amount", width: 10 },
+      { header: "Publisher", key: "publisher", width: 15 },
+      { header: "Accn No", key: "accnNumber", width: 15 },
+      { header: "Keywords", key: "keywords", width: 25 },
     ];
 
     // Royal Blue Header
@@ -111,12 +127,18 @@ exports.standardsRequisitionWiseReport = async (req, res, next) => {
 
     standards.forEach((s) => {
       worksheet.addRow({
-        requisition_no: s.requisition_no || "N/A",
+        requisition_no: s.requisition_no,
         icnNumber: s.icnNumber,
         standardNumber: s.standardNumber,
         title: s.title,
+        department: s.department,
+        category: s.category,
+        status: s.status,
         po_no: s.po_no,
         amount: s.amount,
+        publisher: s.publisher,
+        accnNumber: s.accnNumber,
+        keywords: s.keywords,
       });
     });
 
@@ -139,12 +161,19 @@ exports.standardsStatusWiseReport = async (req, res, next) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Status-wise Report");
 
-    worksheet.columns = [
-      { header: "Status", key: "status", width: 15 },
-      { header: "Standard Number", key: "standardNumber", width: 20 },
-      { header: "Title", key: "title", width: 40 },
-      { header: "Department", key: "department", width: 20 },
+      worksheet.columns = [
+      { header: "Status", key: "status", width: 12 },
       { header: "ICN", key: "icnNumber", width: 10 },
+      { header: "Standard No", key: "standardNumber", width: 20 },
+      { header: "Title", key: "title", width: 35 },
+      { header: "Department", key: "department", width: 15 },
+      { header: "Category", key: "category", width: 15 },
+      { header: "Req No", key: "requisition_no", width: 15 },
+      { header: "PO No", key: "po_no", width: 15 },
+      { header: "Amount", key: "amount", width: 10 },
+      { header: "Publisher", key: "publisher", width: 15 },
+      { header: "Accn No", key: "accnNumber", width: 15 },
+      { header: "Keywords", key: "keywords", width: 25 },
     ];
 
     // Purple Header
@@ -154,10 +183,17 @@ exports.standardsStatusWiseReport = async (req, res, next) => {
     standards.forEach((s) => {
       worksheet.addRow({
         status: s.status,
+        icnNumber: s.icnNumber,
         standardNumber: s.standardNumber,
         title: s.title,
         department: s.department,
-        icnNumber: s.icnNumber,
+        category: s.category,
+        requisition_no: s.requisition_no,
+        po_no: s.po_no,
+        amount: s.amount,
+        publisher: s.publisher,
+        accnNumber: s.accnNumber,
+        keywords: s.keywords,
       });
     });
 
@@ -183,17 +219,16 @@ exports.standardsNumberWiseReport = async (req, res, next) => {
     const worksheet = workbook.addWorksheet("Standard Number Report");
 
     worksheet.columns = [
-      { header: "Standard Number", key: "standardNumber", width: 25 },
-      { header: "Title", key: "title", width: 45 },
-      { header: "ICN", key: "icnNumber", width: 12 },
-      { header: "Edition", key: "edition", width: 12 },
-      { header: "Publisher", key: "publisher", width: 20 },
+      { header: "Standard No", key: "standardNumber", width: 20 },
+      { header: "ICN", key: "icnNumber", width: 10 },
+      { header: "Title", key: "title", width: 35 },
       { header: "Department", key: "department", width: 15 },
       { header: "Category", key: "category", width: 15 },
       { header: "Status", key: "status", width: 12 },
       { header: "Req No", key: "requisition_no", width: 15 },
       { header: "PO No", key: "po_no", width: 15 },
       { header: "Amount", key: "amount", width: 10 },
+      { header: "Publisher", key: "publisher", width: 15 },
       { header: "Accn No", key: "accnNumber", width: 15 },
       { header: "Keywords", key: "keywords", width: 25 },
     ];
@@ -206,16 +241,15 @@ exports.standardsNumberWiseReport = async (req, res, next) => {
     standards.forEach((s) => {
       worksheet.addRow({
         standardNumber: s.standardNumber,
-        title: s.title,
         icnNumber: s.icnNumber,
-        edition: s.edition,
-        publisher: s.publisher,
+        title: s.title,
         department: s.department,
         category: s.category,
         status: s.status,
         requisition_no: s.requisition_no,
         po_no: s.po_no,
         amount: s.amount,
+        publisher: s.publisher,
         accnNumber: s.accnNumber,
         keywords: s.keywords,
       });
@@ -456,6 +490,7 @@ exports.periodicalsCompleteDirectoryReport = async (req, res, next) => {
 
     worksheet.columns = [
       { header: "Title", key: "title", width: 30 },
+      
       { header: "Publisher", key: "publisher", width: 20 },
       { header: "ISSN", key: "issn", width: 15 },
       { header: "Frequency", key: "frequency", width: 15 },

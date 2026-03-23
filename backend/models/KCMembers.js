@@ -9,12 +9,10 @@ const kcMemberSchema = new mongoose.Schema({
   },
   institutionName: {
     type: String,
-    required: [true, 'Institution Name is required'],
     trim: true
   },
   contactPerson: {
     type: String,
-    required: [true, 'Contact Person is required'],
     trim: true
   },
   designation: {
@@ -24,12 +22,10 @@ const kcMemberSchema = new mongoose.Schema({
   },
   membershipType: {
     type: String,
-    required: [true, 'Membership Type is required'],
     enum: ['Automotive Abstract', 'ARAI Journal', 'KC Membership Option 1', 'KC Membership Option 2'],
   },
   subscriptionType: {
     type: String,
-    required: [true, 'Subscription Type is required'],
     default: ''
   },
   completeAddress: {
