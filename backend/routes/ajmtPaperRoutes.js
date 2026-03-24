@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { uploadPaperPDF, handleUploadError } = require('../middleware/upload');
+const { uploadPaperPDF, handleUploadError, uploadExcel } = require('../middleware/upload');
+const { protect, authorize } = require('../middleware/auth');
 const {
   getAllPapers,
   getPaperById,
@@ -16,6 +17,20 @@ const {
   updateReviewer,
   deleteReviewer,
 } = require('../controllers/ajmtPaperController');
+
+const {
+  importAJMTPapers
+} = require("../controllers/excelUpload/excelAJMTController");
+
+
+router.post(
+  '/import-excel',
+  protect,                  // only logged in
+  authorize('ADMIN'),       // only admin
+  uploadExcel,
+  handleUploadError,
+  importAJMTPapers
+);
 
 // Main Paper Routes
 router.route('/')

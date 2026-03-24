@@ -9,6 +9,7 @@ const UploadCards = () => {
     periodicals: null,
     abstracts: null,
     kcmembers: null,
+    ajmtpapers: null
   });
 
   const handleFileChange = (type, file) => {
@@ -22,7 +23,8 @@ const UploadCards = () => {
     standards: `${API_URL}/api/standards/import-excel`,
     abstracts: `${API_URL}/api/abstracts/import-excel`,
     periodicals: `${API_URL}/api/periodicals/import-excel`,
-    kcmembers: `${API_URL}/api/kcmembers/import-excel`
+    kcmembers: `${API_URL}/api/kcmembers/import-excel`,
+    ajmtpapers: `${API_URL}/api/ajmtpapers/import-excel`
   };
 
   const validateFileName = (type, file) => {
@@ -45,6 +47,11 @@ const UploadCards = () => {
 
     if (type === "kcmembers" && !name.includes("kc") && !name.includes("member")) {
       alert("Please upload a KC Members Excel file.");
+      return false;
+    }
+
+    if (type === "ajmtpapers" && !name.includes("ajmt") && !name.includes("paper")) {
+      alert("Please upload an AJMT Papers Excel file.");
       return false;
     }
 
@@ -183,6 +190,26 @@ const UploadCards = () => {
           className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700"
         >
           Upload KC Members
+        </button>
+      </div>
+
+      <div className={cardStyle}>
+        <div>
+          <div className="flex items-center gap-3 mb-3">
+            <Users className="text-blue-600" />
+            <h3 className="font-semibold text-gray-800">AJMT Papers</h3>
+          </div>
+          <input
+            type="file"
+            className="text-sm mb-3 bg-gray-50 border border-gray-300 rounded-md p-4 w-full"
+            onChange={(e) => handleFileChange("ajmtpapers", e.target.files[0])}
+          />
+        </div>
+        <button
+          onClick={() => handleUpload("ajmtpapers")}
+          className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
+        >
+          Upload AJMT Papers
         </button>
       </div>
     </div>

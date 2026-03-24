@@ -5,7 +5,6 @@ const authorSchema = new mongoose.Schema(
   {
     authorName: {
       type: String,
-      required: true,
       trim: true,
     },
     authorAddress: {
@@ -57,18 +56,15 @@ const reviewerSchema = new mongoose.Schema(
   {
     reviewerNumber: {
       type: Number,
-      required: true,
       min: 1,
       max: 3,
     },
     reviewerName: {
       type: String,
-      required: true,
       trim: true,
     },
     reviewerEmail: {
       type: String,
-      required: true,
       trim: true,
       lowercase: true,
     },
@@ -88,29 +84,25 @@ const ajmtPaperSchema = new mongoose.Schema(
   {
     uniqueId: {
       type: String,
-      required: [true, "Unique ID is required"],
+      required: true,
       unique: true,
       trim: true,
       uppercase: true,
     },
     paperTitle: {
       type: String,
-      required: [true, "Paper title is required"],
       trim: true,
     },
     titleSubject: {
       type: String,
-      required: [true, "Title subject is required"],
       trim: true,
     },
     paperType: {
       type: String,
-      required: [true, "Paper type is required"],
       trim: true,
     },
     date: {
       type: Date,
-      required: [true, "Date is required"],
     },
     plagiarismPercentage: { type: Number, min: 0, max: 100, default: 0 },
     reviewDate: { type: Date },
