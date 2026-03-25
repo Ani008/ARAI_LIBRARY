@@ -23,7 +23,10 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchStandardsCount = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/standards`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/api/standards`,
+        );
+        console.log("Server Response:", response.data); // CHECK THIS IN BROWSER CONSOLE
         if (response.data && response.data.success) {
           setStandardsCount(response.data.totalRecords);
         }
@@ -34,7 +37,9 @@ const Dashboard = () => {
 
     const fetchPeriodicalsCount = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/periodicals`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/api/periodicals`,
+        );
         if (response.data && response.data.success) {
           setPeriodicalsCount(response.data.totalRecords);
         }
@@ -45,7 +50,9 @@ const Dashboard = () => {
 
     const fetchAbstractsCount = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/abstracts`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/api/abstracts`,
+        );
         if (response.data && response.data.success) {
           setAbstractsCount(response.data.totalRecords);
         }
@@ -56,7 +63,9 @@ const Dashboard = () => {
 
     const fetchKCMembersCount = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/kcmembers`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/api/kcmembers`,
+        );
         if (response.data && response.data.success) {
           setKCMembersCount(response.data.totalRecords);
         }
