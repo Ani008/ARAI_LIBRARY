@@ -32,7 +32,6 @@ exports.standardsDepartmentWiseReport = async (req, res, next) => {
       { header: "ICN", key: "icnNumber", width: 10 },
       { header: "Standard No", key: "standardNumber", width: 20 },
       { header: "Title", key: "title", width: 35 },
-      
       { header: "Category", key: "category", width: 15 },
       { header: "Status", key: "status", width: 12 },
       { header: "Req No", key: "requisition_no", width: 15 },
@@ -65,7 +64,7 @@ exports.standardsDepartmentWiseReport = async (req, res, next) => {
         amount: s.amount,
         publisher: s.publisher,
         accnNumber: s.accnNumber,
-        keywords: s.keywords,
+        keywords: Array.isArray(s.keywords) ? s.keywords.join(", ") : s.keywords,
       });
     });
 
@@ -138,7 +137,7 @@ exports.standardsRequisitionWiseReport = async (req, res, next) => {
         amount: s.amount,
         publisher: s.publisher,
         accnNumber: s.accnNumber,
-        keywords: s.keywords,
+        keywords: Array.isArray(s.keywords) ? s.keywords.join(", ") : s.keywords,
       });
     });
 
@@ -193,7 +192,7 @@ exports.standardsStatusWiseReport = async (req, res, next) => {
         amount: s.amount,
         publisher: s.publisher,
         accnNumber: s.accnNumber,
-        keywords: s.keywords,
+        keywords: Array.isArray(s.keywords) ? s.keywords.join(", ") : s.keywords,
       });
     });
 
@@ -251,7 +250,7 @@ exports.standardsNumberWiseReport = async (req, res, next) => {
         amount: s.amount,
         publisher: s.publisher,
         accnNumber: s.accnNumber,
-        keywords: s.keywords,
+        keywords: Array.isArray(s.keywords) ? s.keywords.join(", ") : s.keywords,
       });
     });
 
@@ -320,8 +319,13 @@ exports.periodicalsSubscriptionDateReport = async (req, res, next) => {
   try {
     const { startDate, endDate } = req.query;
     let filter = {};
+    
+    // Date filtering logic
     if (startDate && endDate) {
-      filter.subscriptionDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
+      filter.subscriptionDate = { 
+        $gte: new Date(startDate), 
+        $lte: new Date(endDate) 
+      };
     }
 
     const periodicals = await Periodical.find(filter).sort({ subscriptionDate: 1 });
@@ -329,35 +333,95 @@ exports.periodicalsSubscriptionDateReport = async (req, res, next) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Subscription Date Report");
 
+    // Comprehensive column list (Total 28 Columns)
     worksheet.columns = [
-      { header: "Subscription Date", key: "subscriptionDate", width: 20 },
+      { header: "Subscription Date", key: "subscriptionDate", width: 18 },
       { header: "Title", key: "title", width: 30 },
-      { header: "Publisher", key: "publisher", width: 25 },
-      { header: "Frequency", key: "frequency", width: 15 },
+      { header: "Subtitle", key: "subtitle", width: 25 },
+      { header: "Authors", key: "authors", width: 30 },
+      { header: "Publisher", key: "publisher", width: 20 },
+      { header: "ISSN", key: "issn", width: 15 },
+      { header: "Frequency", key: "frequency", width: 12 },
+      { header: "Volume", key: "volume", width: 10 },
+      { header: "Issue", key: "issue", width: 10 },
+      { header: "Month", key: "periodicalMonth", width: 12 },
+      { header: "Year", key: "periodicalYear", width: 10 },
+      { header: "Series", key: "series", width: 15 },
+      { header: "Receipt Date", key: "receiptDate", width: 18 },
+      { header: "Dept to Issue", key: "departmentToIssue", width: 18 },
+      { header: "Dept Issue Date", key: "departmentIssueDate", width: 18 },
+      { header: "Add-on Copies", key: "addOnCopies", width: 12 },
+      { header: "Order No", key: "orderNo", width: 12 },
       { header: "PO No", key: "poNo", width: 15 },
+      { header: "Vendor Name", key: "vendorName", width: 20 },
+      { header: "Vendor Phone", key: "vendorPhone", width: 15 },
+      { header: "Vendor Email", key: "vendorEmail", width: 25 },
+      { header: "Mode", key: "mode", width: 12 },
+      { header: "URL", key: "url", width: 25 },
+      { header: "Currency", key: "currency", width: 10 },
       { header: "Amount", key: "amount", width: 12 },
+      { header: "Payment Remarks", key: "remarksForPayment", width: 25 },
+      { header: "Language", key: "language", width: 12 },
+      { header: "Status", key: "status", width: 12 },
+      { header: "Notes", key: "notes", width: 30 },
     ];
 
-    // Blue Header
+    // Blue Header (FF4472C4)
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF4472C4" } };
+    worksheet.getRow(1).fill = { 
+      type: "pattern", 
+      pattern: "solid", 
+      fgColor: { argb: "FF4472C4" } 
+    };
 
     periodicals.forEach((p) => {
       worksheet.addRow({
         subscriptionDate: p.subscriptionDate ? new Date(p.subscriptionDate).toLocaleDateString() : "N/A",
         title: p.title,
+        subtitle: p.subtitle,
+        authors: Array.isArray(p.authors) ? p.authors.join(", ") : "",
         publisher: p.publisher,
+        issn: p.issn,
         frequency: p.frequency,
+        volume: p.volume,
+        issue: p.issue,
+        periodicalMonth: p.periodicalMonth,
+        periodicalYear: p.periodicalYear,
+        series: p.series,
+        receiptDate: p.receiptDate ? new Date(p.receiptDate).toLocaleDateString() : "",
+        departmentToIssue: p.departmentToIssue,
+        departmentIssueDate: p.departmentIssueDate ? new Date(p.departmentIssueDate).toLocaleDateString() : "",
+        addOnCopies: p.addOnCopies,
+        orderNo: p.orderNo,
         poNo: p.poNo,
+        vendorName: p.vendorDetails?.name || "",
+        vendorPhone: p.vendorDetails?.phone || "",
+        vendorEmail: p.vendorDetails?.email || "",
+        mode: p.mode,
+        url: p.url,
+        currency: p.paymentDetails?.currency || "",
         amount: p.paymentDetails?.amount || 0,
+        remarksForPayment: p.remarksForPayment,
+        language: p.language,
+        status: p.status,
+        notes: p.notes,
       });
     });
 
+    // Vertical align and text wrapping
+    worksheet.columns.forEach((column) => {
+      column.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
+    });
+
     const buffer = await workbook.xlsx.writeBuffer();
+
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", `attachment; filename=Subscription_Date_Report_${Date.now()}.xlsx`);
+    res.setHeader("Content-Disposition", `attachment; filename=Subscription_Report_${Date.now()}.xlsx`);
     res.send(buffer);
-  } catch (error) { next(error); }
+
+  } catch (error) { 
+    next(error); 
+  }
 };
 
 // 2. Frequency-wise Report (Frequency Column First)
@@ -366,44 +430,111 @@ exports.periodicalsFrequencyWiseReport = async (req, res, next) => {
     const { frequency } = req.query;
     let filter = frequency ? { frequency } : {};
 
-    const periodicals = await Periodical.find(filter).sort({ frequency: 1, title: 1 });
+    // Sorted by Frequency first, then alphabetically by Title
+    const periodicals = await Periodical.find(filter).sort({ 
+      frequency: 1, 
+      title: 1 
+    });
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Frequency Report");
 
+    // Full 28-Column Comprehensive List
     worksheet.columns = [
       { header: "Frequency", key: "frequency", width: 15 },
       { header: "Title", key: "title", width: 30 },
-      { header: "Publisher", key: "publisher", width: 25 },
+      { header: "Subtitle", key: "subtitle", width: 25 },
+      { header: "Authors", key: "authors", width: 30 },
+      { header: "Publisher", key: "publisher", width: 20 },
       { header: "ISSN", key: "issn", width: 15 },
-      { header: "Dept to Issue", key: "departmentToIssue", width: 20 },
+      { header: "Volume", key: "volume", width: 10 },
+      { header: "Issue", key: "issue", width: 10 },
+      { header: "Month", key: "periodicalMonth", width: 12 },
+      { header: "Year", key: "periodicalYear", width: 10 },
+      { header: "Series", key: "series", width: 15 },
+      { header: "Subscription Date", key: "subscriptionDate", width: 18 },
+      { header: "Receipt Date", key: "receiptDate", width: 18 },
+      { header: "Dept to Issue", key: "departmentToIssue", width: 18 },
+      { header: "Dept Issue Date", key: "departmentIssueDate", width: 18 },
+      { header: "Add-on Copies", key: "addOnCopies", width: 12 },
+      { header: "Order No", key: "orderNo", width: 12 },
+      { header: "PO No", key: "poNo", width: 15 },
+      { header: "Vendor Name", key: "vendorName", width: 20 },
+      { header: "Vendor Phone", key: "vendorPhone", width: 15 },
+      { header: "Vendor Email", key: "vendorEmail", width: 25 },
+      { header: "Mode", key: "mode", width: 12 },
+      { header: "URL", key: "url", width: 25 },
+      { header: "Currency", key: "currency", width: 10 },
+      { header: "Amount", key: "amount", width: 12 },
+      { header: "Payment Remarks", key: "remarksForPayment", width: 25 },
+      { header: "Language", key: "language", width: 12 },
+      { header: "Status", key: "status", width: 12 },
+      { header: "Notes", key: "notes", width: 30 },
     ];
 
-    // Orange Header
+    // Orange Header (FFED7D31)
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFED7D31" } };
+    worksheet.getRow(1).fill = { 
+      type: "pattern", 
+      pattern: "solid", 
+      fgColor: { argb: "FFED7D31" } 
+    };
 
     periodicals.forEach((p) => {
       worksheet.addRow({
         frequency: p.frequency,
         title: p.title,
+        subtitle: p.subtitle,
+        authors: Array.isArray(p.authors) ? p.authors.join(", ") : "",
         publisher: p.publisher,
         issn: p.issn,
+        volume: p.volume,
+        issue: p.issue,
+        periodicalMonth: p.periodicalMonth,
+        periodicalYear: p.periodicalYear,
+        series: p.series,
+        subscriptionDate: p.subscriptionDate ? new Date(p.subscriptionDate).toLocaleDateString() : "",
+        receiptDate: p.receiptDate ? new Date(p.receiptDate).toLocaleDateString() : "",
         departmentToIssue: p.departmentToIssue,
+        departmentIssueDate: p.departmentIssueDate ? new Date(p.departmentIssueDate).toLocaleDateString() : "",
+        addOnCopies: p.addOnCopies,
+        orderNo: p.orderNo,
+        poNo: p.poNo,
+        vendorName: p.vendorDetails?.name || "",
+        vendorPhone: p.vendorDetails?.phone || "",
+        vendorEmail: p.vendorDetails?.email || "",
+        mode: p.mode,
+        url: p.url,
+        currency: p.paymentDetails?.currency || "",
+        amount: p.paymentDetails?.amount || 0,
+        remarksForPayment: p.remarksForPayment,
+        language: p.language,
+        status: p.status,
+        notes: p.notes,
       });
     });
 
+    // Vertical align and text wrapping for readability
+    worksheet.columns.forEach((column) => {
+      column.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
+    });
+
     const buffer = await workbook.xlsx.writeBuffer();
+
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", `attachment; filename=Frequency_Report_${Date.now()}.xlsx`);
     res.send(buffer);
-  } catch (error) { next(error); }
+
+  } catch (error) { 
+    next(error); 
+  }
 };
 
 // 3. Title-wise Report (Title Column First)
 exports.periodicalsTitleWiseReport = async (req, res, next) => {
   try {
     const { title } = req.query;
+    // Keep your regex filter for flexible searching
     let filter = title ? { title: { $regex: title, $options: "i" } } : {};
 
     const periodicals = await Periodical.find(filter).sort({ title: 1 });
@@ -411,33 +542,95 @@ exports.periodicalsTitleWiseReport = async (req, res, next) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Title-wise Report");
 
+    // Full 28-Column Comprehensive List (Matching your Schema)
     worksheet.columns = [
-      { header: "Title", key: "title", width: 40 },
-      { header: "Subtitle", key: "subtitle", width: 30 },
+      { header: "Title", key: "title", width: 35 },
+      { header: "Subtitle", key: "subtitle", width: 25 },
+      { header: "Authors", key: "authors", width: 30 },
       { header: "Publisher", key: "publisher", width: 25 },
       { header: "ISSN", key: "issn", width: 15 },
-      { header: "Status", key: "status", width: 15 },
+      { header: "Frequency", key: "frequency", width: 12 },
+      { header: "Volume", key: "volume", width: 10 },
+      { header: "Issue", key: "issue", width: 10 },
+      { header: "Month", key: "periodicalMonth", width: 12 },
+      { header: "Year", key: "periodicalYear", width: 10 },
+      { header: "Series", key: "series", width: 15 },
+      { header: "Subscription Date", key: "subscriptionDate", width: 18 },
+      { header: "Receipt Date", key: "receiptDate", width: 18 },
+      { header: "Dept to Issue", key: "departmentToIssue", width: 18 },
+      { header: "Dept Issue Date", key: "departmentIssueDate", width: 18 },
+      { header: "Add-on Copies", key: "addOnCopies", width: 12 },
+      { header: "Order No", key: "orderNo", width: 12 },
+      { header: "PO No", key: "poNo", width: 15 },
+      { header: "Vendor Name", key: "vendorName", width: 20 },
+      { header: "Vendor Phone", key: "vendorPhone", width: 15 },
+      { header: "Vendor Email", key: "vendorEmail", width: 25 },
+      { header: "Mode", key: "mode", width: 12 },
+      { header: "URL", key: "url", width: 25 },
+      { header: "Currency", key: "currency", width: 10 },
+      { header: "Amount", key: "amount", width: 12 },
+      { header: "Payment Remarks", key: "remarksForPayment", width: 25 },
+      { header: "Language", key: "language", width: 12 },
+      { header: "Status", key: "status", width: 12 },
+      { header: "Notes", key: "notes", width: 30 },
     ];
 
-    // Green Header
+    // Green Header (FF70AD47)
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF70AD47" } };
+    worksheet.getRow(1).fill = { 
+      type: "pattern", 
+      pattern: "solid", 
+      fgColor: { argb: "FF70AD47" } 
+    };
 
     periodicals.forEach((p) => {
       worksheet.addRow({
         title: p.title,
         subtitle: p.subtitle,
+        authors: Array.isArray(p.authors) ? p.authors.join(", ") : "",
         publisher: p.publisher,
         issn: p.issn,
+        frequency: p.frequency,
+        volume: p.volume,
+        issue: p.issue,
+        periodicalMonth: p.periodicalMonth,
+        periodicalYear: p.periodicalYear,
+        series: p.series,
+        subscriptionDate: p.subscriptionDate ? new Date(p.subscriptionDate).toLocaleDateString() : "",
+        receiptDate: p.receiptDate ? new Date(p.receiptDate).toLocaleDateString() : "",
+        departmentToIssue: p.departmentToIssue,
+        departmentIssueDate: p.departmentIssueDate ? new Date(p.departmentIssueDate).toLocaleDateString() : "",
+        addOnCopies: p.addOnCopies,
+        orderNo: p.orderNo,
+        poNo: p.poNo,
+        vendorName: p.vendorDetails?.name || "",
+        vendorPhone: p.vendorDetails?.phone || "",
+        vendorEmail: p.vendorDetails?.email || "",
+        mode: p.mode,
+        url: p.url,
+        currency: p.paymentDetails?.currency || "",
+        amount: p.paymentDetails?.amount || 0,
+        remarksForPayment: p.remarksForPayment,
+        language: p.language,
         status: p.status,
+        notes: p.notes,
       });
     });
 
+    // Vertical align and text wrapping
+    worksheet.columns.forEach((column) => {
+      column.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
+    });
+
     const buffer = await workbook.xlsx.writeBuffer();
+
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", `attachment; filename=Title_Report_${Date.now()}.xlsx`);
+    res.setHeader("Content-Disposition", `attachment; filename=Title_Search_Report_${Date.now()}.xlsx`);
     res.send(buffer);
-  } catch (error) { next(error); }
+
+  } catch (error) { 
+    next(error); 
+  }
 };
 
 // 4. Status-wise Report (Status Column First)
@@ -446,38 +639,100 @@ exports.periodicalsStatusWiseReport = async (req, res, next) => {
     const { status } = req.query;
     let filter = status ? { status } : {};
 
-    const periodicals = await Periodical.find(filter).sort({ status: 1 });
+    const periodicals = await Periodical.find(filter).sort({ status: 1, title: 1 });
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Status-wise Report");
 
+    // Full 28-Column Comprehensive List
     worksheet.columns = [
       { header: "Status", key: "status", width: 15 },
       { header: "Title", key: "title", width: 35 },
+      { header: "Subtitle", key: "subtitle", width: 25 },
+      { header: "Authors", key: "authors", width: 30 },
       { header: "Publisher", key: "publisher", width: 25 },
-      { header: "Mode", key: "mode", width: 15 },
-      { header: "Language", key: "language", width: 15 },
+      { header: "ISSN", key: "issn", width: 15 },
+      { header: "Frequency", key: "frequency", width: 12 },
+      { header: "Volume", key: "volume", width: 10 },
+      { header: "Issue", key: "issue", width: 10 },
+      { header: "Month", key: "periodicalMonth", width: 12 },
+      { header: "Year", key: "periodicalYear", width: 10 },
+      { header: "Series", key: "series", width: 15 },
+      { header: "Subscription Date", key: "subscriptionDate", width: 18 },
+      { header: "Receipt Date", key: "receiptDate", width: 18 },
+      { header: "Dept to Issue", key: "departmentToIssue", width: 18 },
+      { header: "Dept Issue Date", key: "departmentIssueDate", width: 18 },
+      { header: "Add-on Copies", key: "addOnCopies", width: 12 },
+      { header: "Order No", key: "orderNo", width: 12 },
+      { header: "PO No", key: "poNo", width: 15 },
+      { header: "Vendor Name", key: "vendorName", width: 20 },
+      { header: "Vendor Phone", key: "vendorPhone", width: 15 },
+      { header: "Vendor Email", key: "vendorEmail", width: 25 },
+      { header: "Mode", key: "mode", width: 12 },
+      { header: "URL", key: "url", width: 25 },
+      { header: "Currency", key: "currency", width: 10 },
+      { header: "Amount", key: "amount", width: 12 },
+      { header: "Payment Remarks", key: "remarksForPayment", width: 25 },
+      { header: "Language", key: "language", width: 12 },
+      { header: "Notes", key: "notes", width: 30 },
     ];
 
-    // Purple Header
+    // Purple Header (FF7030A0)
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF7030A0" } };
+    worksheet.getRow(1).fill = { 
+      type: "pattern", 
+      pattern: "solid", 
+      fgColor: { argb: "FF7030A0" } 
+    };
 
     periodicals.forEach((p) => {
       worksheet.addRow({
         status: p.status,
         title: p.title,
+        subtitle: p.subtitle,
+        authors: Array.isArray(p.authors) ? p.authors.join(", ") : "",
         publisher: p.publisher,
+        issn: p.issn,
+        frequency: p.frequency,
+        volume: p.volume,
+        issue: p.issue,
+        periodicalMonth: p.periodicalMonth,
+        periodicalYear: p.periodicalYear,
+        series: p.series,
+        subscriptionDate: p.subscriptionDate ? new Date(p.subscriptionDate).toLocaleDateString() : "",
+        receiptDate: p.receiptDate ? new Date(p.receiptDate).toLocaleDateString() : "",
+        departmentToIssue: p.departmentToIssue,
+        departmentIssueDate: p.departmentIssueDate ? new Date(p.departmentIssueDate).toLocaleDateString() : "",
+        addOnCopies: p.addOnCopies,
+        orderNo: p.orderNo,
+        poNo: p.poNo,
+        vendorName: p.vendorDetails?.name || "",
+        vendorPhone: p.vendorDetails?.phone || "",
+        vendorEmail: p.vendorDetails?.email || "",
         mode: p.mode,
+        url: p.url,
+        currency: p.paymentDetails?.currency || "",
+        amount: p.paymentDetails?.amount || 0,
+        remarksForPayment: p.remarksForPayment,
         language: p.language,
+        notes: p.notes,
       });
     });
 
+    // Formatting
+    worksheet.columns.forEach((column) => {
+      column.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
+    });
+
     const buffer = await workbook.xlsx.writeBuffer();
+
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", `attachment; filename=Status_Report_${Date.now()}.xlsx`);
     res.send(buffer);
-  } catch (error) { next(error); }
+
+  } catch (error) { 
+    next(error); 
+  }
 };
 
 // 5. Complete Directory (Comprehensive Data)
@@ -488,55 +743,104 @@ exports.periodicalsCompleteDirectoryReport = async (req, res, next) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Complete Directory");
 
+    // Comprehensive column list based on your Periodical Schema
     worksheet.columns = [
       { header: "Title", key: "title", width: 30 },
-      
+      { header: "Subtitle", key: "subtitle", width: 25 },
+      { header: "Authors", key: "authors", width: 30 },
       { header: "Publisher", key: "publisher", width: 20 },
       { header: "ISSN", key: "issn", width: 15 },
-      { header: "Frequency", key: "frequency", width: 15 },
+      { header: "Frequency", key: "frequency", width: 12 },
       { header: "Volume", key: "volume", width: 10 },
       { header: "Issue", key: "issue", width: 10 },
-      { header: "Subscription Date", key: "subscriptionDate", width: 15 },
-      { header: "Amount", key: "amount", width: 10 },
+      { header: "Month", key: "periodicalMonth", width: 12 },
+      { header: "Year", key: "periodicalYear", width: 10 },
+      { header: "Series", key: "series", width: 15 },
+      { header: "Subscription Date", key: "subscriptionDate", width: 18 },
+      { header: "Receipt Date", key: "receiptDate", width: 18 },
+      { header: "Dept to Issue", key: "departmentToIssue", width: 18 },
+      { header: "Dept Issue Date", key: "departmentIssueDate", width: 18 },
+      { header: "Add-on Copies", key: "addOnCopies", width: 12 },
+      { header: "Order No", key: "orderNo", width: 12 },
       { header: "PO No", key: "poNo", width: 15 },
       { header: "Vendor Name", key: "vendorName", width: 20 },
+      { header: "Vendor Phone", key: "vendorPhone", width: 15 },
+      { header: "Vendor Email", key: "vendorEmail", width: 25 },
+      { header: "Mode", key: "mode", width: 12 },
+      { header: "URL", key: "url", width: 25 },
+      { header: "Currency", key: "currency", width: 10 },
+      { header: "Amount", key: "amount", width: 12 },
+      { header: "Payment Remarks", key: "remarksForPayment", width: 25 },
+      { header: "Language", key: "language", width: 12 },
       { header: "Status", key: "status", width: 12 },
+      { header: "Notes", key: "notes", width: 30 },
     ];
 
     // Dark Blue/Navy Header
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF203764" } };
+    worksheet.getRow(1).fill = { 
+        type: "pattern", 
+        pattern: "solid", 
+        fgColor: { argb: "FF203764" } 
+    };
 
     periodicals.forEach((p) => {
       worksheet.addRow({
         title: p.title,
+        subtitle: p.subtitle,
+        authors: Array.isArray(p.authors) ? p.authors.join(", ") : "",
         publisher: p.publisher,
         issn: p.issn,
         frequency: p.frequency,
         volume: p.volume,
         issue: p.issue,
+        periodicalMonth: p.periodicalMonth,
+        periodicalYear: p.periodicalYear,
+        series: p.series,
         subscriptionDate: p.subscriptionDate ? new Date(p.subscriptionDate).toLocaleDateString() : "",
-        amount: p.paymentDetails?.amount || 0,
+        receiptDate: p.receiptDate ? new Date(p.receiptDate).toLocaleDateString() : "",
+        departmentToIssue: p.departmentToIssue,
+        departmentIssueDate: p.departmentIssueDate ? new Date(p.departmentIssueDate).toLocaleDateString() : "",
+        addOnCopies: p.addOnCopies,
+        orderNo: p.orderNo,
         poNo: p.poNo,
         vendorName: p.vendorDetails?.name || "",
+        vendorPhone: p.vendorDetails?.phone || "",
+        vendorEmail: p.vendorDetails?.email || "",
+        mode: p.mode,
+        url: p.url,
+        currency: p.paymentDetails?.currency || "",
+        amount: p.paymentDetails?.amount || 0,
+        remarksForPayment: p.remarksForPayment,
+        language: p.language,
         status: p.status,
+        notes: p.notes,
       });
     });
 
+    // Formatting: Middle alignment and text wrapping for long fields
+    worksheet.columns.forEach((column) => {
+        column.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
+    });
+
     const buffer = await workbook.xlsx.writeBuffer();
+    
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", `attachment; filename=Complete_Directory_${Date.now()}.xlsx`);
+    res.setHeader("Content-Disposition", `attachment; filename=Periodicals_Complete_Directory_${Date.now()}.xlsx`);
     res.send(buffer);
-  } catch (error) { next(error); }
+
+  } catch (error) { 
+    next(error); 
+  }
 };
 
 // 6. Missing Issues Report (Overdue Only)
 exports.periodicalsMissingIssuesReport = async (req, res, next) => {
   try {
-    // Only fetch periodicals that have a previous receipt date to calculate the next one
+    // Only fetch periodicals that have a previous receipt date and are Active
     const periodicals = await Periodical.find({
       receiptDate: { $ne: null },
-      status: "Active" // Usually you only track missing issues for active subscriptions
+      status: "Active"
     }).sort({ receiptDate: 1 });
 
     const currentDate = new Date();
@@ -554,11 +858,11 @@ exports.periodicalsMissingIssuesReport = async (req, res, next) => {
         case "Weekly":
           expectedNextDate.setDate(expectedNextDate.getDate() + 7);
           break;
-        case "Bi-Monthly":
-          expectedNextDate.setMonth(expectedNextDate.getMonth() + 2);
-          break;
         case "Monthly":
           expectedNextDate.setMonth(expectedNextDate.getMonth() + 1);
+          break;
+        case "Bi-Monthly":
+          expectedNextDate.setMonth(expectedNextDate.getMonth() + 2);
           break;
         case "Quarterly":
           expectedNextDate.setMonth(expectedNextDate.getMonth() + 3);
@@ -584,47 +888,96 @@ exports.periodicalsMissingIssuesReport = async (req, res, next) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Missing Issues Only");
 
-    // "Expected Date" and "Days Overdue" columns first as requested
+    // Comprehensive 30-Column List (Urgent data first)
     worksheet.columns = [
       { header: "Expected Next Date", key: "expectedNextDate", width: 20 },
       { header: "Days Overdue", key: "daysOverdue", width: 15 },
+      { header: "Last Receipt Date", key: "receiptDate", width: 18 },
       { header: "Title", key: "title", width: 30 },
-      { header: "Frequency", key: "frequency", width: 15 },
-      { header: "Last Receipt Date", key: "receiptDate", width: 20 },
-      { header: "Publisher", key: "publisher", width: 25 },
+      { header: "Frequency", key: "frequency", width: 12 },
+      { header: "Vendor Name", key: "vendorName", width: 20 },
       { header: "Vendor Phone", key: "vendorPhone", width: 15 },
+      { header: "Vendor Email", key: "vendorEmail", width: 25 },
+      { header: "Publisher", key: "publisher", width: 20 },
+      { header: "ISSN", key: "issn", width: 15 },
+      { header: "Volume", key: "volume", width: 10 },
+      { header: "Issue", key: "issue", width: 10 },
+      { header: "Month", key: "periodicalMonth", width: 12 },
+      { header: "Year", key: "periodicalYear", width: 10 },
+      { header: "PO No", key: "poNo", width: 15 },
+      { header: "Currency", key: "currency", width: 10 },
+      { header: "Amount", key: "amount", width: 12 },
+      { header: "Mode", key: "mode", width: 12 },
+      { header: "Subscription Date", key: "subscriptionDate", width: 18 },
+      { header: "Dept to Issue", key: "departmentToIssue", width: 18 },
+      { header: "Order No", key: "orderNo", width: 12 },
+      { header: "Language", key: "language", width: 12 },
+      { header: "Notes", key: "notes", width: 30 },
     ];
 
-    // Sharp Red Header for visibility
+    // Sharp Red Header (FFC00000)
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC00000" } };
+    worksheet.getRow(1).fill = { 
+      type: "pattern", 
+      pattern: "solid", 
+      fgColor: { argb: "FFC00000" } 
+    };
 
     missingIssues.forEach((p) => {
-      const row = worksheet.addRow({
+      const rowData = {
         expectedNextDate: p.expectedNextDate.toLocaleDateString(),
         daysOverdue: p.daysOverdue,
+        receiptDate: new Date(p.receiptDate).toLocaleDateString(),
         title: p.title,
         frequency: p.frequency,
-        receiptDate: new Date(p.receiptDate).toLocaleDateString(),
+        vendorName: p.vendorDetails?.name || "",
+        vendorPhone: p.vendorDetails?.phone || "",
+        vendorEmail: p.vendorDetails?.email || "",
         publisher: p.publisher,
-        vendorPhone: p.vendorDetails?.phone || "N/A",
-      });
+        issn: p.issn,
+        volume: p.volume,
+        issue: p.issue,
+        periodicalMonth: p.periodicalMonth,
+        periodicalYear: p.periodicalYear,
+        poNo: p.poNo,
+        currency: p.paymentDetails?.currency || "",
+        amount: p.paymentDetails?.amount || 0,
+        mode: p.mode,
+        subscriptionDate: p.subscriptionDate ? new Date(p.subscriptionDate).toLocaleDateString() : "",
+        departmentToIssue: p.departmentToIssue,
+        orderNo: p.orderNo,
+        language: p.language,
+        notes: p.notes,
+      };
 
-      // Conditional formatting: If more than 30 days overdue, highlight the row light red
+      const row = worksheet.addRow(rowData);
+
+      // Light Red highlight for critical delays (> 30 days)
       if (p.daysOverdue > 30) {
-        row.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFFFC7CE" },
-        };
+        row.eachCell((cell) => {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFFFC7CE" },
+          };
+        });
       }
     });
 
+    // Vertical align and text wrapping
+    worksheet.columns.forEach((column) => {
+      column.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
+    });
+
     const buffer = await workbook.xlsx.writeBuffer();
+
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", `attachment; filename=Missing_Issues_Only_${Date.now()}.xlsx`);
+    res.setHeader("Content-Disposition", `attachment; filename=Missing_Issues_${Date.now()}.xlsx`);
     res.send(buffer);
-  } catch (error) { next(error); }
+
+  } catch (error) { 
+    next(error); 
+  }
 };
 
 // ==================== ABSTRACTS REPORTS ====================
@@ -634,7 +987,8 @@ exports.abstractsSubjectWiseReport = async (req, res, next) => {
     const { subject } = req.query;
     let filter = {};
     if (subject) {
-      filter.subject = { $in: [subject] }; // Since subject is an array in your model
+      // Correctly handles the array field in your model
+      filter.subject = { $in: [subject] }; 
     }
 
     const abstracts = await Abstract.find(filter).sort({ subject: 1, title: 1 });
@@ -642,35 +996,67 @@ exports.abstractsSubjectWiseReport = async (req, res, next) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Subject-wise Abstracts");
 
+    // Comprehensive 15-column list (Subject first for this report)
     worksheet.columns = [
       { header: "Subject", key: "subject", width: 25 },
-      { header: "Title", key: "title", width: 40 },
-      { header: "Authors", key: "authors", width: 30 },
-      { header: "Journal", key: "journal", width: 25 },
-      { header: "Year", key: "year", width: 10 },
-      { header: "Status", key: "status", width: 15 },
+      { header: "Title", key: "title", width: 35 },
+      { header: "Authors", key: "authors", width: 25 },
+      { header: "Journal", key: "journal", width: 20 },
+      { header: "Source", key: "source", width: 20 },
+      { header: "Keywords", key: "keyword", width: 20 },
+      { header: "Vol", key: "volume", width: 8 },
+      { header: "Issue", key: "issue", width: 8 },
+      { header: "Year", key: "year", width: 8 },
+      { header: "Month", key: "publicationMonth", width: 12 },
+      { header: "Summary", key: "summary", width: 40 },
+      { header: "Status", key: "status", width: 12 },
+      { header: "Published In AA", key: "publishedInAA", width: 25 },
+      { header: "URL", key: "url", width: 25 },
+      { header: "Remarks", key: "remarks", width: 20 },
     ];
 
-    // Purple Header
+    // Purple Header (FF7030A0)
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF7030A0" } };
+    worksheet.getRow(1).fill = { 
+      type: "pattern", 
+      pattern: "solid", 
+      fgColor: { argb: "FF7030A0" } 
+    };
 
     abstracts.forEach((a) => {
       worksheet.addRow({
-        subject: a.subject ? a.subject.join(", ") : "",
+        subject: Array.isArray(a.subject) ? a.subject.join(", ") : "",
         title: a.title,
-        authors: a.authors ? a.authors.join(", ") : "",
+        authors: Array.isArray(a.authors) ? a.authors.join(", ") : "",
         journal: a.journal,
+        source: a.source,
+        keyword: Array.isArray(a.keyword) ? a.keyword.join(", ") : "",
+        volume: a.volume,
+        issue: a.issue,
         year: a.year,
+        publicationMonth: a.publicationMonth,
+        summary: a.summary,
         status: a.status,
+        publishedInAA: a.publishedInAA,
+        url: a.url,
+        remarks: a.remarks,
       });
     });
 
+    // Formatting: Top alignment is best for rows with long summaries
+    worksheet.columns.forEach((column) => {
+      column.alignment = { vertical: "top", horizontal: "left", wrapText: true };
+    });
+
     const buffer = await workbook.xlsx.writeBuffer();
+
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", `attachment; filename=Abstracts_Subject_Report_${Date.now()}.xlsx`);
+    res.setHeader("Content-Disposition", `attachment; filename=Subject_Report_${Date.now()}.xlsx`);
+    
     res.send(buffer);
-  } catch (error) { next(error); }
+  } catch (error) { 
+    next(error); 
+  }
 };
 
 // 2. Yearly Archives Report
@@ -679,40 +1065,73 @@ exports.abstractsYearlyArchivesReport = async (req, res, next) => {
     const { year } = req.query;
     let filter = year ? { year } : {};
 
+    // Sorted by Year (desc) and then Title (asc)
     const abstracts = await Abstract.find(filter).sort({ year: -1, title: 1 });
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Yearly Archives");
 
+    // Comprehensive 15-column list (Year first as requested)
     worksheet.columns = [
       { header: "Year", key: "year", width: 10 },
-      { header: "Title", key: "title", width: 40 },
-      { header: "Journal", key: "journal", width: 25 },
-      { header: "Volume", key: "volume", width: 10 },
-      { header: "Issue", key: "issue", width: 10 },
-      { header: "Month", key: "publicationMonth", width: 15 },
+      { header: "Title", key: "title", width: 35 },
+      { header: "Authors", key: "authors", width: 25 },
+      { header: "Journal", key: "journal", width: 20 },
+      { header: "Source", key: "source", width: 20 },
+      { header: "Keywords", key: "keyword", width: 20 },
+      { header: "Vol", key: "volume", width: 8 },
+      { header: "Issue", key: "issue", width: 8 },
+      { header: "Month", key: "publicationMonth", width: 12 },
+      { header: "Subject", key: "subject", width: 20 },
+      { header: "Summary", key: "summary", width: 40 },
+      { header: "Status", key: "status", width: 12 },
+      { header: "Published In AA", key: "publishedInAA", width: 25 },
+      { header: "URL", key: "url", width: 25 },
+      { header: "Remarks", key: "remarks", width: 20 },
     ];
 
-    // Slate Blue Header
+    // Slate Blue Header (FF44546A)
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF44546A" } };
+    worksheet.getRow(1).fill = { 
+      type: "pattern", 
+      pattern: "solid", 
+      fgColor: { argb: "FF44546A" } 
+    };
 
     abstracts.forEach((a) => {
       worksheet.addRow({
         year: a.year,
         title: a.title,
+        authors: Array.isArray(a.authors) ? a.authors.join(", ") : "",
         journal: a.journal,
+        source: a.source,
+        keyword: Array.isArray(a.keyword) ? a.keyword.join(", ") : "",
         volume: a.volume,
         issue: a.issue,
         publicationMonth: a.publicationMonth,
+        subject: Array.isArray(a.subject) ? a.subject.join(", ") : "",
+        summary: a.summary,
+        status: a.status,
+        publishedInAA: a.publishedInAA,
+        url: a.url,
+        remarks: a.remarks,
       });
     });
 
+    // Formatting: Top alignment for better handling of multi-line summaries
+    worksheet.columns.forEach((column) => {
+      column.alignment = { vertical: "top", horizontal: "left", wrapText: true };
+    });
+
     const buffer = await workbook.xlsx.writeBuffer();
+
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", `attachment; filename=Abstracts_Yearly_Archive_${Date.now()}.xlsx`);
+    res.setHeader("Content-Disposition", `attachment; filename=Yearly_Archive_${year || "All"}_${Date.now()}.xlsx`);
+    
     res.send(buffer);
-  } catch (error) { next(error); }
+  } catch (error) { 
+    next(error); 
+  }
 };
 
 // 3. Published In AA Report (Filter for non-empty publishedInAA)
@@ -726,33 +1145,67 @@ exports.abstractsPublishedInAAReport = async (req, res, next) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Published In AA");
 
+    // Comprehensive 15-column list (Published In AA Details moved to first)
     worksheet.columns = [
-      { header: "Published In AA Details", key: "publishedInAA", width: 40 },
-      { header: "Title", key: "title", width: 40 },
-      { header: "Source", key: "source", width: 30 },
-      { header: "Journal", key: "journal", width: 25 },
-      { header: "URL", key: "url", width: 30 },
+      { header: "Published In AA Details", key: "publishedInAA", width: 35 },
+      { header: "Title", key: "title", width: 35 },
+      { header: "Authors", key: "authors", width: 25 },
+      { header: "Journal", key: "journal", width: 20 },
+      { header: "Source", key: "source", width: 20 },
+      { header: "Keywords", key: "keyword", width: 20 },
+      { header: "Vol", key: "volume", width: 8 },
+      { header: "Issue", key: "issue", width: 8 },
+      { header: "Year", key: "year", width: 8 },
+      { header: "Month", key: "publicationMonth", width: 12 },
+      { header: "Subject", key: "subject", width: 20 },
+      { header: "Summary", key: "summary", width: 40 },
+      { header: "Status", key: "status", width: 12 },
+      { header: "URL", key: "url", width: 25 },
+      { header: "Remarks", key: "remarks", width: 20 },
     ];
 
-    // Rose/Crimson Header
+    // Rose/Crimson Header (FFE11D48)
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE11D48" } };
+    worksheet.getRow(1).fill = { 
+      type: "pattern", 
+      pattern: "solid", 
+      fgColor: { argb: "FFE11D48" } 
+    };
 
     abstracts.forEach((a) => {
       worksheet.addRow({
         publishedInAA: a.publishedInAA,
         title: a.title,
-        source: a.source,
+        authors: Array.isArray(a.authors) ? a.authors.join(", ") : "",
         journal: a.journal,
+        source: a.source,
+        keyword: Array.isArray(a.keyword) ? a.keyword.join(", ") : "",
+        volume: a.volume,
+        issue: a.issue,
+        year: a.year,
+        publicationMonth: a.publicationMonth,
+        subject: Array.isArray(a.subject) ? a.subject.join(", ") : "",
+        summary: a.summary,
+        status: a.status,
         url: a.url,
+        remarks: a.remarks,
       });
     });
 
+    // Formatting: Vertical alignment and text wrapping
+    worksheet.columns.forEach((column) => {
+      column.alignment = { vertical: "top", horizontal: "left", wrapText: true };
+    });
+
     const buffer = await workbook.xlsx.writeBuffer();
+
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", `attachment; filename=Published_In_AA_Report_${Date.now()}.xlsx`);
+    res.setHeader("Content-Disposition", `attachment; filename=Published_In_AA_${Date.now()}.xlsx`);
+    
     res.send(buffer);
-  } catch (error) { next(error); }
+  } catch (error) { 
+    next(error); 
+  }
 };
 
 // 4. Status-wise Report
@@ -766,41 +1219,79 @@ exports.abstractsStatusWiseReport = async (req, res, next) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Status-wise Abstracts");
 
+    // Comprehensive 15-column list based on your Abstract Schema
     worksheet.columns = [
-      { header: "Status", key: "status", width: 15 },
-      { header: "Title", key: "title", width: 40 },
-      { header: "Authors", key: "authors", width: 30 },
-      { header: "Subject", key: "subject", width: 25 },
+      { header: "Status", key: "status", width: 12 },
+      { header: "Title", key: "title", width: 35 },
+      { header: "Authors", key: "authors", width: 25 },
+      { header: "Journal", key: "journal", width: 20 },
+      { header: "Source", key: "source", width: 20 },
+      { header: "Keywords", key: "keyword", width: 20 },
+      { header: "Vol", key: "volume", width: 8 },
+      { header: "Issue", key: "issue", width: 8 },
+      { header: "Year", key: "year", width: 8 },
+      { header: "Month", key: "publicationMonth", width: 12 },
+      { header: "Subject", key: "subject", width: 20 },
+      { header: "Summary", key: "summary", width: 40 },
+      { header: "Published In AA", key: "publishedInAA", width: 25 },
+      { header: "URL", key: "url", width: 25 },
+      { header: "Remarks", key: "remarks", width: 20 },
     ];
 
-    // Dark Green Header
+    // Dark Green Header (FF00B050)
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF00B050" } };
+    worksheet.getRow(1).fill = { 
+      type: "pattern", 
+      pattern: "solid", 
+      fgColor: { argb: "FF00B050" } 
+    };
 
     abstracts.forEach((a) => {
       worksheet.addRow({
         status: a.status,
         title: a.title,
-        authors: a.authors ? a.authors.join(", ") : "",
-        subject: a.subject ? a.subject.join(", ") : "",
+        authors: Array.isArray(a.authors) ? a.authors.join(", ") : "",
+        journal: a.journal,
+        source: a.source,
+        keyword: Array.isArray(a.keyword) ? a.keyword.join(", ") : "",
+        volume: a.volume,
+        issue: a.issue,
+        year: a.year,
+        publicationMonth: a.publicationMonth,
+        subject: Array.isArray(a.subject) ? a.subject.join(", ") : "",
+        summary: a.summary,
+        publishedInAA: a.publishedInAA,
+        url: a.url,
+        remarks: a.remarks,
       });
     });
 
+    // Formatting: Top alignment for long summaries and text wrapping
+    worksheet.columns.forEach((column) => {
+      column.alignment = { vertical: "top", horizontal: "left", wrapText: true };
+    });
+
     const buffer = await workbook.xlsx.writeBuffer();
+
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", `attachment; filename=Abstracts_Status_Report_${Date.now()}.xlsx`);
+    
     res.send(buffer);
-  } catch (error) { next(error); }
+  } catch (error) { 
+    next(error); 
+  }
 };
 
 // 5. Complete Directory (Comprehensive All-Field Report)
 exports.abstractsCompleteDirectoryReport = async (req, res, next) => {
   try {
+    // Sorting by newest first as per your original logic
     const abstracts = await Abstract.find().sort({ createdAt: -1 });
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Complete Abstract Directory");
 
+    // Comprehensive 15-column list based on your Abstract Schema
     worksheet.columns = [
       { header: "Title", key: "title", width: 35 },
       { header: "Authors", key: "authors", width: 25 },
@@ -812,38 +1303,56 @@ exports.abstractsCompleteDirectoryReport = async (req, res, next) => {
       { header: "Year", key: "year", width: 8 },
       { header: "Month", key: "publicationMonth", width: 12 },
       { header: "Subject", key: "subject", width: 20 },
+      { header: "Summary", key: "summary", width: 40 }, // Added missing field
       { header: "Status", key: "status", width: 12 },
       { header: "Published In AA", key: "publishedInAA", width: 25 },
+      { header: "URL", key: "url", width: 25 }, // Added missing field
       { header: "Remarks", key: "remarks", width: 20 },
     ];
 
-    // Gold/Navy Header
+    // Navy Header (FF203764)
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF203764" } };
+    worksheet.getRow(1).fill = { 
+      type: "pattern", 
+      pattern: "solid", 
+      fgColor: { argb: "FF203764" } 
+    };
 
     abstracts.forEach((a) => {
       worksheet.addRow({
         title: a.title,
-        authors: a.authors ? a.authors.join(", ") : "",
+        // Using Array check for safety on authors, keywords, and subjects
+        authors: Array.isArray(a.authors) ? a.authors.join(", ") : "",
         journal: a.journal,
         source: a.source,
-        keyword: a.keyword ? a.keyword.join(", ") : "",
+        keyword: Array.isArray(a.keyword) ? a.keyword.join(", ") : "",
         volume: a.volume,
         issue: a.issue,
         year: a.year,
         publicationMonth: a.publicationMonth,
-        subject: a.subject ? a.subject.join(", ") : "",
+        subject: Array.isArray(a.subject) ? a.subject.join(", ") : "",
+        summary: a.summary, // Mapping added
         status: a.status,
         publishedInAA: a.publishedInAA,
+        url: a.url, // Mapping added
         remarks: a.remarks,
       });
     });
 
+    // Formatting: Ensure long text like Summary wraps and aligns to top/left
+    worksheet.columns.forEach((column) => {
+      column.alignment = { vertical: "top", horizontal: "left", wrapText: true };
+    });
+
     const buffer = await workbook.xlsx.writeBuffer();
+
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", `attachment; filename=Complete_Abstract_Directory_${Date.now()}.xlsx`);
+    
     res.send(buffer);
-  } catch (error) { next(error); }
+  } catch (error) { 
+    next(error); 
+  }
 };
 
 // ==================== KC MEMBERSHIP REPORTS ====================
@@ -856,19 +1365,31 @@ exports.kcMembersCompleteReport = async (req, res, next) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Complete Membership");
 
+    // Comprehensive 20-column list based on your KCMember Schema
     worksheet.columns = [
+      { header: "Membership ID", key: "membershipId", width: 15 },
       { header: "Institution Name", key: "institutionName", width: 30 },
       { header: "Contact Person", key: "contactPerson", width: 25 },
-      { header: "Designation", key: "designation", width: 25 },
-      { header: "Membership Type", key: "membershipType", width: 20 },
-      { header: "Email", key: "email", width: 30 },
-      { header: "Phone", key: "phone", width: 15 },
+      { header: "Designation", key: "designation", width: 20 },
+      { header: "Membership Type", key: "membershipType", width: 25 },
+      { header: "Subscription Type", key: "subscriptionType", width: 20 },
+      { header: "Membership Status", key: "membershipStatus", width: 15 },
       { header: "Start Date", key: "membershipStartDate", width: 15 },
       { header: "End Date", key: "membershipEndDate", width: 15 },
-      { header: "Payment Status", key: "paymentStatus", width: 15 },
+      { header: "Email", key: "email", width: 30 },
+      { header: "Phone", key: "phone", width: 15 },
+      { header: "Alt Phone", key: "alternatePhone", width: 15 },
+      { header: "Website", key: "website", width: 25 },
+      { header: "Complete Address", key: "completeAddress", width: 40 },
       { header: "Fees", key: "fees", width: 12 },
+      { header: "Payment Status", key: "paymentStatus", width: 15 },
+      { header: "Last Payment Date", key: "lastPaymentDate", width: 18 },
+      { header: "Transaction ID", key: "transactionId", width: 20 },
+      { header: "Bank Name", key: "nameOfBank", width: 20 },
+      { header: "Notes", key: "notes", width: 30 },
     ];
 
+    // Standard Blue Header (FF0070C0)
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
     worksheet.getRow(1).fill = {
       type: "pattern",
@@ -876,39 +1397,41 @@ exports.kcMembersCompleteReport = async (req, res, next) => {
       fgColor: { argb: "FF0070C0" },
     };
 
-    members.forEach((member) => {
+    members.forEach((m) => {
       worksheet.addRow({
-        institutionName: member.institutionName,
-        contactPerson: member.contactPerson,
-        designation: member.designation || "",
-        membershipType: member.membershipType,
-        email: member.email || "",
-        phone: member.phone || "",
-        membershipStartDate: member.membershipStartDate
-          ? new Date(member.membershipStartDate).toLocaleDateString()
-          : "",
-        membershipEndDate: member.membershipEndDate
-          ? new Date(member.membershipEndDate).toLocaleDateString()
-          : "",
-        paymentStatus: member.paymentStatus || "",
-        fees: member.fees || "",
+        membershipId: m.membershipId,
+        institutionName: m.institutionName,
+        contactPerson: m.contactPerson,
+        designation: m.designation || "",
+        membershipType: m.membershipType,
+        subscriptionType: m.subscriptionType || "",
+        membershipStatus: m.membershipStatus || "",
+        membershipStartDate: m.membershipStartDate ? new Date(m.membershipStartDate).toLocaleDateString() : "",
+        membershipEndDate: m.membershipEndDate ? new Date(m.membershipEndDate).toLocaleDateString() : "",
+        email: m.email || "",
+        phone: m.phone || "",
+        alternatePhone: m.alternatePhone || "",
+        website: m.website || "",
+        completeAddress: m.completeAddress || "",
+        fees: m.fees || 0,
+        paymentStatus: m.paymentStatus || "",
+        lastPaymentDate: m.lastPaymentDate ? new Date(m.lastPaymentDate).toLocaleDateString() : "",
+        transactionId: m.transactionId || "",
+        nameOfBank: m.nameOfBank || "",
+        notes: m.notes || "",
       });
     });
 
+    // Formatting: Scannable alignment and wrapping for long addresses/notes
     worksheet.columns.forEach((column) => {
-      column.alignment = { vertical: "middle", wrapText: true };
+      column.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
 
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    );
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=KC_Complete_Membership_${Date.now()}.xlsx`,
-    );
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=KC_Complete_Membership_${Date.now()}.xlsx`);
+    
     res.send(buffer);
   } catch (error) {
     next(error);
@@ -918,6 +1441,7 @@ exports.kcMembersCompleteReport = async (req, res, next) => {
 // 11. Payment Status Report
 exports.kcMembersPaymentStatusReport = async (req, res, next) => {
   try {
+    // Sorted by Payment Status first, then Institution Name
     const members = await KCMember.find().sort({
       paymentStatus: 1,
       institutionName: 1,
@@ -926,18 +1450,31 @@ exports.kcMembersPaymentStatusReport = async (req, res, next) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Payment Status");
 
+    // Comprehensive 20-column list (Payment details moved to front)
     worksheet.columns = [
+      { header: "Payment Status", key: "paymentStatus", width: 15 },
       { header: "Institution Name", key: "institutionName", width: 30 },
       { header: "Contact Person", key: "contactPerson", width: 25 },
-      { header: "Membership Type", key: "membershipType", width: 20 },
-      { header: "Payment Status", key: "paymentStatus", width: 15 },
       { header: "Fees", key: "fees", width: 12 },
-      { header: "Payment Frequency", key: "paymentFrequency", width: 18 },
       { header: "Last Payment Date", key: "lastPaymentDate", width: 18 },
-      { header: "Transaction ID", key: "transactionId", width: 25 },
-      { header: "Bank Name", key: "nameOfBank", width: 25 },
+      { header: "Transaction ID", key: "transactionId", width: 20 },
+      { header: "Bank Name", key: "nameOfBank", width: 20 },
+      { header: "Membership ID", key: "membershipId", width: 15 },
+      { header: "Designation", key: "designation", width: 20 },
+      { header: "Membership Type", key: "membershipType", width: 25 },
+      { header: "Subscription Type", key: "subscriptionType", width: 20 },
+      { header: "Membership Status", key: "membershipStatus", width: 15 },
+      { header: "Start Date", key: "membershipStartDate", width: 15 },
+      { header: "End Date", key: "membershipEndDate", width: 15 },
+      { header: "Email", key: "email", width: 30 },
+      { header: "Phone", key: "phone", width: 15 },
+      { header: "Alt Phone", key: "alternatePhone", width: 15 },
+      { header: "Website", key: "website", width: 25 },
+      { header: "Complete Address", key: "completeAddress", width: 40 },
+      { header: "Notes", key: "notes", width: 30 },
     ];
 
+    // Green Header (FF00B050)
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
     worksheet.getRow(1).fill = {
       type: "pattern",
@@ -945,49 +1482,55 @@ exports.kcMembersPaymentStatusReport = async (req, res, next) => {
       fgColor: { argb: "FF00B050" },
     };
 
-    members.forEach((member) => {
+    members.forEach((m) => {
       const row = worksheet.addRow({
-        institutionName: member.institutionName,
-        contactPerson: member.contactPerson,
-        membershipType: member.membershipType,
-        paymentStatus: member.paymentStatus || "",
-        fees: member.fees || "",
-        paymentFrequency: member.paymentFrequency || "",
-        lastPaymentDate: member.lastPaymentDate
-          ? new Date(member.lastPaymentDate).toLocaleDateString()
-          : "",
-        transactionId: member.transactionId || "",
-        nameOfBank: member.nameOfBank || "",
+        paymentStatus: m.paymentStatus || "Unpaid",
+        institutionName: m.institutionName,
+        contactPerson: m.contactPerson,
+        fees: m.fees || 0,
+        lastPaymentDate: m.lastPaymentDate ? new Date(m.lastPaymentDate).toLocaleDateString() : "",
+        transactionId: m.transactionId || "",
+        nameOfBank: m.nameOfBank || "",
+        membershipId: m.membershipId,
+        designation: m.designation || "",
+        membershipType: m.membershipType,
+        subscriptionType: m.subscriptionType || "",
+        membershipStatus: m.membershipStatus || "",
+        membershipStartDate: m.membershipStartDate ? new Date(m.membershipStartDate).toLocaleDateString() : "",
+        membershipEndDate: m.membershipEndDate ? new Date(m.membershipEndDate).toLocaleDateString() : "",
+        email: m.email || "",
+        phone: m.phone || "",
+        alternatePhone: m.alternatePhone || "",
+        website: m.website || "",
+        completeAddress: m.completeAddress || "",
+        notes: m.notes || "",
       });
 
-      // Highlight unpaid in red
-      if (member.paymentStatus === "Unpaid") {
-        row.getCell("paymentStatus").fill = {
+      // Highlight unpaid status in red with white text
+      if (m.paymentStatus === "Unpaid" || !m.paymentStatus) {
+        const statusCell = row.getCell("paymentStatus");
+        statusCell.fill = {
           type: "pattern",
           pattern: "solid",
           fgColor: { argb: "FFFF0000" },
         };
-        row.getCell("paymentStatus").font = {
+        statusCell.font = {
           color: { argb: "FFFFFFFF" },
           bold: true,
         };
       }
     });
 
+    // Formatting: Apply uniform alignment and wrapping
     worksheet.columns.forEach((column) => {
-      column.alignment = { vertical: "middle", wrapText: true };
+      column.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
 
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    );
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=KC_Payment_Status_${Date.now()}.xlsx`,
-    );
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=KC_Payment_Status_${Date.now()}.xlsx`);
+    
     res.send(buffer);
   } catch (error) {
     next(error);
@@ -997,6 +1540,7 @@ exports.kcMembersPaymentStatusReport = async (req, res, next) => {
 exports.kcMembersOverdueReport = async (req, res, next) => {
   try {
     const currentDate = new Date();
+    // Only fetch members who are Unpaid and past their End Date
     const overdueMembers = await KCMember.find({
       paymentStatus: "Unpaid",
       membershipEndDate: { $lt: currentDate },
@@ -1005,18 +1549,32 @@ exports.kcMembersOverdueReport = async (req, res, next) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Overdue Members");
 
+    // Comprehensive 21-column list (Adding calculated "Days Overdue")
     worksheet.columns = [
+      { header: "Days Overdue", key: "daysOverdue", width: 15 },
+      { header: "End Date", key: "membershipEndDate", width: 15 },
       { header: "Institution Name", key: "institutionName", width: 30 },
       { header: "Contact Person", key: "contactPerson", width: 25 },
+      { header: "Membership ID", key: "membershipId", width: 15 },
       { header: "Email", key: "email", width: 30 },
       { header: "Phone", key: "phone", width: 15 },
-      { header: "Membership Type", key: "membershipType", width: 20 },
-      { header: "End Date", key: "membershipEndDate", width: 15 },
-      { header: "Days Overdue", key: "daysOverdue", width: 15 },
       { header: "Fees", key: "fees", width: 12 },
       { header: "Payment Status", key: "paymentStatus", width: 15 },
+      { header: "Membership Type", key: "membershipType", width: 25 },
+      { header: "Subscription Type", key: "subscriptionType", width: 20 },
+      { header: "Designation", key: "designation", width: 20 },
+      { header: "Membership Status", key: "membershipStatus", width: 15 },
+      { header: "Start Date", key: "membershipStartDate", width: 15 },
+      { header: "Alt Phone", key: "alternatePhone", width: 15 },
+      { header: "Website", key: "website", width: 25 },
+      { header: "Complete Address", key: "completeAddress", width: 40 },
+      { header: "Last Payment Date", key: "lastPaymentDate", width: 18 },
+      { header: "Transaction ID", key: "transactionId", width: 20 },
+      { header: "Bank Name", key: "nameOfBank", width: 20 },
+      { header: "Notes", key: "notes", width: 30 },
     ];
 
+    // Red Header (FFC00000)
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
     worksheet.getRow(1).fill = {
       type: "pattern",
@@ -1024,57 +1582,68 @@ exports.kcMembersOverdueReport = async (req, res, next) => {
       fgColor: { argb: "FFC00000" },
     };
 
-    overdueMembers.forEach((member) => {
+    overdueMembers.forEach((m) => {
       const daysOverdue = Math.floor(
-        (currentDate - new Date(member.membershipEndDate)) /
-          (1000 * 60 * 60 * 24),
+        (currentDate - new Date(m.membershipEndDate)) / (1000 * 60 * 60 * 24)
       );
 
       const row = worksheet.addRow({
-        institutionName: member.institutionName,
-        contactPerson: member.contactPerson,
-        email: member.email || "",
-        phone: member.phone || "",
-        membershipType: member.membershipType,
-        membershipEndDate: new Date(
-          member.membershipEndDate,
-        ).toLocaleDateString(),
         daysOverdue: daysOverdue,
-        fees: member.fees || "",
-        paymentStatus: member.paymentStatus,
+        membershipEndDate: new Date(m.membershipEndDate).toLocaleDateString(),
+        institutionName: m.institutionName,
+        contactPerson: m.contactPerson,
+        membershipId: m.membershipId,
+        email: m.email || "",
+        phone: m.phone || "",
+        fees: m.fees || 0,
+        paymentStatus: m.paymentStatus,
+        membershipType: m.membershipType,
+        subscriptionType: m.subscriptionType || "",
+        designation: m.designation || "",
+        membershipStatus: m.membershipStatus || "",
+        membershipStartDate: m.membershipStartDate ? new Date(m.membershipStartDate).toLocaleDateString() : "",
+        alternatePhone: m.alternatePhone || "",
+        website: m.website || "",
+        completeAddress: m.completeAddress || "",
+        lastPaymentDate: m.lastPaymentDate ? new Date(m.lastPaymentDate).toLocaleDateString() : "",
+        transactionId: m.transactionId || "",
+        nameOfBank: m.nameOfBank || "",
+        notes: m.notes || "",
       });
 
-      // Highlight severely overdue (>90 days) in darker red
+      // Conditional formatting based on your logic
       if (daysOverdue > 90) {
-        row.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFFF0000" },
-        };
-        row.font = { color: { argb: "FFFFFFFF" } };
+        // Severe delay: Dark Red / White text
+        row.eachCell((cell) => {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFFF0000" },
+          };
+          cell.font = { color: { argb: "FFFFFFFF" }, bold: true };
+        });
       } else {
-        row.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFFFC7CE" },
-        };
+        // Moderate delay: Light Red / Pink background
+        row.eachCell((cell) => {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFFFC7CE" },
+          };
+        });
       }
     });
 
+    // Formatting alignment
     worksheet.columns.forEach((column) => {
-      column.alignment = { vertical: "middle", wrapText: true };
+      column.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
 
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    );
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=KC_Overdue_Members_${Date.now()}.xlsx`,
-    );
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=KC_Overdue_Report_${Date.now()}.xlsx`);
+    
     res.send(buffer);
   } catch (error) {
     next(error);
@@ -1083,22 +1652,42 @@ exports.kcMembersOverdueReport = async (req, res, next) => {
 
 exports.kcMembersSubscriptionAnalysisReport = async (req, res, next) => {
   try {
-    const members = await KCMember.find();
+    const members = await KCMember.find().sort({ membershipType: 1, institutionName: 1 });
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Subscription Analysis");
 
+    // Comprehensive 24-column list (Analysis columns + all 20 schema fields)
     worksheet.columns = [
       { header: "Institution Name", key: "institutionName", width: 30 },
-      { header: "Membership Type", key: "membershipType", width: 20 },
-      { header: "Automotive Abstracts", key: "automotiveAbstracts", width: 20 },
-      { header: "ARAI Journal", key: "araiJournal", width: 18 },
-      { header: "KC Option 1", key: "kcOption1", width: 15 },
-      { header: "KC Option 2", key: "kcOption2", width: 15 },
-      { header: "Total Subscriptions", key: "totalSubscriptions", width: 18 },
+      { header: "Membership Type", key: "membershipType", width: 25 },
+      { header: "Subscription Type", key: "subscriptionType", width: 20 },
+      // Analysis Helper Columns
+      { header: "Is Automotive Abstract", key: "isAA", width: 18 },
+      { header: "Is ARAI Journal", key: "isJournal", width: 15 },
+      { header: "Is KC Option 1", key: "isOpt1", width: 15 },
+      { header: "Is KC Option 2", key: "isOpt2", width: 15 },
+      // Remaining Schema Fields
+      { header: "Membership ID", key: "membershipId", width: 15 },
+      { header: "Contact Person", key: "contactPerson", width: 25 },
+      { header: "Designation", key: "designation", width: 20 },
+      { header: "Membership Status", key: "membershipStatus", width: 15 },
+      { header: "Start Date", key: "membershipStartDate", width: 15 },
+      { header: "End Date", key: "membershipEndDate", width: 15 },
+      { header: "Email", key: "email", width: 30 },
+      { header: "Phone", key: "phone", width: 15 },
+      { header: "Alt Phone", key: "alternatePhone", width: 15 },
+      { header: "Website", key: "website", width: 25 },
+      { header: "Complete Address", key: "completeAddress", width: 40 },
       { header: "Fees", key: "fees", width: 12 },
+      { header: "Payment Status", key: "paymentStatus", width: 15 },
+      { header: "Last Payment Date", key: "lastPaymentDate", width: 18 },
+      { header: "Transaction ID", key: "transactionId", width: 20 },
+      { header: "Bank Name", key: "nameOfBank", width: 20 },
+      { header: "Notes", key: "notes", width: 30 },
     ];
 
+    // Purple Header (FF7030A0)
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
     worksheet.getRow(1).fill = {
       type: "pattern",
@@ -1106,40 +1695,50 @@ exports.kcMembersSubscriptionAnalysisReport = async (req, res, next) => {
       fgColor: { argb: "FF7030A0" },
     };
 
-    members.forEach((member) => {
-      const subscriptions = member.subscriptionTypes || {};
-      const totalSubs =
-        (subscriptions.automotiveAbstracts ? 1 : 0) +
-        (subscriptions.araiJournal ? 1 : 0) +
-        (subscriptions.kcMembershipOption1 ? 1 : 0) +
-        (subscriptions.kcMembershipOption2 ? 1 : 0);
-
+    members.forEach((m) => {
+      // Mapping logic based on your schema's Enum values
+      const type = m.membershipType || "";
+      
       worksheet.addRow({
-        institutionName: member.institutionName,
-        membershipType: member.membershipType,
-        automotiveAbstracts: subscriptions.automotiveAbstracts ? "Yes" : "No",
-        araiJournal: subscriptions.araiJournal ? "Yes" : "No",
-        kcOption1: subscriptions.kcMembershipOption1 ? "Yes" : "No",
-        kcOption2: subscriptions.kcMembershipOption2 ? "Yes" : "No",
-        totalSubscriptions: totalSubs,
-        fees: member.fees || "",
+        institutionName: m.institutionName,
+        membershipType: type,
+        subscriptionType: m.subscriptionType || "",
+        // Analysis Flags
+        isAA: type === "Automotive Abstract" ? "Yes" : "No",
+        isJournal: type === "ARAI Journal" ? "Yes" : "No",
+        isOpt1: type === "KC Membership Option 1" ? "Yes" : "No",
+        isOpt2: type === "KC Membership Option 2" ? "Yes" : "No",
+        // Schema Fields
+        membershipId: m.membershipId,
+        contactPerson: m.contactPerson,
+        designation: m.designation || "",
+        membershipStatus: m.membershipStatus || "",
+        membershipStartDate: m.membershipStartDate ? new Date(m.membershipStartDate).toLocaleDateString() : "",
+        membershipEndDate: m.membershipEndDate ? new Date(m.membershipEndDate).toLocaleDateString() : "",
+        email: m.email || "",
+        phone: m.phone || "",
+        alternatePhone: m.alternatePhone || "",
+        website: m.website || "",
+        completeAddress: m.completeAddress || "",
+        fees: m.fees || 0,
+        paymentStatus: m.paymentStatus || "",
+        lastPaymentDate: m.lastPaymentDate ? new Date(m.lastPaymentDate).toLocaleDateString() : "",
+        transactionId: m.transactionId || "",
+        nameOfBank: m.nameOfBank || "",
+        notes: m.notes || "",
       });
     });
 
+    // Formatting alignment
     worksheet.columns.forEach((column) => {
-      column.alignment = { vertical: "middle", wrapText: true };
+      column.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
 
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    );
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=KC_Subscription_Analysis_${Date.now()}.xlsx`,
-    );
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=KC_Subscription_Analysis_${Date.now()}.xlsx`);
+    
     res.send(buffer);
   } catch (error) {
     next(error);
@@ -1152,6 +1751,7 @@ exports.kcMembersUpcomingRenewalsReport = async (req, res, next) => {
     const thirtyDaysLater = new Date();
     thirtyDaysLater.setDate(currentDate.getDate() + 30);
 
+    // Fetch members whose membership ends in the next 30 days
     const upcomingRenewals = await KCMember.find({
       membershipEndDate: {
         $gte: currentDate,
@@ -1162,18 +1762,32 @@ exports.kcMembersUpcomingRenewalsReport = async (req, res, next) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Upcoming Renewals");
 
+    // Comprehensive 21-column list (Calculated days first)
     worksheet.columns = [
+      { header: "Days Until Renewal", key: "daysUntilRenewal", width: 18 },
+      { header: "End Date", key: "membershipEndDate", width: 15 },
       { header: "Institution Name", key: "institutionName", width: 30 },
       { header: "Contact Person", key: "contactPerson", width: 25 },
+      { header: "Membership ID", key: "membershipId", width: 15 },
       { header: "Email", key: "email", width: 30 },
       { header: "Phone", key: "phone", width: 15 },
-      { header: "Membership Type", key: "membershipType", width: 20 },
-      { header: "End Date", key: "membershipEndDate", width: 15 },
-      { header: "Days Until Renewal", key: "daysUntilRenewal", width: 18 },
       { header: "Fees", key: "fees", width: 12 },
       { header: "Payment Status", key: "paymentStatus", width: 15 },
+      { header: "Membership Type", key: "membershipType", width: 25 },
+      { header: "Subscription Type", key: "subscriptionType", width: 20 },
+      { header: "Designation", key: "designation", width: 20 },
+      { header: "Membership Status", key: "membershipStatus", width: 15 },
+      { header: "Start Date", key: "membershipStartDate", width: 15 },
+      { header: "Alt Phone", key: "alternatePhone", width: 15 },
+      { header: "Website", key: "website", width: 25 },
+      { header: "Complete Address", key: "completeAddress", width: 40 },
+      { header: "Last Payment Date", key: "lastPaymentDate", width: 18 },
+      { header: "Transaction ID", key: "transactionId", width: 20 },
+      { header: "Bank Name", key: "nameOfBank", width: 20 },
+      { header: "Notes", key: "notes", width: 30 },
     ];
 
+    // Gold/Yellow Header (FFFFC000)
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
     worksheet.getRow(1).fill = {
       type: "pattern",
@@ -1181,50 +1795,58 @@ exports.kcMembersUpcomingRenewalsReport = async (req, res, next) => {
       fgColor: { argb: "FFFFC000" },
     };
 
-    upcomingRenewals.forEach((member) => {
+    upcomingRenewals.forEach((m) => {
       const daysUntilRenewal = Math.floor(
-        (new Date(member.membershipEndDate) - currentDate) /
-          (1000 * 60 * 60 * 24),
+        (new Date(m.membershipEndDate) - currentDate) / (1000 * 60 * 60 * 24)
       );
 
       const row = worksheet.addRow({
-        institutionName: member.institutionName,
-        contactPerson: member.contactPerson,
-        email: member.email || "",
-        phone: member.phone || "",
-        membershipType: member.membershipType,
-        membershipEndDate: new Date(
-          member.membershipEndDate,
-        ).toLocaleDateString(),
         daysUntilRenewal: daysUntilRenewal,
-        fees: member.fees || "",
-        paymentStatus: member.paymentStatus || "",
+        membershipEndDate: new Date(m.membershipEndDate).toLocaleDateString(),
+        institutionName: m.institutionName,
+        contactPerson: m.contactPerson,
+        membershipId: m.membershipId,
+        email: m.email || "",
+        phone: m.phone || "",
+        fees: m.fees || 0,
+        paymentStatus: m.paymentStatus || "",
+        membershipType: m.membershipType,
+        subscriptionType: m.subscriptionType || "",
+        designation: m.designation || "",
+        membershipStatus: m.membershipStatus || "",
+        membershipStartDate: m.membershipStartDate ? new Date(m.membershipStartDate).toLocaleDateString() : "",
+        alternatePhone: m.alternatePhone || "",
+        website: m.website || "",
+        completeAddress: m.completeAddress || "",
+        lastPaymentDate: m.lastPaymentDate ? new Date(m.lastPaymentDate).toLocaleDateString() : "",
+        transactionId: m.transactionId || "",
+        nameOfBank: m.nameOfBank || "",
+        notes: m.notes || "",
       });
 
-      // Highlight urgent renewals (< 7 days) in orange
+      // Highlight urgent renewals (< 7 days) in Orange background
       if (daysUntilRenewal < 7) {
-        row.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFFF9900" },
-        };
+        row.eachCell((cell) => {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFFF9900" },
+          };
+          cell.font = { bold: true };
+        });
       }
     });
 
+    // Formatting: Scannable alignment
     worksheet.columns.forEach((column) => {
-      column.alignment = { vertical: "middle", wrapText: true };
+      column.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
 
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    );
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=KC_Upcoming_Renewals_${Date.now()}.xlsx`,
-    );
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=KC_Upcoming_Renewals_${Date.now()}.xlsx`);
+    
     res.send(buffer);
   } catch (error) {
     next(error);
@@ -1233,6 +1855,7 @@ exports.kcMembersUpcomingRenewalsReport = async (req, res, next) => {
 
 exports.kcMembersPrintAddressLabelsReport = async (req, res, next) => {
   try {
+    // Only fetching Paid members for mailing/stickers
     const members = await KCMember.find({
       paymentStatus: "Paid",
     }).sort({ institutionName: 1 });
@@ -1240,8 +1863,32 @@ exports.kcMembersPrintAddressLabelsReport = async (req, res, next) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Address Labels");
 
-    worksheet.columns = [{ header: "Label", key: "label", width: 60 }];
+    // Primary Label column + all 20 schema fields for background reference
+    worksheet.columns = [
+      { header: "PRINTABLE LABEL", key: "label", width: 60 }, // The visual label
+      { header: "Membership ID", key: "membershipId", width: 15 },
+      { header: "Institution Name", key: "institutionName", width: 30 },
+      { header: "Contact Person", key: "contactPerson", width: 25 },
+      { header: "Designation", key: "designation", width: 20 },
+      { header: "Membership Type", key: "membershipType", width: 25 },
+      { header: "Subscription Type", key: "subscriptionType", width: 20 },
+      { header: "Membership Status", key: "membershipStatus", width: 15 },
+      { header: "Start Date", key: "membershipStartDate", width: 15 },
+      { header: "End Date", key: "membershipEndDate", width: 15 },
+      { header: "Email", key: "email", width: 30 },
+      { header: "Phone", key: "phone", width: 15 },
+      { header: "Alt Phone", key: "alternatePhone", width: 15 },
+      { header: "Website", key: "website", width: 25 },
+      { header: "Complete Address", key: "completeAddress", width: 40 },
+      { header: "Fees", key: "fees", width: 12 },
+      { header: "Payment Status", key: "paymentStatus", width: 15 },
+      { header: "Last Payment Date", key: "lastPaymentDate", width: 18 },
+      { header: "Transaction ID", key: "transactionId", width: 20 },
+      { header: "Bank Name", key: "nameOfBank", width: 20 },
+      { header: "Notes", key: "notes", width: 30 },
+    ];
 
+    // Royal Blue Header (FF4472C4)
     worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
     worksheet.getRow(1).fill = {
       type: "pattern",
@@ -1249,46 +1896,60 @@ exports.kcMembersPrintAddressLabelsReport = async (req, res, next) => {
       fgColor: { argb: "FF4472C4" },
     };
 
-    members.forEach((member) => {
+    members.forEach((m) => {
+      // Constructing the multi-line printable block
       const addressLabel = [
-        member.institutionName,
-        `Attn: ${member.contactPerson}`,
-        member.designation || "",
-        member.completeAddress || "",
-        member.phone ? `Phone: ${member.phone}` : "",
-        member.email ? `Email: ${member.email}` : "",
+        m.institutionName,
+        `Attn: ${m.contactPerson}`,
+        m.designation || "",
+        m.completeAddress || "",
+        m.phone ? `Phone: ${m.phone}` : "",
+        m.email ? `Email: ${m.email}` : "",
       ]
-        .filter((line) => line)
+        .filter((line) => line && line.trim() !== "")
         .join("\n");
 
       const row = worksheet.addRow({
         label: addressLabel,
+        membershipId: m.membershipId,
+        institutionName: m.institutionName,
+        contactPerson: m.contactPerson,
+        designation: m.designation || "",
+        membershipType: m.membershipType,
+        subscriptionType: m.subscriptionType || "",
+        membershipStatus: m.membershipStatus || "",
+        membershipStartDate: m.membershipStartDate ? new Date(m.membershipStartDate).toLocaleDateString() : "",
+        membershipEndDate: m.membershipEndDate ? new Date(m.membershipEndDate).toLocaleDateString() : "",
+        email: m.email || "",
+        phone: m.phone || "",
+        alternatePhone: m.alternatePhone || "",
+        website: m.website || "",
+        completeAddress: m.completeAddress || "",
+        fees: m.fees || 0,
+        paymentStatus: m.paymentStatus,
+        lastPaymentDate: m.lastPaymentDate ? new Date(m.lastPaymentDate).toLocaleDateString() : "",
+        transactionId: m.transactionId || "",
+        nameOfBank: m.nameOfBank || "",
+        notes: m.notes || "",
       });
 
-      row.height = 80;
-      row.alignment = { vertical: "top", wrapText: true };
-
-      // Add border around each label
-      row.eachCell((cell) => {
-        cell.border = {
-          top: { style: "thin" },
-          left: { style: "thin" },
-          bottom: { style: "thin" },
-          right: { style: "thin" },
-        };
-      });
+      // Styling the Label column specifically for printing
+      const labelCell = row.getCell("label");
+      row.height = 90; // Slightly increased height for better spacing
+      labelCell.alignment = { vertical: "top", horizontal: "left", wrapText: true };
+      labelCell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
 
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    );
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=KC_Address_Labels_${Date.now()}.xlsx`,
-    );
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=KC_Address_Labels_${Date.now()}.xlsx`);
+    
     res.send(buffer);
   } catch (error) {
     next(error);

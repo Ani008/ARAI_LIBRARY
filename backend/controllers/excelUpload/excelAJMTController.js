@@ -1,105 +1,141 @@
-import xlsx from "xlsx";
-import AJMTPaper from "../../models/AJMTPaper.js";
+const AJMTPaper = require("../../models/AJMTPaper"); // Adjust path as needed
+const xlsx = require("xlsx");
+// Add this helper function at the top of your controller file
+const parseExcelDate = (dateValue) => {
+  if (!dateValue) return null;
 
-export const importAJMTPapers = async (req, res) => {
+  // If Excel already converted it to a Date object, just return it
+  if (dateValue instanceof Date) return dateValue;
+
+  // If it's a string like "20-06-2022" or "20/06/2022"
+  if (typeof dateValue === "string") {
+    const parts = dateValue.split(/[-/]/); // Splits by - or /
+    if (parts.length === 3) {
+      // Re-arrange DD-MM-YYYY to YYYY-MM-DD
+      const day = parts[0];
+      const month = parts[1];
+      const year = parts[2];
+      return new Date(`${year}-${month}-${day}`);
+    }
+  }
+
+  return dateValue; // Return as is if format is unknown
+};
+
+const importAJMTPapers = async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ message: "No file uploaded" });
+    if (!req.file) {
+      return res.status(400).json({ message: "Please upload an excel file" });
+    }
 
-    const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
-    const sheetData = xlsx.utils.sheet_to_json(
-      workbook.Sheets[workbook.SheetNames[0]],
-      { defval: null } // Ensures empty cells are null
-    );
+    // 1. Read the Excel File
+    const workbook = xlsx.read(req.file.buffer, {
+      type: "buffer",
+      cellDates: true,
+    });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
 
-    const importedData = sheetData.map((row, index) => {
-      // Improved helper to find keys regardless of spaces, hidden chars, or casing
-      const getVal = (targets) => {
-        const lowerTargets = targets.map(t => t.trim().toLowerCase());
-        const key = Object.keys(row).find((k) => 
-          lowerTargets.includes(k.trim().toLowerCase())
-        );
-        const value = key ? row[key] : null;
-        // Treat common empty indicators as null
-        return (value === "-" || value === "null" || value === "" || value === undefined) ? null : value;
-      };
+    // Convert to JSON - defval: null ensures we don't skip empty columns
+    const data = xlsx.utils.sheet_to_json(sheet, { defval: null });
 
-      // Safe Date Parser to prevent 1970-01-01 bug
-      const parseDate = (val) => {
-        if (!val) return null;
-        const d = new Date(val);
-        // If Excel provides a number (date code), convert it properly
-        if (typeof val === 'number') {
-            return new Date((val - (25567 + 1)) * 86400 * 1000);
-        }
-        return isNaN(d.getTime()) ? null : d;
-      };
+    console.log(`Total records found in Excel: ${data.length}`);
 
-      // Generate the Unique ID
-      const generatedId = `AJMT-GEN-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}-${index}`;
+    const importedRecords = [];
+    const errors = [];
 
-      return {
-        uniqueId: generatedId,
-        paperTitle: getVal(["title"]) || "Untitled",
-        titleSubject: getVal(["title subject"]) || "General",
-        paperType: getVal(["paper type"]) || "Research Paper",
-        
-        // Correctly mapping "Submission Date" to "date" field
-        date: parseDate(getVal(["submission date"])) || new Date(),
-        
-        // Handling the "Plagarism" typo from your Excel and mapping to schema
-        plagiarismPercentage: parseFloat(getVal(["plagarism percentage", "plagiarism percentage"])) || 0,
-        
-        status: getVal(["status"]) || "Draft",
-        
-        authors: [
-          {
-            // Maps both "Name of the Author/s" (Sheet1) and "Name of the Authors" (Sheet2)
-            authorName: getVal(["name of the author/s", "name of the authors"]) || "Unknown",
-            authorAddress: getVal(["full address"]) || "",
-            authorEmail: getVal(["author email", "email"]) || "",
-            authorInstitution: getVal(["institution"]) || "",
-            authorCity: getVal(["city"]) || "",
-          },
-        ],
-        
-        reviewers: [
-          {
+    // 2. Map each row to the Model
+    for (let i = 0; i < data.length; i++) {
+      const row = data[i];
+
+      try {
+        // Handle Multiple Authors (Splitting comma-separated strings)
+        const authorNames = (row["Name of the Author/s"] || "")
+          .split(",")
+          .map((s) => s.trim());
+        const authorEmails = (row["Author Email"] || "")
+          .split(",")
+          .map((s) => s.trim());
+        const authorPhones = (row["Phone"] || "")
+          .split(",")
+          .map((s) => s.trim());
+
+        const authorsArray = authorNames.map((name, index) => ({
+          authorName: name || null,
+          authorEmail: authorEmails[index] || null,
+          authorPhone: authorPhones[index] || null,
+          authorInstitution: row["Institution"] || null,
+          authorAddress: row["Full Address"] || null,
+          authorCity: row["City"] || null,
+        }));
+
+        // Handle Reviewers (Mapping columns 1, 2, and 3)
+        const reviewersArray = [];
+        if (row["Name of 1st Reviewer"] || row["1st Reviewer Email"]) {
+          reviewersArray.push({
             reviewerNumber: 1,
-            reviewerName: getVal(["name of 1st reviewer"]) || "",
-            reviewerEmail: getVal(["1st reviewer email"]) || "",
-          },
-          {
+            reviewerName: row["Name of 1st Reviewer"],
+            reviewerEmail: row["1st Reviewer Email"],
+          });
+        }
+        if (row["Name of 2nd Reviewer"] || row["2nd Reviewer Email"]) {
+          reviewersArray.push({
             reviewerNumber: 2,
-            reviewerName: getVal(["name of 2nd reviewer"]) || "",
-            reviewerEmail: getVal(["2nd reviewer email"]) || "",
-          },
-          {
+            reviewerName: row["Name of 2nd Reviewer"],
+            reviewerEmail: row["2nd Reviewer Email"],
+          });
+        }
+        if (row["Name of 3rd Reviewer"] || row["3rd Reviewer Email"]) {
+          reviewersArray.push({
             reviewerNumber: 3,
-            reviewerName: getVal(["name of 3rd reviewer"]) || "",
-            reviewerEmail: getVal(["3rd reviewer email"]) || "",
-          },
-        ].filter(rev => rev.reviewerName.trim() !== "" || rev.reviewerEmail.trim() !== ""),
-        
-        tentativeDateOfPublication: parseDate(getVal(["tentative date of publication"])),
-        websiteUpdateDate: parseDate(getVal(["website update date"])),
-        remarks: getVal(["remarks"]) || "",
-      };
-    }).filter(item => item.paperTitle !== "Untitled"); // Skip entirely empty rows
+            reviewerName: row["Name of 3rd Reviewer"],
+            reviewerEmail: row["3rd Reviewer Email"],
+          });
+        }
 
-    // Use insertMany to upload all 905 lines efficiently
-    const result = await AJMTPaper.insertMany(importedData, { ordered: false });
+        // Create the Paper Object
+        const newPaper = new AJMTPaper({
+          uniqueId: row["Unique ID"],
+          paperTitle: row["Title"] || null,
+          titleSubject: row["Title Subject"] || null,
+          paperType: row["Paper Type"] || null,
+          date: parseExcelDate(row["Submission Date"]),
+          plagiarismPercentage: row["Plagiarism Percentage"] || 0,
+          status: row["Status"] || "Draft",
+          websiteUpdateDate: parseExcelDate(row["Website Update Date"]),
+          remarks: row["Remarks"] || null,
+          authors: authorsArray,
+          reviewers: reviewersArray,
+        });
 
-    return res.status(201).json({
-      success: true,
-      count: result.length,
-      message: `Successfully imported ${result.length} papers.`,
+        await newPaper.save();
+        importedRecords.push(newPaper._id);
+      } catch (rowError) {
+        console.error(`Error at Row ${i + 2}:`, rowError.message);
+        errors.push({ row: i + 2, error: rowError.message });
+      }
+    }
+
+    // 3. Final Report
+    console.log("--- Import Summary ---");
+    console.log(`Successfully Imported: ${importedRecords.length}`);
+    console.log(`Failed Records: ${errors.length}`);
+
+    res.status(200).json({
+      message: "Import process completed",
+      total: data.length,
+      successCount: importedRecords.length,
+      errors: errors,
     });
-
-  } catch (error) {
-    console.error("Import Error:", error);
-    return res.status(500).json({ 
-      message: "Import failed", 
-      error: error.message 
-    });
+  } catch (globalError) {
+    console.error("Critical Controller Error:", globalError);
+    res
+      .status(500)
+      .json({
+        message: "Server Error during import",
+        error: globalError.message,
+      });
   }
 };
+
+module.exports = { importAJMTPapers };

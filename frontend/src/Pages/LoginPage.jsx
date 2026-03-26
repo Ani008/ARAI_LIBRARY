@@ -60,9 +60,10 @@ const LoginPage = () => {
             />
           </div>
 
-          <h1 className="text-4xl font-bold text-slate-900 mb-10">
-            Welcome Back
+          <h1 className="text-3xl font-bold text-slate-900 mb-10">
+            Knowledge Center Modules
           </h1>
+
 
           <form onSubmit={handleLogin} className="space-y-6">
             {/* Role Dropdown */}
