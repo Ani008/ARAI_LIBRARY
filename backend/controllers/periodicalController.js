@@ -6,59 +6,69 @@ const { logPeriodicalUpdate } = require("../controllers/activityLogController");
 // Get all periodicals
 exports.getAllPeriodicals = async (req, res, next) => {
   try {
-      console.log("SEARCH VALUE:", req.query.search);
-  
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 5;
-      const skip = (page - 1) * limit;
-  
-      // 2️⃣ Extract filters
-      const { search, frequency, language, status } = req.query;
-  
-      // 3️⃣ Build dynamic query object
-      const query = {};
-  
-      // 🔎 Global search (ICN, Standard No, Title)
-      if (search && search.trim() !== "") {
-        const searchValue = search.trim();
-  
-        query.$or = [
-          { title: { $regex: searchValue, $options: "i" } },
-          { publisher: { $regex: searchValue, $options: "i" } },
-          { icnNumber: { $regex: searchValue, $options: "i" } },
-        ];
-  
-        // If search is a number, also match icnNumber exactly
-        if (!isNaN(searchValue)) {
-          query.$or.push({ icnNumber: Number(searchValue) });
-        }
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+
+    // 2️⃣ Extract filters
+    const { search, frequency, language, status, startYear, endYear } =
+      req.query;
+
+    // 3️⃣ Build dynamic query object
+    const query = {};
+
+    // 🔎 Global search (ICN, Standard No, Title)
+    if (search && search.trim() !== "") {
+      const searchValue = search.trim();
+
+      query.$or = [
+        { title: { $regex: searchValue, $options: "i" } },
+        { publisher: { $regex: searchValue, $options: "i" } },
+        { icnNumber: { $regex: searchValue, $options: "i" } },
+      ];
+
+      // If search is a number, also match icnNumber exactly
+      if (!isNaN(searchValue)) {
+        query.$or.push({ icnNumber: Number(searchValue) });
       }
-  
-      if (frequency) query.frequency = frequency;
-      if (language) query.language = language;
-      if (status) query.status = status;
-  
-      // 4️⃣ Get total filtered count
-      const totalRecords = await Periodical.countDocuments(query);
-  
-      // 5️⃣ Fetch paginated filtered records
-      const periodicals = await Periodical.find(query)
-        .sort({ icnNumber: -1 })
-        .skip(skip)
-        .limit(limit);
-  
-      // 6️⃣ Send response
-      res.json({
-        success: true,
-        currentPage: page,
-        totalPages: Math.ceil(totalRecords / limit),
-        totalRecords,
-        count: periodicals.length,
-        data: periodicals,
-      });
-    } catch (error) {
-      next(error);
     }
+
+    if (startYear && endYear) {
+      query.periodicalYear = {
+        $gte: Number(startYear),
+        $lte: Number(endYear),
+      };
+    } else if (startYear) {
+      query.periodicalYear = { $gte: Number(startYear) };
+    } else if (endYear) {
+      query.periodicalYear = { $lte: Number(endYear) };
+    }
+
+    if (frequency) query.frequency = frequency;
+    if (language) query.language = language;
+    if (status) query.status = status;
+
+    // 4️⃣ Get total filtered count
+    const totalRecords = await Periodical.countDocuments(query);
+
+    // 5️⃣ Fetch paginated filtered records
+    const periodicals = await Periodical.find(query)
+      .sort({ icnNumber: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    // 6️⃣ Send response
+    res.json({
+      success: true,
+      currentPage: page,
+      totalPages: Math.ceil(totalRecords / limit),
+      totalRecords,
+      count: periodicals.length,
+      data: periodicals,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 // Get single periodical
@@ -213,6 +223,101 @@ exports.deletePeriodical = async (req, res, next) => {
     res.json({
       success: true,
       message: "Periodical deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+exports.getPeriodicalSuggestions = async (req, res, next) => {
+  try {
+    const { field, query } = req.query;
+
+    // Define which fields are searchable to prevent database exposure
+    const allowedFields = {
+      poNo: "poNo",
+      vendorName: "vendorDetails.name",
+      vendorPhone: "vendorDetails.phone",
+      vendorEmail: "vendorDetails.email",
+    };
+
+    const dbField = allowedFields[field];
+
+    if (!dbField) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid field requested" });
+    }
+
+    // Build the filter: find distinct values that match the user's input (case-insensitive)
+    const filter = {};
+    if (query) {
+      filter[dbField] = { $regex: query, $options: "i" };
+    }
+
+    // Get distinct values from the database
+    const suggestions = await Periodical.distinct(dbField, filter);
+
+    res.json({
+      success: true,
+      data: suggestions.slice(0, 10), // Limit to top 10 suggestions for cleaner UI
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.bulkDisposalByYear = async (req, res, next) => {
+  try {
+    const { startYear, endYear } = req.body;
+
+    if (!startYear || !endYear) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide both start and end years",
+      });
+    }
+
+    // Update all matching records from Active to Disposal
+    const result = await Periodical.updateMany(
+      {
+        periodicalYear: { $gte: Number(startYear), $lte: Number(endYear) },
+        status: "Active",
+      },
+      { $set: { status: "Disposal" } },
+    );
+
+    res.json({
+      success: true,
+      message: `Successfully moved ${result.modifiedCount} records to Disposal`,
+      updatedCount: result.modifiedCount,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getDisposalPreviewCount = async (req, res, next) => {
+  try {
+    const { startYear, endYear } = req.query;
+
+    if (!startYear || !endYear) {
+      return res.status(400).json({
+        success: false,
+        message: "Start and End years are required for preview",
+      });
+    }
+
+    // Count how many ACTIVE records fall in this range
+    const count = await Periodical.countDocuments({
+      periodicalYear: { $gte: Number(startYear), $lte: Number(endYear) },
+      status: "Active",
+    });
+
+    res.json({
+      success: true,
+      count,
     });
   } catch (error) {
     next(error);

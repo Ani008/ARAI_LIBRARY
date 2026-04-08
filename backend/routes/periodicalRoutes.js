@@ -7,12 +7,19 @@ const {
   getPeriodicalById,
   createPeriodical,
   updatePeriodical,
-  deletePeriodical
+  deletePeriodical,
+  getPeriodicalSuggestions,
+  bulkDisposalByYear,
+  getDisposalPreviewCount
 } = require('../controllers/periodicalController');
+
 const { uploadExcel, handleUploadError } = require('../middleware/upload');
-const {
-  importPeriodicalsExcel,
-} = require("../controllers/excelUpload/excelPeriodicalController");
+
+const {importPeriodicalsExcel,} = require("../controllers/excelUpload/excelPeriodicalController");
+
+router.get('/suggestions', getPeriodicalSuggestions);
+router.patch('/bulk-disposal',bulkDisposalByYear);
+router.get('/disposal-preview', getDisposalPreviewCount);
 
 router.post(
   '/import-excel',

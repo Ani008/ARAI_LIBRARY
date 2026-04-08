@@ -31,10 +31,22 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
     hardcopyDate: "",
     status: "Draft",
     remarks: "",
-    plagiarismPercentage: ""
+    plagiarismPercentage: "",
+    manuscriptReceivedDate: "",
+    copyrightReceived: "",
+    plagiarismRemarks: "",
   });
 
-  const [authors, setAuthors] = useState([{authorName: "",authorEmail: "",authorAddress: "",authorCity: "",authorInstitution: "",authorPhone: "",},]);
+  const [authors, setAuthors] = useState([
+    {
+      authorName: "",
+      authorEmail: "",
+      authorAddress: "",
+      authorCity: "",
+      authorInstitution: "",
+      authorPhone: "",
+    },
+  ]);
   const [reviewers, setReviewers] = useState([]);
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfFileName, setPdfFileName] = useState("");
@@ -47,6 +59,14 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
   const [selectedReviewer, setSelectedReviewer] = useState(null);
   const [originalData, setOriginalData] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
+  const [showReviewFields, setShowReviewFields] = useState({});
+
+  const toggleReviewFields = (index) => {
+    setShowReviewFields((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
 
   // Pre-fill form when editing
   useEffect(() => {
@@ -70,6 +90,9 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
         status: paper.status || "Draft",
         remarks: paper.remarks || "",
         plagiarismPercentage: paper.plagiarismPercentage || "",
+        plagiarismRemarks: paper.plagiarismRemarks || "",
+        manuscriptReceivedDate: formatDate(paper.manuscriptReceivedDate),
+        copyrightReceived: paper.copyrightReceived || "",
       };
 
       setFormData(formValues);
@@ -85,10 +108,32 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
                 authorCity: "",
                 authorInstitution: "",
                 authorPhone: "",
+                authorCountry: "",
               },
             ],
       );
-      setReviewers(paper.reviewers || []);
+      const loadedReviewers = (paper.reviewers || []).map((r) => ({
+        ...r,
+        dateOfSubmission: formatDate(r.dateOfSubmission),
+        dateOfReceived: formatDate(r.dateOfReceived),
+      }));
+
+      setReviewers(loadedReviewers);
+
+      // AUTO OPEN IF DATA EXISTS
+      const visibility = {};
+      loadedReviewers.forEach((r, index) => {
+        if (
+          r.dateOfSubmission ||
+          r.dateOfReceived ||
+          r.reviewerScore ||
+          r.reviewerRemarks
+        ) {
+          visibility[index] = true;
+        }
+      });
+
+      setShowReviewFields(visibility);
       setPdfFileName(paper.paperFileName || "");
     } else {
       resetForm();
@@ -156,7 +201,7 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value })); 
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (fieldErrors[name]) setFieldErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
@@ -166,6 +211,29 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
     setAuthors(newAuthors);
     if (fieldErrors.authors)
       setFieldErrors((prev) => ({ ...prev, authors: "" }));
+  };
+
+  const handleDownloadPaper = async () => {
+    if (!paper?._id) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/${paper._id}/download`);
+      if (!response.ok) throw new Error("Download failed");
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = pdfFileName || "paper.pdf";
+      document.body.appendChild(link);
+      link.click();
+
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError("Failed to download paper");
+    }
   };
 
   const addAuthor = () => {
@@ -194,6 +262,8 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
 
   const addReviewer = () => {
     if (reviewers.length < 3) {
+      const newIndex = reviewers.length;
+
       setReviewers([
         ...reviewers,
         {
@@ -203,6 +273,12 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
           emailSent: false,
         },
       ]);
+
+      // IMPORTANT FIX
+      setShowReviewFields((prev) => ({
+        ...prev,
+        [newIndex]: false,
+      }));
     }
   };
 
@@ -224,6 +300,11 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
       }
     }
     setReviewers(reviewers.filter((_, i) => i !== index));
+    setShowReviewFields((prev) => {
+      const updated = { ...prev };
+      delete updated[index];
+      return updated;
+    });
   };
 
   const handleFileChange = (e) => {
@@ -353,8 +434,21 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
     }
 
     for (const reviewer of reviewers) {
-      if (!reviewer._id && reviewer.reviewerName && reviewer.reviewerEmail) {
-        try {
+      try {
+        // UPDATE EXISTING REVIEWER
+        if (reviewer._id) {
+          await fetch(
+            `${API_BASE_URL}/${paper._id}/reviewers/${reviewer._id}`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(reviewer),
+            },
+          );
+        }
+
+        // ADD NEW REVIEWER
+        else if (reviewer.reviewerName && reviewer.reviewerEmail) {
           await fetch(`${API_BASE_URL}/${paper._id}/reviewers`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -362,11 +456,15 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
               reviewerNumber: reviewer.reviewerNumber,
               reviewerName: reviewer.reviewerName,
               reviewerEmail: reviewer.reviewerEmail,
+              dateOfSubmission: reviewer.dateOfSubmission,
+              dateOfReceived: reviewer.dateOfReceived,
+              reviewerScore: reviewer.reviewerScore,
+              reviewerRemarks: reviewer.reviewerRemarks,
             }),
           });
-        } catch (err) {
-          console.error("Error adding new reviewer:", err);
         }
+      } catch (err) {
+        console.error("Error saving reviewer:", err);
       }
     }
 
@@ -399,9 +497,7 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
-                {isEditMode
-                  ? "Edit AJMT Paper"
-                  : "New Research Paper Entry"}
+                {isEditMode ? "Edit AJMT Paper" : "New Research Paper Entry"}
               </h2>
               <p className="text-sm text-gray-500 mt-1 tracking-wide">
                 Research Management System
@@ -566,6 +662,8 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
                     Research Paper PDF{" "}
                     {!isEditMode && <span className="text-red-500">*</span>}
                   </label>
+
+                  {/* Upload Box */}
                   <label className="cursor-pointer block">
                     <div
                       className={`border-2 border-dashed rounded-lg px-6 py-8 text-center hover:border-emerald-400 transition ${
@@ -585,6 +683,7 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
                         Maximum file size: 10MB
                       </p>
                     </div>
+
                     <input
                       type="file"
                       accept=".pdf"
@@ -592,10 +691,21 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
                       className="hidden"
                     />
                   </label>
+
                   {fieldErrors.pdfFile && (
                     <p className="mt-1 text-sm text-red-600">
                       {fieldErrors.pdfFile}
                     </p>
+                  )}
+
+                  {isEditMode && pdfFileName && (
+                    <button
+                      type="button"
+                      onClick={handleDownloadPaper}
+                      className="mt-3 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition text-sm font-medium"
+                    >
+                      Download Paper
+                    </button>
                   )}
                 </div>
 
@@ -657,36 +767,86 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Plagiarism Percentage (%)
-                  </label>
-                  <input
-                    type="number"
-                    name="plagiarismPercentage"
-                    value={formData.plagiarismPercentage}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
-                    placeholder="Enter percentage (e.g. 15)"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Plagiarism %
+                    </label>
+                    <input
+                      type="number"
+                      name="plagiarismPercentage"
+                      value={formData.plagiarismPercentage}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                      placeholder="15"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Plagiarism Remarks
+                    </label>
+                    <select
+                      name="plagiarismRemarks"
+                      value={formData.plagiarismRemarks || ""}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    >
+                      <option value="">Select</option>
+                      <option value="Acceptable">Acceptable</option>
+                      <option value="Minor Revision">Minor Revision</option>
+                      <option value="High Plagiarism">High Plagiarism</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Status
-                  </label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
-                  >
-                    <option value="Draft">Draft</option>
-                    <option value="Under Review">Under Review</option>
-                    <option value="Accepted">Accepted</option>
-                    <option value="Rejected">Rejected</option>
-                    <option value="Published">Published</option>
-                  </select>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Status
+                    </label>
+                    <select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="Draft">Draft</option>
+                      <option value="Under Review">Under Review</option>
+                      <option value="Accepted">Accepted</option>
+                      <option value="Rejected">Rejected</option>
+                      <option value="Published">Published</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Manuscript Received Date
+                    </label>
+                    <input
+                      type="date"
+                      name="manuscriptReceivedDate"
+                      value={formData.manuscriptReceivedDate || ""}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Copyright Received
+                    </label>
+                    <select
+                      name="copyrightReceived"
+                      value={formData.copyrightReceived}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    >
+                      <option value="">Select</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div>
@@ -863,6 +1023,25 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
                             placeholder="Phone No"
                           />
                         </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Country
+                          </label>
+                          <input
+                            type="text"
+                            value={author.authorCountry || ""}
+                            onChange={(e) =>
+                              handleAuthorChange(
+                                index,
+                                "authorCountry",
+                                e.target.value,
+                              )
+                            }
+                            className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+                            placeholder="Country"
+                          />
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -989,6 +1168,97 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
                               </>
                             )}
                           </button>
+
+                          <button
+                            type="button"
+                            onClick={() => toggleReviewFields(index)}
+                            className="flex items-center justify-center py-2 px-4 rounded font-medium text-sm transition border-2 border-purple-600 text-purple-600 hover:bg-purple-50"
+                          >
+                            <FileText className="mr-2" size={16} />
+                            Add Review
+                          </button>
+                        </div>
+                      )}
+
+                      {showReviewFields[index] === true && (
+                        <div className="mt-4 border-t pt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {/* Date of Submission */}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Date of Submission
+                            </label>
+                            <input
+                              type="date"
+                              value={reviewer.dateOfSubmission || ""}
+                              onChange={(e) =>
+                                handleReviewerChange(
+                                  index,
+                                  "dateOfSubmission",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                            />
+                          </div>
+
+                          {/* Date of Received */}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Date of Received
+                            </label>
+                            <input
+                              type="date"
+                              value={reviewer.dateOfReceived || ""}
+                              onChange={(e) =>
+                                handleReviewerChange(
+                                  index,
+                                  "dateOfReceived",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                            />
+                          </div>
+
+                          {/* Reviewer Score */}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Reviewer Score
+                            </label>
+                            <input
+                              type="text"
+                              value={reviewer.reviewerScore || ""}
+                              onChange={(e) =>
+                                handleReviewerChange(
+                                  index,
+                                  "reviewerScore",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                              placeholder="Enter score"
+                            />
+                          </div>
+
+                          {/* Reviewer Remarks */}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Reviewer Remarks
+                            </label>
+                            <input
+                              type="text"
+                              value={reviewer.reviewerRemarks || ""}
+                              onChange={(e) =>
+                                handleReviewerChange(
+                                  index,
+                                  "reviewerRemarks",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                              placeholder="Enter remarks"
+                            />
+                          </div>
                         </div>
                       )}
 

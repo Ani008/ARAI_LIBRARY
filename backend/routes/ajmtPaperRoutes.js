@@ -16,6 +16,7 @@ const {
   addReviewer,
   updateReviewer,
   deleteReviewer,
+  downloadPaper,
 } = require('../controllers/ajmtPaperController');
 
 const {
@@ -66,5 +67,7 @@ router.route('/:id/reviewers/:reviewerId')
   .put(updateReviewer)    // PUT /api/ajmt-papers/:id/reviewers/:reviewerId
   .delete(deleteReviewer);// DELETE /api/ajmt-papers/:id/reviewers/:reviewerId
 
-
+router.route('/:id/download')
+  .get(downloadPaper);
+  
 module.exports = router;

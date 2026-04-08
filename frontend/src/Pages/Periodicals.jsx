@@ -20,6 +20,11 @@ const PeriodicalManagement = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  const [startYear, setStartYear] = useState("");
+  const [endYear, setEndYear] = useState("");
+  const [previewCount, setPreviewCount] = useState(null);
+
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -58,7 +63,7 @@ const PeriodicalManagement = () => {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        `${API_BASE}/periodicals?page=${page}&limit=${limit}&search=${searchTerm}&frequency=${frequencyFilter}&language=${languageFilter}&status=${statusFilter}`,
+        `${API_BASE}/periodicals?page=${page}&limit=${limit}&search=${searchTerm}&frequency=${frequencyFilter}&language=${languageFilter}&status=${statusFilter}&startYear=${startYear}&endYear=${endYear}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -78,12 +83,28 @@ const PeriodicalManagement = () => {
   };
 
   useEffect(() => {
+    // Only fetch the table data here
     fetchPeriodicals(currentPage);
-  }, [currentPage, limit, searchTerm, frequencyFilter, languageFilter, statusFilter]);
+  }, [
+    currentPage,
+    limit,
+    searchTerm,
+    frequencyFilter,
+    languageFilter,
+    statusFilter,
+    startYear,
+    endYear,
+  ]);
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, frequencyFilter, languageFilter, statusFilter, limit]);
+    if (startYear && endYear) {
+      fetchPreviewCount();
+      // Reset to page 1 ONLY when the years themselves change
+      setCurrentPage(1);
+    } else {
+      setPreviewCount(null);
+    }
+  }, [startYear, endYear]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -225,6 +246,36 @@ const PeriodicalManagement = () => {
   ];
   const statusOptions = ["Active", "Disposal", "Issued"];
   const modeOptions = ["Subscription", "Exchange", "Free", "Membership"];
+  const [suggestions, setSuggestions] = useState({
+    vendorNames: [],
+    emails: [],
+    phones: [],
+    poNumbers: [],
+  });
+
+  const fetchFieldSuggestions = async (field, query) => {
+    if (!query || query.length < 2) return;
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `${API_BASE}/periodicals/suggestions?field=${field}&query=${query}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      const data = await response.json();
+      if (data.success) {
+        // Map backend field names to our local state keys
+        const keyMap = {
+          vendorName: "vendorNames",
+          vendorEmail: "emails",
+          vendorPhone: "phones",
+          poNo: "poNumbers",
+        };
+        setSuggestions((prev) => ({ ...prev, [keyMap[field]]: data.data }));
+      }
+    } catch (err) {
+      console.error(`Error fetching ${field} suggestions`, err);
+    }
+  };
 
   const getVisiblePages = () => {
     const pages = [];
@@ -239,6 +290,54 @@ const PeriodicalManagement = () => {
       if (i > 0) pages.push(i);
     }
     return pages;
+  };
+
+  const fetchPreviewCount = async () => {
+    if (!startYear || !endYear) return;
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `${API_BASE}/periodicals/disposal-preview?startYear=${startYear}&endYear=${endYear}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      const data = await response.json();
+      if (data.success) {
+        setPreviewCount(data.count);
+      }
+    } catch (err) {
+      console.error("Failed to fetch preview count", err);
+    }
+  };
+
+  const handleBulkDisposal = async () => {
+    if (
+      !window.confirm(
+        `Are you sure you want to move ${previewCount} records to Disposal?`,
+      )
+    )
+      return;
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE}/periodicals/bulk-disposal`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ startYear, endYear }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSuccess(data.message);
+        setPreviewCount(0);
+        fetchPeriodicals(1);
+      }
+    } catch (err) {
+      setError("Bulk update failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -257,11 +356,42 @@ const PeriodicalManagement = () => {
               <p className="text-sm text-slate-500 mt-1">
                 Manage and track your periodicals, status & lifecycle.
               </p>
+              {previewCount !== null && (
+                <p className="text-sm font-semibold text-blue-600 mt-2 bg-blue-50 px-3 py-1 rounded-md inline-block">
+                  Found {previewCount} Records for the selected range.
+                </p>
+              )}
             </div>
 
             <div className="flex items-center gap-3">
-              {" "}
-              {/* This wrapper keeps them together */}
+              <div className="flex items-center gap-2 bg-white p-1 rounded-md border border-slate-200 shadow-sm mr-2">
+                <input
+                  type="number"
+                  placeholder="Start Year"
+                  className="w-24 px-2 py-1 text-sm border-none outline-none"
+                  value={startYear}
+                  onChange={(e) => {
+                    setStartYear(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
+                <span className="text-slate-400">-</span>
+                <input
+                  type="number"
+                  placeholder="End Year"
+                  className="w-24 px-2 py-1 text-sm border-none outline-none"
+                  value={endYear}
+                  onChange={(e) => setEndYear(e.target.value)}
+                />
+                <button
+                  onClick={handleBulkDisposal}
+                  disabled={!previewCount || previewCount === 0}
+                  className="px-3 py-1 bg-amber-500 text-white text-xs font-bold rounded hover:bg-amber-600 disabled:opacity-50 transition"
+                >
+                  Active → Disposal
+                </button>
+              </div>
+
               <button
                 onClick={() => setShowForm(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition shadow-sm font-medium"
@@ -305,7 +435,10 @@ const PeriodicalManagement = () => {
                     type="text"
                     placeholder="Search by title, publisher, or ISSN..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(1);
+                    }}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -502,6 +635,8 @@ const PeriodicalManagement = () => {
         languageOptions={languageOptions}
         departmentOptions={departmentOptions}
         modeOptions={modeOptions}
+        suggestions={suggestions}
+        fetchFieldSuggestions={fetchFieldSuggestions}
       />
     </div>
   );

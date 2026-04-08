@@ -1,20 +1,20 @@
-const AJMTPaper = require('../models/AJMTPaper');
-const { sendReviewerEmail } = require('../services/emailService');
-const fs = require('fs');
-const path = require('path');
+const AJMTPaper = require("../models/AJMTPaper");
+const { sendReviewerEmail } = require("../services/emailService");
+const fs = require("fs");
+const path = require("path");
 
 exports.getAllPapers = async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 10, 
-      status, 
+    const {
+      page = 1,
+      limit = 10,
+      status,
       paperType,
-      sortBy = '-createdAt' 
+      sortBy = "-createdAt",
     } = req.query;
 
     const query = {};
-    
+
     if (status) query.status = status;
     if (paperType) query.paperType = paperType;
 
@@ -32,13 +32,13 @@ exports.getAllPapers = async (req, res) => {
       total: count,
       totalPages: Math.ceil(count / limit),
       currentPage: parseInt(page),
-      data: papers
+      data: papers,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error fetching papers',
-      error: error.message
+      message: "Error fetching papers",
+      error: error.message,
     });
   }
 };
@@ -50,19 +50,19 @@ exports.getPaperById = async (req, res) => {
     if (!paper) {
       return res.status(404).json({
         success: false,
-        message: 'Paper not found'
+        message: "Paper not found",
       });
     }
 
     res.status(200).json({
       success: true,
-      data: paper
+      data: paper,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error fetching paper',
-      error: error.message
+      message: "Error fetching paper",
+      error: error.message,
     });
   }
 };
@@ -78,13 +78,13 @@ exports.createPaper = async (req, res) => {
     }
 
     // 2. Parse authors if it's a JSON string (from form-data)
-    if (typeof paperData.authors === 'string') {
+    if (typeof paperData.authors === "string") {
       try {
         paperData.authors = JSON.parse(paperData.authors);
       } catch (e) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid authors format. Must be a valid JSON array.'
+          message: "Invalid authors format. Must be a valid JSON array.",
         });
       }
     } else if (!paperData.authors) {
@@ -92,13 +92,13 @@ exports.createPaper = async (req, res) => {
     }
 
     // 3. Parse reviewers if it's a JSON string (from form-data)
-    if (typeof paperData.reviewers === 'string') {
+    if (typeof paperData.reviewers === "string") {
       try {
         paperData.reviewers = JSON.parse(paperData.reviewers);
       } catch (e) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid reviewers format. Must be a valid JSON array.'
+          message: "Invalid reviewers format. Must be a valid JSON array.",
         });
       }
     } else if (!paperData.reviewers) {
@@ -115,7 +115,7 @@ exports.createPaper = async (req, res) => {
 
     // 5. Explicitly ensure default status if missing
     if (!paperData.status) {
-      paperData.status = 'Draft';
+      paperData.status = "Draft";
     }
 
     // 8. Create the paper (This passes the whole cleaned object to Mongoose)
@@ -123,23 +123,22 @@ exports.createPaper = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Paper created successfully',
-      data: paper
+      message: "Paper created successfully",
+      data: paper,
     });
-
   } catch (error) {
     // Delete uploaded file if paper creation fails
     if (req.file && req.file.path) {
-      const fs = require('fs'); // Ensure fs is available
+      const fs = require("fs"); // Ensure fs is available
       fs.unlink(req.file.path, (err) => {
-        if (err) console.error('Error deleting file:', err);
+        if (err) console.error("Error deleting file:", err);
       });
     }
-    
+
     res.status(400).json({
       success: false,
-      message: 'Error creating paper',
-      error: error.message
+      message: "Error creating paper",
+      error: error.message,
     });
   }
 };
@@ -149,7 +148,7 @@ exports.uploadPaperPDF = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({
         success: false,
-        message: 'No file uploaded'
+        message: "No file uploaded",
       });
     }
 
@@ -158,19 +157,19 @@ exports.uploadPaperPDF = async (req, res) => {
     if (!paper) {
       // Delete uploaded file if paper not found
       fs.unlink(req.file.path, (err) => {
-        if (err) console.error('Error deleting file:', err);
+        if (err) console.error("Error deleting file:", err);
       });
-      
+
       return res.status(404).json({
         success: false,
-        message: 'Paper not found'
+        message: "Paper not found",
       });
     }
 
     // Delete old file if exists
     if (paper.paperFile && fs.existsSync(paper.paperFile)) {
       fs.unlink(paper.paperFile, (err) => {
-        if (err) console.error('Error deleting old file:', err);
+        if (err) console.error("Error deleting old file:", err);
       });
     }
 
@@ -184,21 +183,21 @@ exports.uploadPaperPDF = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'PDF uploaded successfully',
-      data: paper
+      message: "PDF uploaded successfully",
+      data: paper,
     });
   } catch (error) {
     // Delete uploaded file on error
     if (req.file) {
       fs.unlink(req.file.path, (err) => {
-        if (err) console.error('Error deleting file:', err);
+        if (err) console.error("Error deleting file:", err);
       });
     }
 
     res.status(500).json({
       success: false,
-      message: 'Error uploading PDF',
-      error: error.message
+      message: "Error uploading PDF",
+      error: error.message,
     });
   }
 };
@@ -214,7 +213,7 @@ exports.sendReviewerEmail = async (req, res) => {
     if (!paper) {
       return res.status(404).json({
         success: false,
-        message: 'Paper not found'
+        message: "Paper not found",
       });
     }
 
@@ -222,7 +221,8 @@ exports.sendReviewerEmail = async (req, res) => {
     if (!paper.paperFile) {
       return res.status(400).json({
         success: false,
-        message: 'No PDF file uploaded for this paper. Please upload a PDF first.'
+        message:
+          "No PDF file uploaded for this paper. Please upload a PDF first.",
       });
     }
 
@@ -230,7 +230,7 @@ exports.sendReviewerEmail = async (req, res) => {
     if (!fs.existsSync(paper.paperFile)) {
       return res.status(404).json({
         success: false,
-        message: 'Paper file not found on server'
+        message: "Paper file not found on server",
       });
     }
 
@@ -240,7 +240,7 @@ exports.sendReviewerEmail = async (req, res) => {
     if (!reviewer) {
       return res.status(404).json({
         success: false,
-        message: `Reviewer ${reviewerNumber} not found`
+        message: `Reviewer ${reviewerNumber} not found`,
       });
     }
 
@@ -253,8 +253,8 @@ exports.sendReviewerEmail = async (req, res) => {
       reviewer.reviewerName,
       paper,
       paper.paperFile,
-      customSubject,  // Pass custom subject
-      customBody      // Pass custom body
+      customSubject, // Pass custom subject
+      customBody, // Pass custom body
     );
 
     // Update reviewer email status
@@ -270,15 +270,14 @@ exports.sendReviewerEmail = async (req, res) => {
         reviewerName: reviewer.reviewerName,
         emailSentTo: emailTo,
         emailSentDate: reviewer.emailSentDate,
-        emailResult: emailResult
-      }
+        emailResult: emailResult,
+      },
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error sending email',
-      error: error.message
+      message: "Error sending email",
+      error: error.message,
     });
   }
 };
@@ -289,36 +288,32 @@ exports.updatePaper = async (req, res) => {
     if (req.body.reviewers && req.body.reviewers.length > 3) {
       return res.status(400).json({
         success: false,
-        message: 'Maximum 3 reviewers allowed'
+        message: "Maximum 3 reviewers allowed",
       });
     }
 
-    const paper = await AJMTPaper.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-        runValidators: true
-      }
-    );
+    const paper = await AJMTPaper.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!paper) {
       return res.status(404).json({
         success: false,
-        message: 'Paper not found'
+        message: "Paper not found",
       });
     }
 
     res.status(200).json({
       success: true,
-      message: 'Paper updated successfully',
-      data: paper
+      message: "Paper updated successfully",
+      data: paper,
     });
   } catch (error) {
     res.status(400).json({
       success: false,
-      message: 'Error updating paper',
-      error: error.message
+      message: "Error updating paper",
+      error: error.message,
     });
   }
 };
@@ -330,14 +325,14 @@ exports.deletePaper = async (req, res) => {
     if (!paper) {
       return res.status(404).json({
         success: false,
-        message: 'Paper not found'
+        message: "Paper not found",
       });
     }
 
     // Delete associated file
     if (paper.paperFile && fs.existsSync(paper.paperFile)) {
       fs.unlink(paper.paperFile, (err) => {
-        if (err) console.error('Error deleting file:', err);
+        if (err) console.error("Error deleting file:", err);
       });
     }
 
@@ -345,14 +340,14 @@ exports.deletePaper = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Paper and associated file deleted successfully',
-      data: {}
+      message: "Paper and associated file deleted successfully",
+      data: {},
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error deleting paper',
-      error: error.message
+      message: "Error deleting paper",
+      error: error.message,
     });
   }
 };
@@ -364,7 +359,7 @@ exports.addAuthor = async (req, res) => {
     if (!paper) {
       return res.status(404).json({
         success: false,
-        message: 'Paper not found'
+        message: "Paper not found",
       });
     }
 
@@ -374,7 +369,7 @@ exports.addAuthor = async (req, res) => {
       authorCity: req.body.authorCity,
       authorInstitution: req.body.authorInstitution,
       authorEmail: req.body.authorEmail,
-      authorPhone: req.body.authorPhone
+      authorPhone: req.body.authorPhone,
     };
 
     paper.authors.push(authorData);
@@ -382,14 +377,14 @@ exports.addAuthor = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Author added successfully',
-      data: paper
+      message: "Author added successfully",
+      data: paper,
     });
   } catch (error) {
     res.status(400).json({
       success: false,
-      message: 'Error adding author',
-      error: error.message
+      message: "Error adding author",
+      error: error.message,
     });
   }
 };
@@ -401,7 +396,7 @@ exports.updateAuthor = async (req, res) => {
     if (!paper) {
       return res.status(404).json({
         success: false,
-        message: 'Paper not found'
+        message: "Paper not found",
       });
     }
 
@@ -410,30 +405,35 @@ exports.updateAuthor = async (req, res) => {
     if (!author) {
       return res.status(404).json({
         success: false,
-        message: 'Author not found'
+        message: "Author not found",
       });
     }
 
     // Update author fields
     if (req.body.authorName) author.authorName = req.body.authorName;
-    if (req.body.authorAddress !== undefined) author.authorAddress = req.body.authorAddress;
-    if (req.body.authorCity !== undefined) author.authorCity = req.body.authorCity;
-    if (req.body.authorInstitution !== undefined) author.authorInstitution = req.body.authorInstitution;
-    if (req.body.authorEmail !== undefined) author.authorEmail = req.body.authorEmail;
-    if (req.body.authorPhone !== undefined) author.authorPhone = req.body.authorPhone;
+    if (req.body.authorAddress !== undefined)
+      author.authorAddress = req.body.authorAddress;
+    if (req.body.authorCity !== undefined)
+      author.authorCity = req.body.authorCity;
+    if (req.body.authorInstitution !== undefined)
+      author.authorInstitution = req.body.authorInstitution;
+    if (req.body.authorEmail !== undefined)
+      author.authorEmail = req.body.authorEmail;
+    if (req.body.authorPhone !== undefined)
+      author.authorPhone = req.body.authorPhone;
 
     await paper.save();
 
     res.status(200).json({
       success: true,
-      message: 'Author updated successfully',
-      data: paper
+      message: "Author updated successfully",
+      data: paper,
     });
   } catch (error) {
     res.status(400).json({
       success: false,
-      message: 'Error updating author',
-      error: error.message
+      message: "Error updating author",
+      error: error.message,
     });
   }
 };
@@ -445,7 +445,7 @@ exports.deleteAuthor = async (req, res) => {
     if (!paper) {
       return res.status(404).json({
         success: false,
-        message: 'Paper not found'
+        message: "Paper not found",
       });
     }
 
@@ -454,14 +454,14 @@ exports.deleteAuthor = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Author deleted successfully',
-      data: paper
+      message: "Author deleted successfully",
+      data: paper,
     });
   } catch (error) {
     res.status(400).json({
       success: false,
-      message: 'Error deleting author',
-      error: error.message
+      message: "Error deleting author",
+      error: error.message,
     });
   }
 };
@@ -473,14 +473,14 @@ exports.addReviewer = async (req, res) => {
     if (!paper) {
       return res.status(404).json({
         success: false,
-        message: 'Paper not found'
+        message: "Paper not found",
       });
     }
 
     if (paper.reviewers.length >= 3) {
       return res.status(400).json({
         success: false,
-        message: 'Maximum 3 reviewers allowed'
+        message: "Maximum 3 reviewers allowed",
       });
     }
 
@@ -488,6 +488,11 @@ exports.addReviewer = async (req, res) => {
       reviewerNumber: req.body.reviewerNumber || paper.reviewers.length + 1,
       reviewerName: req.body.reviewerName,
       reviewerEmail: req.body.reviewerEmail,
+
+      dateOfSubmission: req.body.dateOfSubmission,
+      dateOfReceived: req.body.dateOfReceived,
+      reviewerScore: req.body.reviewerScore,
+      reviewerRemarks: req.body.reviewerRemarks,
     };
 
     paper.reviewers.push(reviewerData);
@@ -495,14 +500,14 @@ exports.addReviewer = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Reviewer added successfully',
-      data: paper
+      message: "Reviewer added successfully",
+      data: paper,
     });
   } catch (error) {
     res.status(400).json({
       success: false,
-      message: 'Error adding reviewer',
-      error: error.message
+      message: "Error adding reviewer",
+      error: error.message,
     });
   }
 };
@@ -514,7 +519,7 @@ exports.updateReviewer = async (req, res) => {
     if (!paper) {
       return res.status(404).json({
         success: false,
-        message: 'Paper not found'
+        message: "Paper not found",
       });
     }
 
@@ -523,27 +528,32 @@ exports.updateReviewer = async (req, res) => {
     if (!reviewer) {
       return res.status(404).json({
         success: false,
-        message: 'Reviewer not found'
+        message: "Reviewer not found",
       });
     }
 
     // Update reviewer fields
-    if (req.body.reviewerName) reviewer.reviewerName = req.body.reviewerName;
-    if (req.body.reviewerEmail) reviewer.reviewerEmail = req.body.reviewerEmail;
-    if (req.body.reviewerNumber !== undefined) reviewer.reviewerNumber = req.body.reviewerNumber;
+    reviewer.reviewerName = req.body.reviewerName ?? reviewer.reviewerName;
+    reviewer.reviewerEmail = req.body.reviewerEmail ?? reviewer.reviewerEmail;
+    reviewer.reviewerNumber = req.body.reviewerNumber ?? reviewer.reviewerNumber;
+
+    reviewer.dateOfSubmission = req.body.dateOfSubmission ?? reviewer.dateOfSubmission;
+    reviewer.dateOfReceived = req.body.dateOfReceived ?? reviewer.dateOfReceived;
+    reviewer.reviewerScore = req.body.reviewerScore ?? reviewer.reviewerScore;
+    reviewer.reviewerRemarks = req.body.reviewerRemarks ?? reviewer.reviewerRemarks;
 
     await paper.save();
 
     res.status(200).json({
       success: true,
-      message: 'Reviewer updated successfully',
-      data: paper
+      message: "Reviewer updated successfully",
+      data: paper,
     });
   } catch (error) {
     res.status(400).json({
       success: false,
-      message: 'Error updating reviewer',
-      error: error.message
+      message: "Error updating reviewer",
+      error: error.message,
     });
   }
 };
@@ -555,7 +565,7 @@ exports.deleteReviewer = async (req, res) => {
     if (!paper) {
       return res.status(404).json({
         success: false,
-        message: 'Paper not found'
+        message: "Paper not found",
       });
     }
 
@@ -564,14 +574,46 @@ exports.deleteReviewer = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Reviewer deleted successfully',
-      data: paper
+      message: "Reviewer deleted successfully",
+      data: paper,
     });
   } catch (error) {
     res.status(400).json({
       success: false,
-      message: 'Error deleting reviewer',
-      error: error.message
+      message: "Error deleting reviewer",
+      error: error.message,
+    });
+  }
+};
+
+
+exports.downloadPaper = async (req, res) => {
+  try {
+    const paper = await AJMTPaper.findById(req.params.id);
+
+    if (!paper) {
+      return res.status(404).json({
+        success: false,
+        message: "Paper not found",
+      });
+    }
+
+    if (!paper.paperFile) {
+      return res.status(404).json({
+        success: false,
+        message: "No file uploaded for this paper",
+      });
+    }
+
+    const filePath = paper.paperFile;
+
+    res.download(filePath, paper.paperFileName || "paper.pdf");
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error downloading paper",
+      error: error.message,
     });
   }
 };

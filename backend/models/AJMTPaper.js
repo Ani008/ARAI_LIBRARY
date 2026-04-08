@@ -8,6 +8,7 @@ const authorSchema = new mongoose.Schema({
   authorInstitution: { type: String, trim: true },
   authorEmail: { type: String, trim: true, lowercase: true },
   authorPhone: { type: String, trim: true },
+  authorCountry: { type: String, trim: true }, 
 });
 
 // Sub-schema for Reviewer Review Entry
@@ -24,6 +25,12 @@ const reviewerSchema = new mongoose.Schema({
   reviewerEmail: { type: String, trim: true, lowercase: true },
   emailSent: { type: Boolean, default: false },
   emailSentDate: { type: Date },
+
+    // NEW FIELDS
+  dateOfSubmission: { type: Date },
+  dateOfReceived: { type: Date },
+  reviewerScore: { type: String, trim: true },
+  reviewerRemarks: { type: String, trim: true },
 });
 
 // Main AJMT Paper Schema
@@ -35,6 +42,9 @@ const ajmtPaperSchema = new mongoose.Schema(
     paperType: { type: String, trim: true },
     date: { type: Date },
     plagiarismPercentage: { type: Number, default: 0 },
+    manuscriptReceivedDate: { type: Date },
+    copyrightReceived: { type: String, enum: ["Yes","No"]},
+    plagiarismRemarks: { type: String, enum: ["Acceptable", "Minor Revision", "High Plagiarism"]},
     reviewDate: { type: Date },
     paperFile: { type: String },
     paperFileName: { type: String },
