@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Trash2, Edit2, Plus, Search, File, Download } from "lucide-react";
+import { Trash2, Edit2, Plus, Search, File, Download, Upload} from "lucide-react";
 import PeriodicalModal from "../Modal/PeriodicalModal";
 import { useNavigate } from "react-router-dom";
 
@@ -363,12 +363,12 @@ const PeriodicalManagement = () => {
               )}
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 bg-white p-1 rounded-md border border-slate-200 shadow-sm mr-2">
+            <div className="flex items-center gap-2 flex-wrap xl:flex-nowrap">
+              <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-md border border-slate-200 shadow-sm">
                 <input
                   type="number"
                   placeholder="Start Year"
-                  className="w-24 px-2 py-1 text-sm border-none outline-none"
+                  className="w-20 px-1 py-0.5 text-xs border-none outline-none"
                   value={startYear}
                   onChange={(e) => {
                     setStartYear(e.target.value);
@@ -379,14 +379,14 @@ const PeriodicalManagement = () => {
                 <input
                   type="number"
                   placeholder="End Year"
-                  className="w-24 px-2 py-1 text-sm border-none outline-none"
+                  className="w-20 px-1 py-0.5 text-xs border-none outline-none"
                   value={endYear}
                   onChange={(e) => setEndYear(e.target.value)}
                 />
                 <button
                   onClick={handleBulkDisposal}
                   disabled={!previewCount || previewCount === 0}
-                  className="px-3 py-1 bg-amber-500 text-white text-xs font-bold rounded hover:bg-amber-600 disabled:opacity-50 transition"
+                  className="px-2 py-0.5 bg-amber-500 text-white text-[11px] font-semibold rounded hover:bg-amber-600 disabled:opacity-50 transition whitespace-nowrap"
                 >
                   Active → Disposal
                 </button>
@@ -394,17 +394,26 @@ const PeriodicalManagement = () => {
 
               <button
                 onClick={() => setShowForm(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition shadow-sm font-medium"
+                className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition shadow-sm text-sm"
               >
                 <Plus size={20} />
                 Add New
               </button>
+
               <button
                 onClick={() => navigate("/reports")}
-                className="flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 transition shadow-sm font-medium"
+                className="flex items-center gap-1 px-3 py-1.5 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 transition shadow-sm text-sm"
               >
                 <Download size={20} />
                 Report
+              </button>
+
+              <button
+                onClick={() => navigate("/uploadExcel")}
+                className="flex items-center px-3 py-1.5 border border-blue-600 text-blue-600 rounded-md hover:bg-indigo-50 transition shadow-sm text-sm"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Upload
               </button>
             </div>
           </div>

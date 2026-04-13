@@ -17,6 +17,7 @@ const {
   updateReviewer,
   deleteReviewer,
   downloadPaper,
+  sendAuthorsEmail,
 } = require('../controllers/ajmtPaperController');
 
 const {
@@ -26,8 +27,8 @@ const {
 
 router.post(
   '/import-excel',
-  protect,                  // only logged in
-  authorize('ADMIN'),       // only admin
+  protect,                  
+  authorize('ADMIN'),       
   uploadExcel,
   handleUploadError,
   importAJMTPapers
@@ -35,39 +36,41 @@ router.post(
 
 // Main Paper Routes
 router.route('/')
-  .get(getAllPapers)      // GET /api/ajmt-papers
-  .post(uploadPaperPDF, handleUploadError, createPaper);  // POST /api/ajmt-papers (with optional file upload)
+  .get(getAllPapers)      
+  .post(uploadPaperPDF, handleUploadError, createPaper);  
 
 router.route('/:id')
-  .get(getPaperById)      // GET /api/ajmt-papers/:id
-  .put(updatePaper)       // PUT /api/ajmt-papers/:id
-  .delete(deletePaper);   // DELETE /api/ajmt-papers/:id
+  .get(getPaperById)      
+  .put(updatePaper)       
+  .delete(deletePaper);   
 
 // File Upload Routes
 router.route('/:id/upload-pdf')
-  .post(uploadPaperPDF, handleUploadError, uploadPDF);  // POST /api/ajmt-papers/:id/upload-pdf
+  .post(uploadPaperPDF, handleUploadError, uploadPDF);  
 
 // Email Routes
 router.route('/:id/send-email/:reviewerNumber')
-  .post(sendReviewerEmail);  // POST /api/ajmt-papers/:id/send-email/:reviewerNumber
+  .post(sendReviewerEmail);  
 
 // Author Routes
 router.route('/:id/authors')
-  .post(addAuthor);       // POST /api/ajmt-papers/:id/authors
+  .post(addAuthor);      
 
 router.route('/:id/authors/:authorId')
-  .put(updateAuthor)      // PUT /api/ajmt-papers/:id/authors/:authorId
-  .delete(deleteAuthor);  // DELETE /api/ajmt-papers/:id/authors/:authorId
+  .put(updateAuthor)      
+  .delete(deleteAuthor);  
 
 // Reviewer Routes
 router.route('/:id/reviewers')
-  .post(addReviewer);     // POST /api/ajmt-papers/:id/reviewers
+  .post(addReviewer);     
 
 router.route('/:id/reviewers/:reviewerId')
-  .put(updateReviewer)    // PUT /api/ajmt-papers/:id/reviewers/:reviewerId
-  .delete(deleteReviewer);// DELETE /api/ajmt-papers/:id/reviewers/:reviewerId
+  .put(updateReviewer)   
+  .delete(deleteReviewer);
 
 router.route('/:id/download')
   .get(downloadPaper);
+
+router.post('/:id/send-authors-email', sendAuthorsEmail);
   
 module.exports = router;

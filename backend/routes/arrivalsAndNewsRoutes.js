@@ -1,25 +1,37 @@
 const express = require('express');
 const router = express.Router();
+const { sendArrivalNewsEmail } = require('../controllers/emailController');
+
 const {
   getAllArrivalsAndNews,
   getArrivalsAndNewsById,
-  createArrivalsAndNews,
+  createArrivalNews,
+  addNewsRow,
   updateArrivalsAndNews,
   deleteArrivalsAndNews,
   getArrivalsAndNewsStatistics
 } = require('../controllers/arrivalsAndNewsController');
 
-// Statistics route
+
+
+router.post("/send-email", sendArrivalNewsEmail);
+// Statistics
 router.get('/statistics', getArrivalsAndNewsStatistics);
 
-// Main CRUD routes
+
+// Add single row (IMPORTANT)
+router.post('/add-row/:id', addNewsRow);
+
+
+// Main CRUD
 router.route('/')
   .get(getAllArrivalsAndNews)
-  .post(createArrivalsAndNews);
+  .post(createArrivalNews);
 
 router.route('/:id')
   .get(getArrivalsAndNewsById)
   .put(updateArrivalsAndNews)
   .delete(deleteArrivalsAndNews);
+
 
 module.exports = router;

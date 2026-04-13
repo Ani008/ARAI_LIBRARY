@@ -2,6 +2,7 @@ const AJMTPaper = require("../models/AJMTPaper");
 const { sendReviewerEmail } = require("../services/emailService");
 const fs = require("fs");
 const path = require("path");
+const nodemailer = require("nodemailer");
 
 exports.getAllPapers = async (req, res) => {
   try {
@@ -616,4 +617,57 @@ exports.downloadPaper = async (req, res) => {
       error: error.message,
     });
   }
+};
+
+exports.sendAuthorsEmail = async (req, res) => {
+  try {
+    const { emails, paper } = req.body;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    });
+
+    const html = generateAuthorsEmailTemplate(paper);
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      bcc: emails, // send to all authors
+      subject: "AJMT Paper Communication",
+      html,
+    });
+
+    res.json({
+      success: true,
+      message: "Email sent to all authors",
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to send email",
+    });
+  }
+};
+
+
+const generateAuthorsEmailTemplate = (paper) => {
+  return `
+  <p>Dear Author,</p>
+
+  <p>Greetings from AJMT.</p>
+
+  <p>Paper Title: <b>${paper.paperTitle || ""}</b></p>
+
+  <br/>
+
+  <p>Regards,</p>
+  <p>AJMT Team</p>
+  `;
 };

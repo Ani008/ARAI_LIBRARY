@@ -25,9 +25,8 @@ const NewArrivalsAndNews = () => {
   const limit = 5;
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState("");
-  const [filterCategory, setFilterCategory] = useState("");
-  const [filterPriority, setFilterPriority] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [dropdownOptions, setDropdownOptions] = useState({});
 
   const fetchItems = async (page = 1) => {
@@ -41,10 +40,8 @@ const NewArrivalsAndNews = () => {
           page,
           limit,
           search: searchTerm,
-          type: filterType,
-          priority: filterPriority,
-          status: "Active",
-          category: filterCategory,
+          startDate,
+          endDate,
         },
         headers: {
           Authorization: `Bearer ${token}`,
@@ -72,11 +69,11 @@ const NewArrivalsAndNews = () => {
 
   useEffect(() => {
     fetchItems(currentPage);
-  }, [currentPage, searchTerm, filterType, filterPriority, filterCategory]);
+  }, [currentPage, searchTerm, startDate, endDate]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterType, filterPriority, filterCategory]);
+  }, [searchTerm, startDate, endDate]);
 
   const handleEdit = (item) => {
     setEditingItem(item); // 1. Set the data
@@ -138,46 +135,29 @@ const NewArrivalsAndNews = () => {
             </div>
 
             {/* Type Filter */}
-            <select
+            <input
+              type="date"
               className="px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500"
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-            >
-              <option value="">All Types</option>
-              {dropdownOptions.arrivalsNewsTypes?.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
 
             {/* Category Filter */}
-            <select
+            <input
+              type="date"
               className="px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500"
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-            >
-              <option value="">All Categories</option>
-              {dropdownOptions.newsCategories?.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
 
-            {/* Priority Filter */}
-            <select
-              className="px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500"
-              value={filterPriority}
-              onChange={(e) => setFilterPriority(e.target.value)}
+            {/* Find Button */}
+            <button
+              onClick={() => fetchItems(1)}
+              className="flex items-center justify-center gap-2 px-3 py-2 border border-gray-200 rounded-lg text-sm"
             >
-              <option value="">All Priorities</option>
-              {dropdownOptions.priorities?.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
+              <RefreshCw size={14} />
+              Refresh
+            </button>
           </div>
         </div>
 
@@ -188,17 +168,13 @@ const NewArrivalsAndNews = () => {
               <thead>
                 <tr className="bg-slate-50/50 border-b border-gray-100">
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">
-                    Information
+                    Heading
                   </th>
+
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">
-                    Type & Category
+                    Date
                   </th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">
-                    Priority
-                  </th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">
-                    Status
-                  </th>
+
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase text-right">
                     Actions
                   </th>
@@ -208,7 +184,7 @@ const NewArrivalsAndNews = () => {
                 {loading ? (
                   <tr>
                     <td
-                      colSpan="5"
+                      colSpan="3"
                       className="py-10 text-center text-slate-400"
                     >
                       Loading...
@@ -222,49 +198,19 @@ const NewArrivalsAndNews = () => {
                     >
                       <td className="px-6 py-4">
                         <div className="font-bold text-slate-800">
-                          {item.title}
+                          {item.heading}
                         </div>
-                        <div className="text-xs text-slate-500 mt-1 flex items-center gap-2">
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <div className="text-xs text-slate-500 flex items-center gap-2">
                           <Calendar size={12} />
-                          {item.startDate
-                            ? new Date(item.startDate).toLocaleDateString(
-                                "en-GB",
-                              )
+                          {item.date
+                            ? new Date(item.date).toLocaleDateString("en-GB")
                             : "N/A"}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-slate-700 font-medium">
-                          {item.type}
-                        </div>
-                        <div className="text-[10px] text-slate-400 uppercase">
-                          {item.category}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`text-[11px] font-bold px-2 py-0.5 rounded ${
-                            item.priority === "High"
-                              ? "bg-red-50 text-red-600"
-                              : item.priority === "Medium"
-                                ? "bg-blue-50 text-blue-600"
-                                : "bg-gray-100 text-gray-600"
-                          }`}
-                        >
-                          {item.priority}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            item.status === "Active"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-slate-100 text-slate-600"
-                          }`}
-                        >
-                          {item.status}
-                        </span>
-                      </td>
+
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-2">
                           <button
@@ -273,6 +219,7 @@ const NewArrivalsAndNews = () => {
                           >
                             <Edit3 size={18} />
                           </button>
+
                           <button
                             onClick={() => handleDelete(item._id)}
                             className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"

@@ -1,150 +1,142 @@
-import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, Calendar, ExternalLink, Image, Tag, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import {
+  X,
+  Plus,
+  Trash2,
+  Calendar,
+  ExternalLink,
+  Image,
+  Tag,
+  AlertCircle,
+} from "lucide-react";
+import axios from "axios";
 
 const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api`;
 
-const NewArrivalsAndNewsModal = ({ isOpen, onClose, itemToEdit, onSuccess }) => {
+const NewArrivalsAndNewsModal = ({
+  isOpen,
+  onClose,
+  itemToEdit,
+  onSuccess,
+}) => {
   const [formData, setFormData] = useState({
-    type: '',
-    priority: 'Medium',
-    title: '',
-    itemType: '',
-    authorPublisher: '',
-    callNumber: '',
-    isbnIssn: '',
-    description: '',
-    startDate: '',
-    endDate: '',
-    category: '',
-    status: 'Active',
-    tagsKeywords: [],
-    urlLink: '',
-    attachmentImageUrl: '',
-    targetAudience: {
-      students: false,
-      faculty: false,
-      staff: false,
-      public: false
-    },
-    remarks: ''
+    date: "",
+    heading: "",
+    news: [
+      {
+        srno: 1,
+        newsTopic: "",
+        link: "",
+        source: "",
+      },
+    ],
   });
 
-  const [currentTag, setCurrentTag] = useState('');
-  const [dropdownOptions, setDropdownOptions] = useState({});
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    fetchDropdownOptions();
-  }, []);
+  const [email, setEmail] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewHtml, setPreviewHtml] = useState("");
 
   useEffect(() => {
     if (itemToEdit) {
       setFormData({
-        ...itemToEdit,
-        startDate: itemToEdit.startDate ? itemToEdit.startDate.split('T')[0] : '',
-        endDate: itemToEdit.endDate ? itemToEdit.endDate.split('T')[0] : '',
-        tagsKeywords: itemToEdit.tagsKeywords || []
+        date: itemToEdit.date?.split("T")[0] || "",
+        heading: itemToEdit.heading || "",
+        news: itemToEdit.news || [],
       });
     } else {
-      resetForm();
+      setFormData({
+        date: "",
+        heading: "",
+        news: [
+          {
+            srno: 1,
+            newsTopic: "",
+            link: "",
+            source: "",
+          },
+        ],
+      });
     }
   }, [itemToEdit]);
 
-  const fetchDropdownOptions = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/options`);
-      const data = await response.json();
-      setDropdownOptions(data.data);
-    } catch (error) {
-      console.error('Error fetching options:', error);
-    }
-  };
+  const handleRowChange = (index, field, value) => {
+    const updated = [...formData.news];
+    updated[index][field] = value;
 
-  const resetForm = () => {
     setFormData({
-      type: '',
-      priority: 'Medium',
-      title: '',
-      itemType: '',
-      authorPublisher: '',
-      callNumber: '',
-      isbnIssn: '',
-      description: '',
-      startDate: '',
-      endDate: '',
-      category: '',
-      status: 'Active',
-      tagsKeywords: [],
-      urlLink: '',
-      attachmentImageUrl: '',
-      targetAudience: {
-        students: false,
-        faculty: false,
-        staff: false,
-        public: false
-      },
-      remarks: ''
+      ...formData,
+      news: updated,
     });
-    setCurrentTag('');
-    setError('');
   };
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    
-    if (name.startsWith('targetAudience.')) {
-      const audienceKey = name.split('.')[1];
-      setFormData(prev => ({
-        ...prev,
-        targetAudience: {
-          ...prev.targetAudience,
-          [audienceKey]: checked
-        }
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
-  };
-
-  const handleAddTag = () => {
-    if (currentTag.trim() && !formData.tagsKeywords.includes(currentTag.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        tagsKeywords: [...prev.tagsKeywords, currentTag.trim()]
-      }));
-      setCurrentTag('');
-    }
-  };
-
-  const handleRemoveTag = (tagToRemove) => {
-    setFormData(prev => ({
+  const addRow = () => {
+    setFormData((prev) => ({
       ...prev,
-      tagsKeywords: prev.tagsKeywords.filter(tag => tag !== tagToRemove)
+      news: [
+        ...prev.news,
+        {
+          srno: prev.news.length + 1,
+          newsTopic: "",
+          link: "",
+          source: "",
+        },
+      ],
     }));
+  };
+
+  const deleteRow = (index) => {
+    const updated = formData.news.filter((_, i) => i !== index);
+
+    const reNumbered = updated.map((row, i) => ({
+      ...row,
+      srno: i + 1,
+    }));
+
+    setFormData({
+      ...formData,
+      news: reNumbered,
+    });
+  };
+
+  const handlePreview = () => {
+    const html = generateEmailHTML(formData);
+    setPreviewHtml(html);
+    setShowPreview(true);
+  };
+
+  const handleSendEmail = async () => {
+    try {
+      await axios.post(`${API_BASE_URL}/arrivals-news/send-email`, {
+        email,
+        items: [formData],
+      });
+
+      alert("Email sent successfully");
+      setShowPreview(false);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to send email");
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
-      const url = itemToEdit 
+      const url = itemToEdit
         ? `${API_BASE_URL}/arrivals-news/${itemToEdit._id}`
         : `${API_BASE_URL}/arrivals-news`;
-      
-      const method = itemToEdit ? 'PUT' : 'POST';
+
+      const method = itemToEdit ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
@@ -152,380 +144,296 @@ const NewArrivalsAndNewsModal = ({ isOpen, onClose, itemToEdit, onSuccess }) => 
       if (data.success) {
         onSuccess();
         onClose();
-        resetForm();
-      } else {
-        setError(data.message || 'Failed to save item');
       }
-    } catch (error) {
-      setError('Error saving item: ' + error.message);
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error(err);
     }
+
+    setLoading(false);
   };
 
   if (!isOpen) return null;
 
+  const generateEmailHTML = (data) => {
+    return `
+  <div style="font-family: Arial, sans-serif;">
+
+  <p>Good Morning !</p>
+
+  <h3 style="margin-bottom:10px;">
+  ARAI KNOWLEDGE CENTER MODULES
+  </h3>
+
+  <h4 style="margin-top:15px;">
+  ${data.heading}
+  </h4>
+
+  <table 
+  style="
+  border-collapse: collapse;
+  width: 100%;
+  border: 1px solid #000;
+  font-size: 13px;
+  ">
+
+  <thead>
+  <tr>
+
+  <th style="border:1px solid #000; padding:6px;">
+  SrNo
+  </th>
+
+  <th style="border:1px solid #000; padding:6px;">
+  News Topic
+  </th>
+
+  <th style="border:1px solid #000; padding:6px;">
+  Source
+  </th>
+
+  <th style="border:1px solid #000; padding:6px;">
+  Link
+  </th>
+
+  </tr>
+  </thead>
+
+  <tbody>
+
+  ${data.news
+    .map(
+      (row, index) => `
+
+  <tr>
+
+  <td style="border:1px solid #000; padding:6px;">
+  ${index + 1}
+  </td>
+
+  <td style="border:1px solid #000; padding:6px;">
+  ${row.newsTopic || ""}
+  </td>
+
+  <td style="border:1px solid #000; padding:6px;">
+  ${row.source || ""}
+  </td>
+
+  <td style="border:1px solid #000; padding:6px;">
+  <a href="${row.link}" target="_blank">
+  ${row.link || "Open"}
+  </a>
+  </td>
+
+  </tr>
+
+  `,
+    )
+    .join("")}
+
+  </tbody>
+  </table>
+
+  </div>
+  `;
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
-        
-
         <form onSubmit={handleSubmit} className="p-6">
           {/* Section 1: Basic Information */}
           <div className="mb-8">
             <div className="flex justify-between items-center py-5 border-b">
-                      <div>
-                        <h2 className="text-xl font-bold text-slate-800">New Arrival or News Item</h2>
-                        <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mt-1">Manage Library Updates & Announcements</p>
-                      </div>
-                      <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors"><X size={24} /></button>
-                    </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 mt-4">
-                  Type
-                </label>
-                <select
-                  name="type"
-                  value={formData.type}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select Type</option>
-                  {dropdownOptions.arrivalsNewsTypes?.map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
+                <h2 className="text-xl font-bold text-slate-800">
+                  New Arrival or News Item
+                </h2>
+                <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mt-1">
+                  Manage Library Updates & Announcements
+                </p>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 mt-4">
-                  Priority
-                </label>
-                <select
-                  name="priority"
-                  value={formData.priority}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  {dropdownOptions.priorities?.map(priority => (
-                    <option key={priority} value={priority}>{priority}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Title
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter title"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Item Type
-                </label>
-                <select
-                  name="itemType"
-                  value={formData.itemType}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select Item Type</option>
-                  {dropdownOptions.itemTypes?.map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category
-                </label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select Category</option>
-                  {dropdownOptions.newsCategories?.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Status
-                </label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  {dropdownOptions.newsStatuses?.map(status => (
-                    <option key={status} value={status}>{status}</option>
-                  ))}
-                </select>
-              </div>
+              <button
+                onClick={onClose}
+                className="text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X size={24} />
+              </button>
             </div>
-          </div>
-
-          {/* Section 2: Item Details */}
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-green-500">
-              Item Details
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Author/Publisher
-                </label>
-                <input
-                  type="text"
-                  name="authorPublisher"
-                  value={formData.authorPublisher}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter author or publisher name"
-                />
-              </div>
-
+            {/* Date + Heading */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Call Number
-                </label>
-                <input
-                  type="text"
-                  name="callNumber"
-                  value={formData.callNumber}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., 629.2 SMI 2024"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ISBN/ISSN
-                </label>
-                <input
-                  type="text"
-                  name="isbnIssn"
-                  value={formData.isbnIssn}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., ISBN 978-0-123-45678-9"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows="4"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter detailed description"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Section 3: Dates & Duration */}
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-purple-500 flex items-center">
-              <Calendar className="mr-2" size={20} />
-              Dates & Duration
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Start Date
-                </label>
+                <label className="block text-sm font-medium mb-1">Date</label>
                 <input
                   type="date"
-                  name="startDate"
-                  value={formData.startDate}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={formData.date}
+                  onChange={(e) =>
+                    setFormData({ ...formData, date: e.target.value })
+                  }
+                  className="w-full border px-3 py-2 rounded-lg"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  End Date
+                <label className="block text-sm font-medium mb-1">
+                  Heading
                 </label>
-                <input
-                  type="date"
-                  name="endDate"
-                  value={formData.endDate}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Section 4: Tags & Keywords */}
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-orange-500 flex items-center">
-              <Tag className="mr-2" size={20} />
-              Tags & Keywords
-            </h3>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Add Tags/Keywords
-              </label>
-              <div className="flex gap-2 mb-3">
                 <input
                   type="text"
-                  value={currentTag}
-                  onChange={(e) => setCurrentTag(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter tag and click + to add"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddTag}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center"
-                >
-                  <Plus size={20} />
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {formData.tagsKeywords.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
-                  >
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTag(tag)}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      <X size={16} />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Section 5: Links & Attachments */}
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-indigo-500 flex items-center">
-              <ExternalLink className="mr-2" size={20} />
-              Links & Attachments
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  URL/Link
-                </label>
-                <input
-                  type="url"
-                  name="urlLink"
-                  value={formData.urlLink}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="https://example.com"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                  <Image className="mr-1" size={16} />
-                  Attachment/Image URL
-                </label>
-                <input
-                  type="url"
-                  name="attachmentImageUrl"
-                  value={formData.attachmentImageUrl}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="https://example.com/image.jpg"
+                  value={formData.heading}
+                  onChange={(e) =>
+                    setFormData({ ...formData, heading: e.target.value })
+                  }
+                  className="w-full border px-3 py-2 rounded-lg"
+                  placeholder="Enter heading"
                 />
               </div>
             </div>
-          </div>
-
-          {/* Section 6: Target Audience */}
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-pink-500">
-              Target Audience
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {['students', 'faculty', 'staff', 'public'].map((audience) => (
-                <label key={audience} className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name={`targetAudience.${audience}`}
-                    checked={formData.targetAudience[audience]}
-                    onChange={handleInputChange}
-                    className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                  />
-                  <span className="text-sm font-medium text-gray-700 capitalize">
-                    {audience}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Section 7: Remarks */}
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-yellow-500">
-              Additional Information
-            </h3>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Remarks
-              </label>
-              <textarea
-                name="remarks"
-                value={formData.remarks}
-                onChange={handleInputChange}
-                rows="3"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter any additional remarks or notes"
+            <div className="flex items-center gap-3 mb-4">
+              <input
+                type="email"
+                placeholder="Enter email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="px-3 py-2 border rounded-lg text-sm w-64"
               />
-            </div>
-          </div>
 
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={handlePreview}
+                className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm"
+              >
+                Preview
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSendEmail}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"
+              >
+                Send Email
+              </button>
+            </div>
+
+            {/* Table */}
+            <div className="border rounded-lg overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="p-2">SrNo</th>
+                    <th className="p-2">News Topic</th>
+                    <th className="p-2">Link</th>
+                    <th className="p-2">Source</th>
+                    <th className="p-2">Action</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {formData.news.map((row, index) => (
+                    <tr key={index} className="border-t">
+                      <td className="p-2 text-center">{row.srno}</td>
+
+                      <td className="p-2">
+                        <input
+                          value={row.newsTopic}
+                          onChange={(e) =>
+                            handleRowChange(index, "newsTopic", e.target.value)
+                          }
+                          className="w-full border px-2 py-1 rounded"
+                        />
+                      </td>
+
+                      <td className="p-2">
+                        <input
+                          value={row.link}
+                          onChange={(e) =>
+                            handleRowChange(index, "link", e.target.value)
+                          }
+                          className="w-full border px-2 py-1 rounded"
+                        />
+                      </td>
+
+                      <td className="p-2">
+                        <input
+                          value={row.source}
+                          onChange={(e) =>
+                            handleRowChange(index, "source", e.target.value)
+                          }
+                          className="w-full border px-2 py-1 rounded"
+                        />
+                      </td>
+
+                      <td className="p-2 text-center">
+                        <button
+                          type="button"
+                          onClick={() => deleteRow(index)}
+                          className="text-red-500"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Add Row Button */}
             <button
               type="button"
-              onClick={onClose}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+              onClick={addRow}
+              className="mt-4 flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg"
             >
-              Cancel
+              <Plus size={16} />
+              Add News
             </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Saving...' : (itemToEdit ? 'Update Item' : 'Create Item')}
-            </button>
+
+            <div className="flex justify-end mt-6">
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-green-600 text-white px-6 py-2 rounded-lg"
+              >
+                {loading ? "Saving..." : "Save"}
+              </button>
+            </div>
           </div>
         </form>
       </div>
+
+      {showPreview && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+          <div className="bg-white w-[800px] max-h-[80vh] overflow-y-auto rounded-lg shadow-xl">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h3 className="font-semibold">Email Preview</h3>
+
+              <button onClick={() => setShowPreview(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div
+              className="p-4"
+              dangerouslySetInnerHTML={{ __html: previewHtml }}
+            />
+
+            <div className="flex justify-end gap-3 p-4 border-t">
+              <button
+                onClick={() => setShowPreview(false)}
+                className="px-4 py-2 border rounded"
+              >
+                Close
+              </button>
+
+              <button
+                onClick={handleSendEmail}
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+              >
+                Send Email
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

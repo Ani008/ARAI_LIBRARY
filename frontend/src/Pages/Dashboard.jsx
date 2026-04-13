@@ -25,6 +25,7 @@ const Dashboard = () => {
   const [periodicalsCount, setPeriodicalsCount] = useState(0);
   const [abstractsCount, setAbstractsCount] = useState(0);
   const [KCMembersCount, setKCMembersCount] = useState(0);
+  const [ajmtPapersCount, setAjmtPapersCount] = useState(0);
 
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -55,7 +56,6 @@ const Dashboard = () => {
         const response = await axios.get(
           `${import.meta.env.VITE_API_URL}/api/standards`,
         );
-        console.log("Server Response:", response.data); // CHECK THIS IN BROWSER CONSOLE
         if (response.data && response.data.success) {
           setStandardsCount(response.data.totalRecords);
         }
@@ -103,10 +103,33 @@ const Dashboard = () => {
       }
     };
 
+    const fetchAjmtPapersCount = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/api/ajmtpapers`,
+        );
+
+        console.log("AJMT:", response.data);
+
+        if (response.data?.success) {
+          setAjmtPapersCount(
+            response.data.totalRecords ||
+              response.data.total ||
+              response.data.count ||
+              response.data.data?.length ||
+              0,
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching AJMT Papers count:", error);
+      }
+    };
+
     fetchKCMembersCount();
     fetchAbstractsCount();
     fetchPeriodicalsCount();
     fetchStandardsCount();
+    fetchAjmtPapersCount();
   }, []);
 
   return (
@@ -133,7 +156,7 @@ const Dashboard = () => {
       </h3>
 
       {/* Stats Section */}
-      <div className="grid grid-cols-4 gap-7 mb-10 ">
+      <div className="grid grid-cols-5 gap-7 mb-10 ">
         <StatCard
           label="Standards"
           value={standardsCount}
@@ -165,6 +188,14 @@ const Dashboard = () => {
           color="bg-green-500"
           icon={<Eye className="text-green-100 w-6 h-6" />}
           onClick={() => navigate("/kcmembers")}
+        />
+        <StatCard
+          label="AJMT Papers"
+          value={ajmtPapersCount}
+          subLabel="AJMT PAPERS"
+          color="bg-blue-500"
+          icon={<FileText className="text-white w-6 h-6" />}
+          onClick={() => navigate("/ajmtpapers")}
         />
       </div>
 

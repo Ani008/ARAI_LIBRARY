@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import EmailPreviewModal from "./EmailpreviewModal";
 import ReviewModal from "./ReviewModal";
+import axios from "axios";
 
 const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
   const isEditMode = mode === "edit" && paper !== null;
@@ -60,6 +61,9 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
   const [originalData, setOriginalData] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [showReviewFields, setShowReviewFields] = useState({});
+
+  const [showEmailPreview, setShowEmailPreview] = useState(false);
+  const [emailPreviewHtml, setEmailPreviewHtml] = useState("");
 
   const toggleReviewFields = (index) => {
     setShowReviewFields((prev) => ({
@@ -305,6 +309,93 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
       delete updated[index];
       return updated;
     });
+  };
+
+  const handlePreviewAuthorsEmail = () => {
+    const emails = authors
+      .map((a) => a.authorEmail)
+      .filter((e) => e && e.trim() !== "");
+
+    if (emails.length === 0) {
+      alert("No author emails found");
+      return;
+    }
+
+    const html = generateAuthorsEmailHTML();
+
+    setEmailPreviewHtml(html);
+    setShowEmailPreview(true);
+  };
+
+  const handleSendAuthorsEmail = async () => {
+    const emails = authors
+      .map((a) => a.authorEmail)
+      .filter((e) => e && e.trim() !== "");
+
+    if (emails.length === 0) {
+      alert("No author emails found");
+      return;
+    }
+
+    if (!paper?._id) {
+      alert("Save paper before sending email");
+      return;
+    }
+
+    try {
+      await axios.post(`${API_BASE_URL}/${paper._id}/send-authors-email`, {
+        emails,
+        paper: formData,
+      });
+
+      alert("Email sent successfully");
+    } catch (err) {
+      console.error("EMAIL ERROR:", err.response?.data || err);
+      alert("Failed to send email");
+    }
+  };
+
+  const generateAuthorsEmailHTML = () => {
+    return `
+<p>Dear Authors,</p>
+
+<p>Greetings from AJMT</p>
+
+<b>Paper Title:</b> ${formData.paperTitle || ""}
+
+<br/><br/>
+
+<table style="border-collapse:collapse;width:100%;border:1px solid #000">
+
+<tr>
+<th style="border:1px solid #000;padding:6px">SrNo</th>
+<th style="border:1px solid #000;padding:6px">Author</th>
+<th style="border:1px solid #000;padding:6px">Email</th>
+<th style="border:1px solid #000;padding:6px">Institution</th>
+</tr>
+
+${authors
+  .map(
+    (a, i) => `
+
+<tr>
+<td style="border:1px solid #000;padding:6px">${i + 1}</td>
+<td style="border:1px solid #000;padding:6px">${a.authorName || ""}</td>
+<td style="border:1px solid #000;padding:6px">${a.authorEmail || ""}</td>
+<td style="border:1px solid #000;padding:6px">${a.authorInstitution || ""}</td>
+</tr>
+
+`,
+  )
+  .join("")}
+
+</table>
+
+<br/>
+
+Regards <br/>
+AJMT Team
+`;
   };
 
   const handleFileChange = (e) => {
@@ -868,10 +959,29 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
             {activeTab === "authors" && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Authors ({authors.filter((a) => a.authorName.trim()).length}
-                    )
-                  </h3>
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Authors (
+                      {authors.filter((a) => a.authorName.trim()).length})
+                    </h3>
+
+                    <button
+                      type="button"
+                      onClick={handlePreviewAuthorsEmail}
+                      className="px-3 py-1.5 text-xs bg-gray-700 text-white rounded"
+                    >
+                      Preview Email
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleSendAuthorsEmail}
+                      className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded"
+                    >
+                      Send Email
+                    </button>
+                  </div>
+
                   <button
                     type="button"
                     onClick={addAuthor}
@@ -1314,6 +1424,43 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
           </button>
         </div>
       </div>
+
+      {showEmailPreview && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+          <div className="bg-white w-[800px] max-h-[80vh] overflow-y-auto rounded-lg shadow-xl">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h3 className="font-semibold">Authors Email Preview</h3>
+
+              <button onClick={() => setShowEmailPreview(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div
+              className="p-4"
+              dangerouslySetInnerHTML={{ __html: emailPreviewHtml }}
+            />
+
+            <div className="flex justify-end gap-3 p-4 border-t">
+              <button
+                type="button"
+                onClick={() => setShowEmailPreview(false)}
+                className="px-4 py-2 border rounded"
+              >
+                Close
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSendAuthorsEmail}
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+              >
+                Send Email
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Email Preview Modal */}
       {selectedReviewer && (
