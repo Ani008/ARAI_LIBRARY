@@ -13,6 +13,50 @@ import axios from "axios";
 
 const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api`;
 
+const getAutoNewsSubject = () => {
+  const date = new Date();
+
+  const day = date.getDate();
+  const year = date.getFullYear();
+
+  const engMonth = date.toLocaleString("en-US", { month: "long" });
+
+  const hindiMonths = {
+    January: "जनवरी",
+    February: "फ़रवरी",
+    March: "मार्च",
+    April: "अप्रैल",
+    May: "मई",
+    June: "जून",
+    July: "जुलाई",
+    August: "अगस्त",
+    September: "सितंबर",
+    October: "अक्टूबर",
+    November: "नवंबर",
+    December: "दिसंबर",
+  };
+
+  const hindiMonth = hindiMonths[engMonth];
+
+  const getOrdinal = (n) => {
+    if (n > 3 && n < 21) return "th";
+    switch (n % 10) {
+      case 1:
+        return "st";
+      case 2:
+        return "nd";
+      case 3:
+        return "rd";
+      default:
+        return "th";
+    }
+  };
+
+  const ordinal = getOrdinal(day);
+
+  return `FW: ${day} ${hindiMonth} ${year} ऑटो समाचार लिंक / ${day}${ordinal} ${engMonth} ${year} Auto News Link`;
+};
+
 const NewArrivalsAndNewsModal = ({
   isOpen,
   onClose,
@@ -36,6 +80,7 @@ const NewArrivalsAndNewsModal = ({
   const [email, setEmail] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [previewHtml, setPreviewHtml] = useState("");
+  const [subject, setSubject] = useState(getAutoNewsSubject());
 
   useEffect(() => {
     if (itemToEdit) {
@@ -107,9 +152,12 @@ const NewArrivalsAndNewsModal = ({
 
   const handleSendEmail = async () => {
     try {
+      const html = generateEmailHTML(formData);
+
       await axios.post(`${API_BASE_URL}/arrivals-news/send-email`, {
         email,
-        items: [formData],
+        subject, // ✅ send subject
+        html, // ✅ send generated HTML
       });
 
       alert("Email sent successfully");
@@ -154,19 +202,36 @@ const NewArrivalsAndNewsModal = ({
 
   if (!isOpen) return null;
 
+  const getFormattedDate = () => {
+    const date = new Date();
+    const day = date.getDate();
+    const year = date.getFullYear();
+    const engMonth = date.toLocaleString("en-US", { month: "long" });
+
+    const hindiMonths = {
+      January: "जनवरी",
+      February: "फ़रवरी",
+      March: "मार्च",
+      April: "अप्रैल",
+      May: "मई",
+      June: "जून",
+      July: "जुलाई",
+      August: "अगस्त",
+      September: "सितंबर",
+      October: "अक्टूबर",
+      November: "नवंबर",
+      December: "दिसंबर",
+    };
+
+    return `${day} ${hindiMonths[engMonth]} ${year}`;
+  };
+
   const generateEmailHTML = (data) => {
     return `
   <div style="font-family: Arial, sans-serif;">
 
-  <p>Good Morning !</p>
-
-  <h3 style="margin-bottom:10px;">
-  ARAI KNOWLEDGE CENTER MODULES
-  </h3>
-
-  <h4 style="margin-top:15px;">
-  ${data.heading}
-  </h4>
+  <p>${getFormattedDate()} ऑटो समाचार लिंक / Auto News Link</p>
+  </br>
 
   <table 
   style="
@@ -180,19 +245,19 @@ const NewArrivalsAndNewsModal = ({
   <tr>
 
   <th style="border:1px solid #000; padding:6px;">
-  SrNo
+  क्रमांक।Sr. No.
   </th>
 
   <th style="border:1px solid #000; padding:6px;">
-  News Topic
+  समाचार / News
   </th>
 
   <th style="border:1px solid #000; padding:6px;">
-  Source
+  स्रोत / Source
   </th>
 
   <th style="border:1px solid #000; padding:6px;">
-  Link
+  लिंक / Link
   </th>
 
   </tr>
@@ -232,6 +297,11 @@ const NewArrivalsAndNewsModal = ({
 
   </tbody>
   </table>
+
+  </br>
+
+  <p>धन्यवाद / Thanks</p>
+  <p>ज्ञान केंद्र, कोथरुड / Knowledge Centre, Kothrud</p>
 
   </div>
   `;

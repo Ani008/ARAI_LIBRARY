@@ -8,7 +8,7 @@ exports.getAllAbstracts = async (req, res, next) => {
     const skip = (page - 1) * limit;
 
     // Destructure onlyPublished from query
-    const { search, subject, onlyPublished, status } = req.query;
+    const { search, subject, onlyPublished, status, publishedInAA } = req.query;
 
     const query = {};
 
@@ -18,6 +18,11 @@ exports.getAllAbstracts = async (req, res, next) => {
     if (req.query.onlyPublished === "true") {
       query.publishedInAA = { $exists: true, $ne: "" };
     }
+
+    if (publishedInAA && publishedInAA !== "") {
+      query.publishedInAA = publishedInAA;
+    }
+    
     if (status && status !== "") {
       query.status = status;
     }
@@ -178,10 +183,12 @@ exports.deleteAbstract = async (req, res, next) => {
 exports.getAbstractsByIds = async (req, res, next) => {
   try {
     const { ids } = req.body;
-    
+
     // Validate that ids is an array
     if (!ids || !Array.isArray(ids)) {
-      return res.status(400).json({ success: false, message: "Please provide an array of IDs" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Please provide an array of IDs" });
     }
 
     const abstracts = await Abstract.find({ _id: { $in: ids } });
@@ -192,5 +199,21 @@ exports.getAbstractsByIds = async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+};
+
+exports.getPublishedAAList = async (req, res) => {
+  try {
+    const list = await Abstract.distinct("publishedInAA", {
+      publishedInAA: { $exists: true, $ne: "" },
+    });
+
+    // optional: sort latest first
+    list.sort().reverse();
+
+    res.status(200).json(list);
+  } catch (error) {
+    console.error("Error fetching published AA list:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };

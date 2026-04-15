@@ -7,7 +7,8 @@ const {
   createAbstract,
   updateAbstract,
   deleteAbstract,
-  getAbstractsByIds
+  getAbstractsByIds,
+  getPublishedAAList,
 } = require('../controllers/abstractController');
 
 const { uploadExcel, handleUploadError } = require('../middleware/upload');
@@ -16,6 +17,7 @@ const {
 } = require("../controllers/excelUpload/excelAbstractController");
 
 router.post('/export-data', getAbstractsByIds);
+router.get("/published-aa-list", getPublishedAAList);
 
 router.post(
   '/import-excel',

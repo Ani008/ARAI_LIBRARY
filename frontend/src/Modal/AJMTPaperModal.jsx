@@ -357,44 +357,45 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
 
   const generateAuthorsEmailHTML = () => {
     return `
-<p>Dear Authors,</p>
 
-<p>Greetings from AJMT</p>
-
-<b>Paper Title:</b> ${formData.paperTitle || ""}
-
-<br/><br/>
-
-<table style="border-collapse:collapse;width:100%;border:1px solid #000">
-
-<tr>
-<th style="border:1px solid #000;padding:6px">SrNo</th>
-<th style="border:1px solid #000;padding:6px">Author</th>
-<th style="border:1px solid #000;padding:6px">Email</th>
-<th style="border:1px solid #000;padding:6px">Institution</th>
-</tr>
-
-${authors
-  .map(
-    (a, i) => `
-
-<tr>
-<td style="border:1px solid #000;padding:6px">${i + 1}</td>
-<td style="border:1px solid #000;padding:6px">${a.authorName || ""}</td>
-<td style="border:1px solid #000;padding:6px">${a.authorEmail || ""}</td>
-<td style="border:1px solid #000;padding:6px">${a.authorInstitution || ""}</td>
-</tr>
-
-`,
-  )
-  .join("")}
-
-</table>
+<p>Dear Author/s,</p>
 
 <br/>
 
-Regards <br/>
-AJMT Team
+<p>
+The plagiarism check was performed on your submitted paper by eliminating all references 
+and author contact information. The plagiarism report displays <b>${formData.plagiarismPercentage || "NA"}%</b>. 
+We confirm that the similarity index is below our predetermined limit and are 
+submitting the paper for peer review. The peer review might take up to two months. 
+We will notify you via email once we receive the review copy.
+</p>
+
+<br/>
+
+<p>
+Login to the journal website and check the status of your article.
+</p>
+
+<br/>
+
+<p>
+Subscribe the journal to your institution. For more information, please read the 
+subscription page of the Journal website at 
+<a href="https://araijournal.com">https://araijournal.com</a>
+</p>
+
+<br/><br/>
+
+<p>
+Yours sincerely,<br/><br/>
+
+Dr. A. Madhava Rao (Assistant Editor)<br/>
+ARAI Journal of Mobility Technology<br/>
+Sr. Manager, Knowledge Centre<br/>
+ARAI, Kothrud<br/>
+Tel: 202-6762-1126
+</p>
+
 `;
   };
 
@@ -1471,6 +1472,8 @@ AJMT Team
             setSelectedReviewer(null);
           }}
           reviewer={selectedReviewer}
+          uniqueId={formData.uniqueId}
+          manuscriptReceivedDate={formData.manuscriptReceivedDate}
           paperId={paper?._id}
           paperTitle={formData.paperTitle}
           paperSubject={formData.titleSubject}

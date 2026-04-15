@@ -32,6 +32,9 @@ const Abstracts = () => {
   const [publishedOnly, setPublishedOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
 
+  const [publishedAAList, setPublishedAAList] = useState([]);
+  const [selectedAA, setSelectedAA] = useState("");
+
   const navigate = useNavigate();
 
   const fetchAbstracts = async () => {
@@ -43,6 +46,7 @@ const Abstracts = () => {
           search: search,
           status: statusFilter,
           onlyPublished: publishedOnly,
+          publishedInAA: selectedAA,
         },
       });
 
@@ -61,11 +65,24 @@ const Abstracts = () => {
 
   useEffect(() => {
     fetchAbstracts(currentPage);
-  }, [currentPage, search, statusFilter, publishedOnly]);
+  }, [currentPage, search, statusFilter, publishedOnly, selectedAA]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, statusFilter, publishedOnly]);
+  }, [search, statusFilter, publishedOnly, selectedAA]);
+
+  useEffect(() => {
+    const fetchAAList = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/published-aa-list`);
+        setPublishedAAList(res.data || []);
+      } catch (err) {
+        console.error("Failed to fetch AA list", err);
+      }
+    };
+
+    fetchAAList();
+  }, []);
 
   const handleSelectOne = (id) => {
     setSelectedIds((prev) =>
@@ -260,19 +277,22 @@ const Abstracts = () => {
             />
           </div>
 
-          <button
-            onClick={() => {
-              setPublishedOnly(!publishedOnly);
-              setCurrentPage(1); // Reset to first page when filtering
+          <select
+            value={selectedAA}
+            onChange={(e) => {
+              setSelectedAA(e.target.value);
+              setCurrentPage(1);
             }}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 border ${
-              publishedOnly
-                ? "bg-rose-500 text-white border-rose-500 shadow-md"
-                : "bg-transparent text-rose-500 border-rose-500 hover:bg-rose-50"
-            }`}
+            className="px-4 py-2 rounded-md text-sm font-medium border border-rose-500 text-rose-600 bg-white min-w-[220px]"
           >
-            {publishedOnly ? "✓ Published in AA" : "Published in AA"}
-          </button>
+            <option value="">Published in AA</option>
+
+            {publishedAAList.map((item, index) => (
+              <option key={index} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
 
           {/* Status */}
           <select

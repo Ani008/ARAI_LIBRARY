@@ -1,64 +1,203 @@
-import React, { useState } from 'react';
-import { X, Mail, Send, Loader2, Check } from 'lucide-react';
+import React, { useState } from "react";
+import { X, Mail, Send, Loader2, Check } from "lucide-react";
 
-const EmailPreviewModal = ({ isOpen, onClose, reviewer, paperId, paperTitle, paperSubject, authorNames, onEmailSent }) => {
+const EmailPreviewModal = ({
+  isOpen,
+  onClose,
+  reviewer,
+  paperId,
+  paperTitle,
+  paperSubject,
+  authorNames,
+  onEmailSent,
+  uniqueId,
+  manuscriptReceivedDate,
+}) => {
   const [emailSubject, setEmailSubject] = useState(
-    `Research Paper Review Request: ${paperTitle}`
+    `Research Paper Review Request: ${paperTitle}`,
   );
 
-  const [emailBody, setEmailBody] = useState(`Dear ${reviewer?.reviewerName || 'Reviewer'},
+  const [emailBody, setEmailBody] = useState(`
+<p><strong>AJMT – Paper Review (Paper No. ${uniqueId})</strong></p>
+<br/>
 
-We hope this email finds you well. We are writing to request your expertise in reviewing a research paper submitted to our journal.
+<h3><strong>Manuscript Information</strong></h3>
+<br/>
 
-Paper Details:
-• Title: ${paperTitle}
-• Subject: ${paperSubject}
-• Author(s): ${authorNames}
+<table style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">
+<tr>
+<td style="border:1px solid #000; padding:6px;"><b>Journal Name</b></td>
+<td style="border:1px solid #000; padding:6px;">ARAI Journal of Mobility Technology</td>
+</tr>
+<tr>
+<td style="border:1px solid #000; padding:6px;"><b>Manuscript Number</b></td>
+<td style="border:1px solid #000; padding:6px;">${uniqueId}</td>
+</tr>
+<tr>
+<td style="border:1px solid #000; padding:6px;"><b>Manuscript Title</b></td>
+<td style="border:1px solid #000; padding:6px;">${paperTitle}</td>
+</tr>
+<tr>
+<td style="border:1px solid #000; padding:6px;"><b>Date Received from Author</b></td>
+<td style="border:1px solid #000; padding:6px;">${manuscriptReceivedDate}</td>
+</tr>
+<tr>
+<td style="border:1px solid #000; padding:6px;"><b>Plagiarism %</b></td>
+<td style="border:1px solid #000; padding:6px;"></td>
+</tr>
+</table>
+<br/>
 
-Please find the research paper attached to this email. We would greatly appreciate your review and feedback on the following aspects:
+<p><strong>Dear ${reviewer?.reviewerName || "Sir"},</strong></p>
 
-• Originality and significance of the research
-• Methodology and approach
-• Quality of analysis and results
-• Clarity and organization of the paper
-• Plagiarism check and proper citations
+<p>
+We believe you are one of the subject expert, so we are sending you this paper 
+based on your expertise and subject area. Please review the paper and provide 
+your comments. Your comments and suggestions for improving the paper's quality 
+will be shared with the author for further revisions before being sent to print.
+</p>
+<br/>
 
-We kindly request that you complete your review within 2-3 weeks from the date of this email.
+<p>
+Please find the manuscript attached for your reference. You can either print the 
+paper or use the edit tools (Insert / Comment) to make changes. After finishing 
+the review, please provide your comments and score in the below table.
+</p>
+<br/>
 
-When submitting your review, please include:
-1. Overall assessment and recommendation
-2. Plagiarism percentage (if detected)
-3. Detailed comments and suggestions
-4. Any concerns or questions
+<h3><strong>RATING SCORE</strong></h3>
+<br/>
 
-If you have any questions or need additional information, please do not hesitate to contact us.
 
-Thank you for your time and valuable contribution to academic research.
+<table style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">
+<tr>
+<th style="border:1px solid #000; padding:6px; text-align:left;">Sl. No.</th>
+<th style="border:1px solid #000; padding:6px; text-align:left;">Particulars</th>
+<th style="border:1px solid #000; padding:6px; text-align:left;">Score (1-10)</th>
+</tr>
 
-Best regards,
-AJMT Editorial Team
-Academic Journal Management Tool`);
+<tr>
+<td style="border:1px solid #000; padding:6px;">1</td>
+<td style="border:1px solid #000; padding:6px;">Long Term Reference Value</td>
+<td style="border:1px solid #000; padding:6px;"></td>
+</tr>
+
+<tr>
+<td style="border:1px solid #000; padding:6px;">2</td>
+<td style="border:1px solid #000; padding:6px;">Concepts & Organization</td>
+<td style="border:1px solid #000; padding:6px;"></td>
+</tr>
+
+<tr>
+<td style="border:1px solid #000; padding:6px;">3</td>
+<td style="border:1px solid #000; padding:6px;">Professional Integrity</td>
+<td style="border:1px solid #000; padding:6px;"></td>
+</tr>
+
+<tr>
+<td style="border:1px solid #000; padding:6px;">4</td>
+<td style="border:1px solid #000; padding:6px;">Innovation</td>
+<td style="border:1px solid #000; padding:6px;"></td>
+</tr>
+
+<tr>
+<td style="border:1px solid #000; padding:6px;">5</td>
+<td style="border:1px solid #000; padding:6px;">Quality & Validation</td>
+<td style="border:1px solid #000; padding:6px;"></td>
+</tr>
+
+<tr>
+<td style="border:1px solid #000; padding:6px;">6</td>
+<td style="border:1px solid #000; padding:6px;">Soundness of Conclusion</td>
+<td style="border:1px solid #000; padding:6px;"></td>
+</tr>
+
+<tr>
+<th colspan="2" style="border:1px solid #000; padding:6px; text-align:right;">
+Total out of 60
+</th>
+<td style="border:1px solid #000; padding:6px;"></td>
+</tr>
+
+</table>
+</br>
+
+<p><strong>Scores range from 1 to 10, with 1 being the lowest and 10 being the highest.</strong></p>
+
+<h3><strong>Whether Recommended for Journal (Please √ mark)</strong></h3>
+</br>
+
+<table style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">
+<tr>
+
+<td style="border:1px solid #000; padding:10px; font-weight:600;">
+Approved
+</td>
+<td style="border:1px solid #000; width:60px;"></td>
+
+<td style="border:1px solid #000; padding:10px; font-weight:600;">
+Approved if Modified- Minor
+</td>
+<td style="border:1px solid #000; width:60px;"></td>
+
+<td style="border:1px solid #000; padding:10px; font-weight:600;">
+Approved if Modified – Major
+</td>
+<td style="border:1px solid #000; width:60px;"></td>
+
+<td style="border:1px solid #000; padding:10px; font-weight:600;">
+Disapproved
+</td>
+<td style="border:1px solid #000; width:60px;"></td>
+
+</tr>
+</table>
+</br>
+
+<h3>Comments & Corrective Actions</h3>
+</br>
+
+<table border="1" cellpadding="6" cellspacing="0" width="100%">
+<tr><td>1.</td></tr>
+<tr><td>2.</td></tr>
+<tr><td>3.</td></tr>
+<tr><td>4.</td></tr>
+<tr><td>5.</td></tr>
+</table>
+
+<br/>
+
+<p>
+Yours Sincerely,<br/><br/>
+<strong>Dr A. Madhava Rao</strong><br/>
+Sr. Manager, Knowledge Centres (Kothrud & Chakan)<br/>
+Assistant Editor (ARAI Journal of Mobility Technology)<br/>
+The Automotive Research Association of India<br/>
+Pune - Maharashtra<br/>
+Tel: 020-6762-1126 | https://araijournal.com
+</p>
+`);
 
   const [sending, setSending] = useState(false);
   const [progress, setProgress] = useState(0);
   const [sent, setSent] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api/ajmtpapers`;
 
   const handleSend = async () => {
     if (!paperId || !reviewer) {
-      setError('Missing paper or reviewer information');
+      setError("Missing paper or reviewer information");
       return;
     }
 
     setSending(true);
     setProgress(0);
-    setError('');
+    setError("");
 
     // Simulate progress bar
     const progressInterval = setInterval(() => {
-      setProgress(prev => {
+      setProgress((prev) => {
         if (prev >= 90) {
           clearInterval(progressInterval);
           return 90;
@@ -71,19 +210,19 @@ Academic Journal Management Tool`);
       const response = await fetch(
         `${API_BASE_URL}/${paperId}/send-email/${reviewer.reviewerNumber}`,
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             customSubject: emailSubject,
-            customBody: emailBody
-          })
-        }
+            customBody: emailBody,
+          }),
+        },
       );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to send email');
+        throw new Error(data.message || "Failed to send email");
       }
 
       // Complete progress
@@ -100,7 +239,6 @@ Academic Journal Management Tool`);
       setTimeout(() => {
         onClose();
       }, 2000);
-
     } catch (err) {
       clearInterval(progressInterval);
       setError(err.message);
@@ -121,7 +259,9 @@ Academic Journal Management Tool`);
             <Mail className="mr-3" size={24} />
             <div>
               <h2 className="text-xl font-bold">Email Preview & Edit</h2>
-              <p className="text-sm text-emerald-100">Review and customize before sending</p>
+              <p className="text-sm text-emerald-100">
+                Review and customize before sending
+              </p>
             </div>
           </div>
           <button
@@ -185,16 +325,31 @@ Academic Journal Management Tool`);
             </h4>
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <div className="border-b border-gray-200 pb-3 mb-4">
-                <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Subject:</div>
-                <div className="text-base font-semibold text-gray-900">{emailSubject}</div>
+                <div className="text-xs text-gray-500 uppercase font-semibold mb-1">
+                  Subject:
+                </div>
+                <div className="text-base font-semibold text-gray-900">
+                  {emailSubject}
+                </div>
               </div>
-              <div className="whitespace-pre-wrap text-sm text-gray-700 leading-relaxed">
-                {emailBody}
-              </div>
+              <div
+                className="text-sm text-gray-700 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: emailBody }}
+              />
               <div className="mt-6 pt-4 border-t border-gray-200">
                 <div className="flex items-center text-xs text-gray-500">
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  <svg
+                    className="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                    />
                   </svg>
                   Attachment: {paperTitle}.pdf
                 </div>
@@ -206,7 +361,9 @@ Academic Journal Management Tool`);
           {sending && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-700 font-medium">Sending email...</span>
+                <span className="text-gray-700 font-medium">
+                  Sending email...
+                </span>
                 <span className="text-emerald-600 font-bold">{progress}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
@@ -226,14 +383,25 @@ Academic Journal Management Tool`);
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  <svg
+                    className="h-5 w-5 text-blue-600"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <h4 className="text-sm font-semibold text-blue-800">Customize Your Email</h4>
+                  <h4 className="text-sm font-semibold text-blue-800">
+                    Customize Your Email
+                  </h4>
                   <p className="text-sm text-blue-700 mt-1">
-                    You can modify the subject and message above. The PDF will be automatically attached when you send the email.
+                    You can modify the subject and message above. The PDF will
+                    be automatically attached when you send the email.
                   </p>
                 </div>
               </div>
