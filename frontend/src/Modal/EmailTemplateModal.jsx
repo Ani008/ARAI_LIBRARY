@@ -6,39 +6,6 @@ const EmailTemplateModal = ({ isOpen, onClose, onSend, reviewerName, paperTitle,
     `Research Paper Review Request: ${paperTitle}`
   );
 
-  const [emailBody, setEmailBody] = useState(`Dear ${reviewerName},
-
-We hope this email finds you well. We are writing to request your expertise in reviewing a research paper submitted to our journal.
-
-Paper Details:
-• Title: ${paperTitle}
-• Subject: ${paperSubject}
-• Author(s): ${authorNames}
-
-Please find the research paper attached to this email. We would greatly appreciate your review and feedback on the following aspects:
-
-• Originality and significance of the research
-• Methodology and approach
-• Quality of analysis and results
-• Clarity and organization of the paper
-• Plagiarism check and proper citations
-
-We kindly request that you complete your review within 2-3 weeks from the date of this email.
-
-When submitting your review, please include:
-1. Overall assessment and recommendation
-2. Plagiarism percentage (if detected)
-3. Detailed comments and suggestions
-4. Any concerns or questions
-
-If you have any questions or need additional information, please do not hesitate to contact us.
-
-Thank you for your time and valuable contribution to academic research.
-
-Best regards,
-AJMT Editorial Team
-Academic Journal Management Tool`);
-
   const handleSend = () => {
     onSend({
       subject: emailSubject,

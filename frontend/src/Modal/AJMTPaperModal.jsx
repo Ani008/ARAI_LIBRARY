@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   X,
   Plus,
@@ -13,10 +13,10 @@ import {
   Calendar,
 } from "lucide-react";
 import EmailPreviewModal from "./EmailpreviewModal";
-import ReviewModal from "./ReviewModal";
 import axios from "axios";
 
 const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
+  const editableRef = useRef(null);
   const isEditMode = mode === "edit" && paper !== null;
   const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api/ajmtpapers`;
 
@@ -64,6 +64,9 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
 
   const [showEmailPreview, setShowEmailPreview] = useState(false);
   const [emailPreviewHtml, setEmailPreviewHtml] = useState("");
+
+  const [authorsEmailContent, setAuthorsEmailContent] = useState("");
+  
 
   const toggleReviewFields = (index) => {
     setShowReviewFields((prev) => ({
@@ -321,7 +324,7 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
       return;
     }
 
-    const html = generateAuthorsEmailHTML();
+    const html = authorsEmailContent;
 
     setEmailPreviewHtml(html);
     setShowEmailPreview(true);
@@ -342,10 +345,13 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
       return;
     }
 
+    const finalHtml = editableRef.current.innerHTML; // ✅ KEY FIX
+
     try {
       await axios.post(`${API_BASE_URL}/${paper._id}/send-authors-email`, {
         emails,
         paper: formData,
+        html: finalHtml, 
       });
 
       alert("Email sent successfully");
@@ -355,9 +361,8 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
     }
   };
 
-  const generateAuthorsEmailHTML = () => {
-    return `
-
+  useEffect(() => {
+    setAuthorsEmailContent(`
 <p>Dear Author/s,</p>
 
 <br/>
@@ -395,9 +400,8 @@ Sr. Manager, Knowledge Centre<br/>
 ARAI, Kothrud<br/>
 Tel: 202-6762-1126
 </p>
-
-`;
-  };
+`);
+  }, [formData.plagiarismPercentage]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -1437,10 +1441,12 @@ Tel: 202-6762-1126
               </button>
             </div>
 
-            <div
-              className="p-4"
-              dangerouslySetInnerHTML={{ __html: emailPreviewHtml }}
-            />
+            <div 
+  ref={editableRef} // <--- Attach the ref here
+  contentEditable={true} // <--- Makes it editable
+  className="p-4 bg-gray-50 border rounded min-h-[400px] overflow-y-auto outline-none focus:ring-2 focus:ring-blue-500"
+  dangerouslySetInnerHTML={{ __html: emailPreviewHtml }} 
+/>
 
             <div className="flex justify-end gap-3 p-4 border-t">
               <button
@@ -1462,8 +1468,8 @@ Tel: 202-6762-1126
           </div>
         </div>
       )}
-
       {/* Email Preview Modal */}
+
       {selectedReviewer && (
         <EmailPreviewModal
           isOpen={emailModalOpen}
@@ -1482,6 +1488,7 @@ Tel: 202-6762-1126
             .filter(Boolean)
             .join(", ")}
           onEmailSent={handleEmailSent}
+          plagiarismPercentage={formData.plagiarismPercentage}
         />
       )}
     </div>

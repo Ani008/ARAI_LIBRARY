@@ -15,7 +15,10 @@ exports.getAllArrivalsAndNews = async (req, res, next) => {
 
     // 🔎 search by heading
     if (search && search.trim() !== "") {
-      query.heading = { $regex: search.trim(), $options: "i" };
+      query.$or = [
+        { heading: { $regex: search.trim(), $options: "i" } },
+        { "news.newsTopic": { $regex: search.trim(), $options: "i" } }
+      ];
     }
 
     // date filter

@@ -1,5 +1,5 @@
 const AJMTPaper = require("../models/AJMTPaper");
-const { sendReviewerEmail } = require("../services/emailService");
+const { sendReviewerEmail, sendAuthorsEmail } = require("../services/emailService");
 const fs = require("fs");
 const path = require("path");
 const nodemailer = require("nodemailer");
@@ -621,53 +621,45 @@ exports.downloadPaper = async (req, res) => {
 
 exports.sendAuthorsEmail = async (req, res) => {
   try {
-    const { emails, paper } = req.body;
+    const { emails, html } = req.body;
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
-      },
-    });
+    // ✅ Debug logs (after destructuring)
+    console.log("Emails received:", emails);
+    console.log("Type of emails:", typeof emails);
 
-    const html = generateAuthorsEmailTemplate(paper);
+    if (!emails || emails.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No recipient emails provided",
+      });
+    }
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      bcc: emails, // send to all authors
-      subject: "AJMT Paper Communication",
-      html,
-    });
+    // ✅ Ensure it's always an array
+    let emailList = emails;
+    if (typeof emails === "string") {
+      emailList = emails.split(",").map(e => e.trim());
+    }
+
+    // ✅ Call correct service
+    const emailResult = await sendAuthorsEmail(
+      emailList,
+      "AJMT Paper Communication",
+      html
+    );
 
     res.json({
       success: true,
       message: "Email sent to all authors",
+      data: emailResult
     });
 
   } catch (error) {
-    console.error(error);
+    console.error("Authors Email Error:", error);
+
     res.status(500).json({
       success: false,
       message: "Failed to send email",
+      error: error.message
     });
   }
-};
-
-
-const generateAuthorsEmailTemplate = (paper) => {
-  return `
-  <p>Dear Author,</p>
-
-  <p>Greetings from AJMT.</p>
-
-  <p>Paper Title: <b>${paper.paperTitle || ""}</b></p>
-
-  <br/>
-
-  <p>Regards,</p>
-  <p>AJMT Team</p>
-  `;
 };

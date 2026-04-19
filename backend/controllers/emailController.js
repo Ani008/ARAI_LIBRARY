@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const { sendNewsEmail } = require("../services/emailService");
 
 exports.sendArrivalNewsEmail = async (req, res) => {
   try {
@@ -6,30 +7,32 @@ exports.sendArrivalNewsEmail = async (req, res) => {
 
     // ✅ validation
     if (!email) {
-      return res.status(400).json({ message: "Email is required" });
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
     }
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
-      },
+    // ✅ Call service (SMTP-based)
+    const result = await sendNewsEmail(
+      email,
+      subject || "ARAI Knowledge Center Modules",
+      html
+    );
+
+    res.json({
+      success: true,
+      message: "News/Arrival email sent successfully",
+      data: result,
     });
 
-    // ✅ USE FRONTEND HTML (NOT generateHTML)
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: subject || "ARAI Knowledge Center Modules",
-      html: html, // 🔥 IMPORTANT CHANGE
-    });
-
-    res.json({ success: true });
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ success: false });
+    console.error("Arrival News Email Error:", err);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to send email",
+      error: err.message,
+    });
   }
 };

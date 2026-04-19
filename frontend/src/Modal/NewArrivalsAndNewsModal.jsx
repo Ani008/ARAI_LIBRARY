@@ -256,10 +256,6 @@ const NewArrivalsAndNewsModal = ({
   स्रोत / Source
   </th>
 
-  <th style="border:1px solid #000; padding:6px;">
-  लिंक / Link
-  </th>
-
   </tr>
   </thead>
 
@@ -276,17 +272,13 @@ const NewArrivalsAndNewsModal = ({
   </td>
 
   <td style="border:1px solid #000; padding:6px;">
-  ${row.newsTopic || ""}
+  <a href="${row.link}" target="_blank" style="color:blue; text-decoration:underline;">
+    ${row.newsTopic || "Open"}
+  </a>
   </td>
 
   <td style="border:1px solid #000; padding:6px;">
   ${row.source || ""}
-  </td>
-
-  <td style="border:1px solid #000; padding:6px;">
-  <a href="${row.link}" target="_blank">
-  ${row.link || "Open"}
-  </a>
   </td>
 
   </tr>
@@ -305,6 +297,7 @@ const NewArrivalsAndNewsModal = ({
 
   </div>
   `;
+  
   };
 
   return (
