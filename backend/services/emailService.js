@@ -1,5 +1,7 @@
 const nodemailer = require('nodemailer');
 const fs = require('fs');
+require('dotenv').config();
+
 
 // SMTP Configuration (from .env)
 const emailConfig = {
@@ -7,6 +9,9 @@ const emailConfig = {
   port: Number(process.env.SMTP_PORT),
   secure: process.env.SMTP_SECURE === "true"
 };
+  
+  console.log("SMTP HOST USED:", process.env.SMTP_HOST);
+  console.log("SMTP PORT USED:", process.env.SMTP_PORT);
 
 // Create transporter
 const createTransporter = () => {
