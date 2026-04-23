@@ -228,76 +228,46 @@ const NewArrivalsAndNewsModal = ({
 
   const generateEmailHTML = (data) => {
     return `
-  <div style="font-family: Arial, sans-serif;">
+  <html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body style="margin:0; padding:10px; font-family: Arial;">
 
-  <p>${getFormattedDate()} ऑटो समाचार लिंक / Auto News Link</p>
-  </br>
+    <p style="margin-bottom:10px;">
+      ${getFormattedDate()} ऑटो समाचार लिंक / Auto News Link
+    </p>
 
-  <table 
-  style="
-  border-collapse: collapse;
-  width: 100%;
-  border: 1px solid #000;
-  font-size: 13px;
-  ">
+    <table cellpadding="0" cellspacing="0"
+      style="border-collapse: collapse; width: 100%; border:1px solid #000;">
 
-  <thead>
-  <tr>
+      <tr>
+        <th style="border:1px solid #000; padding:5px;">Sr. No.</th>
+        <th style="border:1px solid #000; padding:5px;">News</th>
+        <th style="border:1px solid #000; padding:5px;">Source</th>
+      </tr>
 
-  <th style="border:1px solid #000; padding:6px;">
-  क्रमांक।Sr. No.
-  </th>
+      ${data.news
+        .map(
+          (row, i) => `
+        <tr>
+          <td style="border:1px solid #000; padding:5px;">${i + 1}</td>
+          <td style="border:1px solid #000; padding:5px;">
+            <a href="${row.link}">${row.newsTopic}</a>
+          </td>
+          <td style="border:1px solid #000; padding:5px;">${row.source}</td>
+        </tr>
+      `,
+        )
+        .join("")}
 
-  <th style="border:1px solid #000; padding:6px;">
-  समाचार / News
-  </th>
+    </table>
 
-  <th style="border:1px solid #000; padding:6px;">
-  स्रोत / Source
-  </th>
+    <p style="margin-top:10px;">Thanks</p>
 
-  </tr>
-  </thead>
-
-  <tbody>
-
-  ${data.news
-    .map(
-      (row, index) => `
-
-  <tr>
-
-  <td style="border:1px solid #000; padding:6px;">
-  ${index + 1}
-  </td>
-
-  <td style="border:1px solid #000; padding:6px;">
-  <a href="${row.link}" target="_blank" style="color:blue; text-decoration:underline;">
-    ${row.newsTopic || "Open"}
-  </a>
-  </td>
-
-  <td style="border:1px solid #000; padding:6px;">
-  ${row.source || ""}
-  </td>
-
-  </tr>
-
-  `,
-    )
-    .join("")}
-
-  </tbody>
-  </table>
-
-  </br>
-
-  <p>धन्यवाद / Thanks</p>
-  <p>ज्ञान केंद्र, कोथरुड / Knowledge Centre, Kothrud</p>
-
-  </div>
+  </body>
+  </html>
   `;
-  
   };
 
   return (

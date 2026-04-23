@@ -1489,6 +1489,7 @@ Tel: 202-6762-1126
             .join(", ")}
           onEmailSent={handleEmailSent}
           plagiarismPercentage={formData.plagiarismPercentage}
+          dateOfReceived={formData.dateOfReceived}
         />
       )}
     </div>
