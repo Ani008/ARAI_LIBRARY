@@ -66,7 +66,7 @@ const sendReviewerEmail = async (
 
 
     const mailOptions = {
-      from: `"AJMT Editorial Team" <${process.env.MAIL_FROM_AUTHORS}>`,
+      from: `"AJMT Journal" <${process.env.MAIL_FROM_AUTHORS}>`,
       to: reviewerEmail,
       subject: emailSubject,
       html: customBody, // ✅ FIXED
@@ -100,7 +100,7 @@ const sendNewsEmail = async (to, subject, body) => {
     const transporter = createTransporter();
 
     const mailOptions = {
-      from: `"ARAI Knowledge Centre" <${process.env.MAIL_FROM_NEWS}>`,
+      from: `"Knowledge Centre" <${process.env.MAIL_FROM_NEWS}>`,
       to,
       subject,
       html: body,
