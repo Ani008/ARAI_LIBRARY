@@ -263,7 +263,8 @@ const NewArrivalsAndNewsModal = ({
 
     </table>
 
-    <p style="margin-top:10px;">Thanks</p>
+    <p style="margin-top:10px;">धन्यवाद / Thanks</p>
+    <p style="margin-top:10px;">ज्ञान केंद्र, कोथरुड / Knowledge Centre, Kothrud</p>
 
   </body>
   </html>
