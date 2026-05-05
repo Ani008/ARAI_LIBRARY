@@ -54,7 +54,7 @@ const getAutoNewsSubject = () => {
 
   const ordinal = getOrdinal(day);
 
-  return `FW: ${day} ${hindiMonth} ${year} ऑटो समाचार लिंक / ${day}${ordinal} ${engMonth} ${year} Auto News Link`;
+  return `${day} ${hindiMonth} ${year} ऑटो समाचार लिंक / ${day}${ordinal} ${engMonth} ${year} Auto News Link`;
 };
 
 const NewArrivalsAndNewsModal = ({
@@ -235,7 +235,7 @@ const NewArrivalsAndNewsModal = ({
   <body style="margin:0; padding:10px; font-family: Arial;">
 
     <p style="margin-bottom:10px;">
-      ${getFormattedDate()} ऑटो समाचार लिंक / Auto News Link
+      ${getFormattedDate()} ऑटो समाचार लिंक /${getFormattedDate()} Auto News Link
     </p>
 
     <table cellpadding="0" cellspacing="0"

@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Trash2, Edit2, Plus, Search, File, Download, Upload} from "lucide-react";
+import {
+  Trash2,
+  Edit2,
+  Plus,
+  Search,
+  File,
+  Download,
+  Upload,
+} from "lucide-react";
 import PeriodicalModal from "../Modal/PeriodicalModal";
 import { useNavigate } from "react-router-dom";
 
@@ -500,16 +508,19 @@ const PeriodicalManagement = () => {
                         Title
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                        Publisher
+                        Volume
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                        ISSN
+                        Issue
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                        Month
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                        Year
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
                         Frequency
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                        Language
                       </th>
                       <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider">
                         Actions
@@ -526,20 +537,19 @@ const PeriodicalManagement = () => {
                           {periodical.title}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-600">
-                          {periodical.publisher}
+                          {periodical.volume || "-"}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-600">
-                          {periodical.issn || "-"}
+                          {periodical.issue || "-"}
                         </td>
                         <td className="px-6 py-4 text-sm">
-                          <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                            {periodical.frequency}
-                          </span>
+                            {periodical.month || "-"}
                         </td>
                         <td className="px-6 py-4 text-sm">
-                          <span className="px-3 py-1 bg-slate-100 text-slate-800 rounded-full text-xs font-medium">
-                            {periodical.language || "-"}
-                          </span>
+                            {periodical.year || "-"}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                            {periodical.frequency || "-"}
                         </td>
                         <td className="px-6 py-4 text-sm">
                           <div className="flex gap-3 justify-center">
