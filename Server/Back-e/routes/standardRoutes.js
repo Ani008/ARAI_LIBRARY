@@ -20,7 +20,8 @@ const {
 
 router.post(
   '/import-excel',
-  protect,     // only admin
+  protect,                  // only logged in
+  authorize('ADMIN'),       // only admin
   uploadExcel,
   handleUploadError,
   importStandardsExcel
@@ -31,12 +32,12 @@ router.get('/unique-values/:field', getUniqueFieldValues);
 
 router.route('/')
   .get(getAllStandards)
-  .post(protect, createStandard);
+  .post(protect, authorize('ADMIN'), createStandard);
 
 router.route('/:id')
   .get(getStandardById)
-  .put(protect, updateStandard)
-  .delete(protect, deleteStandard);
+  .put(protect, authorize('ADMIN'), updateStandard)
+  .delete(protect, authorize('ADMIN'), deleteStandard);
 
 
 

@@ -543,17 +543,13 @@ const PeriodicalManagement = () => {
                           {periodical.issue || "-"}
                         </td>
                         <td className="px-6 py-4 text-sm">
-                          {periodical.month ||
-                            periodical.periodicalMonth ||
-                            "-"}
+                            {periodical.month || "-"}
                         </td>
-
                         <td className="px-6 py-4 text-sm">
-                          {periodical.year || periodical.periodicalYear || "-"}
+                            {periodical.year || "-"}
                         </td>
-
                         <td className="px-6 py-4 text-sm">
-                          {periodical.frequency || "-"}
+                            {periodical.frequency || "-"}
                         </td>
                         <td className="px-6 py-4 text-sm">
                           <div className="flex gap-3 justify-center">

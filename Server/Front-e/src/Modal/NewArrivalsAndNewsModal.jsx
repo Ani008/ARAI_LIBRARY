@@ -38,23 +38,8 @@ const getAutoNewsSubject = () => {
 
   const hindiMonth = hindiMonths[engMonth];
 
-  // Convert English digits to Hindi digits
-  const toHindiNumber = (num) => {
-    const hindiDigits = ["०", "१", "२", "३", "४", "५", "६", "७", "८", "९"];
-
-    return num
-      .toString()
-      .split("")
-      .map((digit) => hindiDigits[digit])
-      .join("");
-  };
-
-  const hindiDay = toHindiNumber(day);
-  const hindiYear = toHindiNumber(year);
-
   const getOrdinal = (n) => {
     if (n > 3 && n < 21) return "th";
-
     switch (n % 10) {
       case 1:
         return "st";
@@ -69,7 +54,7 @@ const getAutoNewsSubject = () => {
 
   const ordinal = getOrdinal(day);
 
-  return `${hindiDay} ${hindiMonth} ${hindiYear} ऑटो समाचार लिंक / ${day}${ordinal} ${engMonth} ${year} Auto News Link`;
+  return `${day} ${hindiMonth} ${year} ऑटो समाचार लिंक / ${day}${ordinal} ${engMonth} ${year} Auto News Link`;
 };
 
 const NewArrivalsAndNewsModal = ({
@@ -217,12 +202,10 @@ const NewArrivalsAndNewsModal = ({
 
   if (!isOpen) return null;
 
-  const getHindiFormattedDate = () => {
+  const getFormattedDate = () => {
     const date = new Date();
-
     const day = date.getDate();
     const year = date.getFullYear();
-
     const engMonth = date.toLocaleString("en-US", { month: "long" });
 
     const hindiMonths = {
@@ -240,45 +223,7 @@ const NewArrivalsAndNewsModal = ({
       December: "दिसंबर",
     };
 
-    const toHindiNumber = (num) => {
-      const hindiDigits = ["०", "१", "२", "३", "४", "५", "६", "७", "८", "९"];
-
-      return num
-        .toString()
-        .split("")
-        .map((digit) => hindiDigits[digit])
-        .join("");
-    };
-
-    return `${toHindiNumber(day)} ${
-      hindiMonths[engMonth]
-    } ${toHindiNumber(year)}`;
-  };
-
-  const getEnglishFormattedDate = () => {
-    const date = new Date();
-
-    const day = date.getDate();
-    const year = date.getFullYear();
-
-    const month = date.toLocaleString("en-US", { month: "long" });
-
-    const getOrdinal = (n) => {
-      if (n > 3 && n < 21) return "th";
-
-      switch (n % 10) {
-        case 1:
-          return "st";
-        case 2:
-          return "nd";
-        case 3:
-          return "rd";
-        default:
-          return "th";
-      }
-    };
-
-    return `${day}${getOrdinal(day)} ${month} ${year}`;
+    return `${day} ${hindiMonths[engMonth]} ${year}`;
   };
 
   const generateEmailHTML = (data) => {
@@ -290,7 +235,7 @@ const NewArrivalsAndNewsModal = ({
   <body style="margin:0; padding:10px; font-family: Arial;">
 
     <p style="margin-bottom:10px;">
-      ${getHindiFormattedDate()} ऑटो समाचार लिंक / ${getEnglishFormattedDate()} Auto News Link
+      ${getFormattedDate()} ऑटो समाचार लिंक /${getFormattedDate()} Auto News Link
     </p>
 
     <table cellpadding="0" cellspacing="0"
