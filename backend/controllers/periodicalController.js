@@ -53,7 +53,7 @@ exports.getAllPeriodicals = async (req, res, next) => {
 
     // 5️⃣ Fetch paginated filtered records
     const periodicals = await Periodical.find(query)
-      .sort({ icnNumber: -1 })
+      .sort({ _id: -1 })
       .skip(skip)
       .limit(limit);
 
@@ -135,6 +135,11 @@ exports.createPeriodical = async (req, res, next) => {
 
     // LOG THE ACTIVITY
     await logPeriodicalCreate(req, req.user, periodical);
+    res.status(201).json({
+      success: true,
+      message: "Periodical created successfully",
+      data: periodical,
+    });
   } catch (error) {
     next(error);
   }
