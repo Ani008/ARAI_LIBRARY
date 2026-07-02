@@ -281,7 +281,7 @@ const AJMTPapersPage = () => {
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Submitted</th>
                 <th className="px-6 py-4">Reviewers</th>
-                <th className="px-6 py-4">Score</th>
+                <th className="px-6 py-4">Plagiarism</th>
                 <th className="px-6 py-4 text-right pr-8">Actions</th>
               </tr>
             </thead>
@@ -316,11 +316,16 @@ const AJMTPapersPage = () => {
                   {/* Date */}
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 align-middle">
                     {formatDate(paper.date)}
+                    {paper.tentativeDateOfPublication && (
+                      <div className="text-xs text-cyan-800 mt-1">
+                        Tentative: {formatDate(paper.tentativeDateOfPublication)}
+                      </div>
+                    )}
                   </td>
 
                   {/* Reviewers */}
                   <td className="px-6 py-4 text-sm text-slate-600">
-                    {paper.reviewers?.length || 0}/3
+                    {paper.reviewers?.length || 0}
                   </td>
 
                   {/* Score */}

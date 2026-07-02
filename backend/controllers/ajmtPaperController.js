@@ -285,13 +285,6 @@ exports.sendReviewerEmail = async (req, res) => {
 
 exports.updatePaper = async (req, res) => {
   try {
-    // Validate reviewers count if provided
-    if (req.body.reviewers && req.body.reviewers.length > 3) {
-      return res.status(400).json({
-        success: false,
-        message: "Maximum 3 reviewers allowed",
-      });
-    }
 
     const paper = await AJMTPaper.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -478,13 +471,6 @@ exports.addReviewer = async (req, res) => {
       });
     }
 
-    if (paper.reviewers.length >= 3) {
-      return res.status(400).json({
-        success: false,
-        message: "Maximum 3 reviewers allowed",
-      });
-    }
-
     const reviewerData = {
       reviewerNumber: req.body.reviewerNumber || paper.reviewers.length + 1,
       reviewerName: req.body.reviewerName,
@@ -494,6 +480,7 @@ exports.addReviewer = async (req, res) => {
       dateOfReceived: req.body.dateOfReceived,
       reviewerScore: req.body.reviewerScore,
       reviewerRemarks: req.body.reviewerRemarks,
+      reviewerComments: req.body.reviewerComments,
     };
 
     paper.reviewers.push(reviewerData);
@@ -542,6 +529,7 @@ exports.updateReviewer = async (req, res) => {
     reviewer.dateOfReceived = req.body.dateOfReceived ?? reviewer.dateOfReceived;
     reviewer.reviewerScore = req.body.reviewerScore ?? reviewer.reviewerScore;
     reviewer.reviewerRemarks = req.body.reviewerRemarks ?? reviewer.reviewerRemarks;
+    reviewer.reviewerComments = req.body.reviewerComments ?? reviewer.reviewerComments;
 
     await paper.save();
 

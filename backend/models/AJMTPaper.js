@@ -31,6 +31,7 @@ const reviewerSchema = new mongoose.Schema({
   dateOfReceived: { type: Date },
   reviewerScore: { type: String, trim: true },
   reviewerRemarks: { type: String, trim: true },
+  reviewerComments: { type: String, trim: true },
 });
 
 // Main AJMT Paper Schema

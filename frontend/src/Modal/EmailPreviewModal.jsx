@@ -157,7 +157,7 @@ const EmailPreviewModal = ({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             customSubject: emailSubject,
-            customBody: beforeEditable + editableContent + afterEditable,
+            customBody: editableContent + beforeEditable + afterEditable,
           }),
         },
       );
@@ -201,7 +201,7 @@ const EmailPreviewModal = ({
           <div className="border p-4 bg-gray-50 rounded">
             <div
               dangerouslySetInnerHTML={{
-                __html: beforeEditable + editableContent + afterEditable,
+                __html: beforeEditable + afterEditable,
               }}
             />
           </div>

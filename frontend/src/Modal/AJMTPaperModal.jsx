@@ -270,25 +270,22 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
   };
 
   const addReviewer = () => {
-    if (reviewers.length < 3) {
-      const newIndex = reviewers.length;
+    const newIndex = reviewers.length;
 
-      setReviewers([
-        ...reviewers,
-        {
-          reviewerNumber: reviewers.length + 1,
-          reviewerName: "",
-          reviewerEmail: "",
-          emailSent: false,
-        },
-      ]);
+    setReviewers([
+      ...reviewers,
+      {
+        reviewerNumber: reviewers.length + 1,
+        reviewerName: "",
+        reviewerEmail: "",
+        emailSent: false,
+      },
+    ]);
 
-      // IMPORTANT FIX
-      setShowReviewFields((prev) => ({
-        ...prev,
-        [newIndex]: false,
-      }));
-    }
+    setShowReviewFields((prev) => ({
+      ...prev,
+      [newIndex]: false,
+    }));
   };
 
   const removeReviewer = async (index) => {
@@ -559,6 +556,7 @@ Tel: 202-6762-1126
               dateOfReceived: reviewer.dateOfReceived,
               reviewerScore: reviewer.reviewerScore,
               reviewerRemarks: reviewer.reviewerRemarks,
+              reviewerComments: reviewer.reviewerComments,
             }),
           });
         }
@@ -634,7 +632,7 @@ Tel: 202-6762-1126
                 {tab === "authors" &&
                   `Authors (${authors.filter((a) => a.authorName.trim()).length})`}
                 {tab === "reviewers" &&
-                  `Reviewers & Reviews (${reviewers.length}/3)`}
+                  `Reviewers & Reviews (${reviewers.length})`}
               </button>
             ))}
           </div>
@@ -1186,18 +1184,16 @@ Tel: 202-6762-1126
               <div className="space-y-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">
-                    Reviewers ({reviewers.length}/3)
+                    Reviewers ({reviewers.length})
                   </h3>
-                  {reviewers.length < 3 && (
-                    <button
-                      type="button"
-                      onClick={addReviewer}
-                      className="text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center"
-                    >
-                      <Plus size={16} className="mr-1" />
-                      Add Reviewer
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={addReviewer}
+                    className="text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center"
+                  >
+                    <Plus size={16} className="mr-1" />
+                    Add Reviewer
+                  </button>
                 </div>
 
                 {!isEditMode && (
@@ -1390,6 +1386,26 @@ Tel: 202-6762-1126
                               }
                               className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
                               placeholder="Enter remarks"
+                            />
+                          </div>
+
+                          {/* Reviewer Comments */}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Reviewer Comments
+                            </label>
+                            <input
+                              type="text"
+                              value={reviewer.reviewerComments || ""}
+                              onChange={(e) =>
+                                handleReviewerChange(
+                                  index,
+                                  "reviewerComments",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                              placeholder="Enter comments"
                             />
                           </div>
                         </div>

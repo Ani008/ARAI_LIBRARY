@@ -2764,6 +2764,7 @@ exports.ajmtStatusWiseReport = async (req, res, next) => {
       { header: "Reviewers", key: "reviewers", width: 60 },
 
       { header: "Remarks", key: "remarks", width: 40 },
+      { header: "Reviewer Comments", key: "reviewerComments", width: 60 },
 
       { header: "Paper File", key: "paperFileName", width: 30 },
 
@@ -2793,10 +2794,9 @@ exports.ajmtStatusWiseReport = async (req, res, next) => {
       const reviewersText = (paper.reviewers || [])
         .map(
           (r) =>
-            `Reviewer No: ${r.reviewerNumber} Name: ${r.reviewerName} Email: ${r.reviewerEmail} Email Sent: ${r.emailSent} Email Sent Date: ${r.emailSentDate || ""} Submission Date: ${r.dateOfSubmission || ""} Received Date: ${r.dateOfReceived || ""} Score: ${r.reviewerScore || ""} Remarks: ${r.reviewerRemarks || ""}`,
+            `Reviewer No: ${r.reviewerNumber} Name: ${r.reviewerName} Email: ${r.reviewerEmail} Email Sent: ${r.emailSent} Email Sent Date: ${r.emailSentDate || ""} Submission Date: ${r.dateOfSubmission || ""} Received Date: ${r.dateOfReceived || ""} Score: ${r.reviewerScore || ""} Remarks: ${r.reviewerRemarks || ""} Comments: ${r.reviewerComments || ""}`,
         )
         .join("\n\n");
-
 
       worksheet.addRow({
         uniqueId: paper.uniqueId,
@@ -2962,7 +2962,7 @@ exports.ajmtReport = async (req, res, next) => {
       const reviewersText = (paper.reviewers || [])
         .map(
           (r) =>
-            `Reviewer No: ${r.reviewerNumber} Name: ${r.reviewerName} Email: ${r.reviewerEmail} Email Sent: ${r.emailSent} Email Sent Date: ${r.emailSentDate || ""} Submission Date: ${r.dateOfSubmission || ""} Received Date: ${r.dateOfReceived || ""} Score: ${r.reviewerScore || ""} Remarks: ${r.reviewerRemarks || ""}`,
+            `Reviewer No: ${r.reviewerNumber} Name: ${r.reviewerName} Email: ${r.reviewerEmail} Email Sent: ${r.emailSent} Email Sent Date: ${r.emailSentDate || ""} Submission Date: ${r.dateOfSubmission || ""} Received Date: ${r.dateOfReceived || ""} Score: ${r.reviewerScore || ""} Remarks: ${r.reviewerRemarks || ""} Comments: ${r.reviewerComments || ""}`,
         )
         .join("\n\n");
 
