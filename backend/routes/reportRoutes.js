@@ -40,6 +40,8 @@ const {
 
   ajmtStatusWiseReport,
   ajmtReport,
+
+  completeBackupReport,
 } = require('../controllers/reportController');
 
 // ==================== STANDARDS REPORTS ====================
@@ -82,5 +84,8 @@ router.get('/arrivals-news/complete', protect, arrivalsNewsCompleteReport);
 
 router.get("/ajmt/status", protect, ajmtStatusWiseReport);
 router.get("/ajmt/complete", protect, ajmtReport);
+
+
+router.get("/backup/complete", protect, completeBackupReport);
 
 module.exports = router;
