@@ -6,7 +6,7 @@ import logo from "../assets/logo.png";
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const [role, setRole] = useState("USER");
+  const [role, setRole] = useState("ADMIN");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -29,8 +29,10 @@ const LoginPage = () => {
       if (response.ok) {
         // Check if the status code is 200-299
         console.log("Login Attempt Successful");
+        console.log(data.user);
 
         localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
 
         // Navigate to the dashboard/home route
         navigate("/");
@@ -64,7 +66,6 @@ const LoginPage = () => {
             Knowledge Center Modules
           </h1>
 
-
           <form onSubmit={handleLogin} className="space-y-6">
             {/* Role Dropdown */}
             <div className="space-y-2">
@@ -78,8 +79,10 @@ const LoginPage = () => {
                   className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                 >
                   <option value="ADMIN">ADMIN</option>
-                  <option value="STAFF">STAFF</option>
-                  <option value="USER">USER</option>
+                  <option value="STAFF1">STAFF 1</option>
+                  <option value="STAFF2">STAFF 2</option>
+                  <option value="STAFF3">STAFF 3</option>
+                  <option value="STAFF4">STAFF 4</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-3.5 w-5 h-5 text-slate-400 pointer-events-none" />
               </div>

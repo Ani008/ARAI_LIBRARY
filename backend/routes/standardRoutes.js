@@ -1,5 +1,6 @@
-const express = require('express');
-const { protect, authorize } = require('../middleware/auth');
+const express = require("express");
+const { protect, authorize } = require("../middleware/auth");
+const { checkPermission } = require("../middleware/permissions");
 
 const router = express.Router();
 const {
@@ -9,36 +10,35 @@ const {
   updateStandard,
   deleteStandard,
   getNextIcn,
-  getUniqueFieldValues
-} = require('../controllers/standardController');
+  getUniqueFieldValues,
+} = require("../controllers/standardController");
 
-const { uploadExcel, handleUploadError } = require('../middleware/upload');
+const { uploadExcel, handleUploadError } = require("../middleware/upload");
 
 const {
-  importStandardsExcel
+  importStandardsExcel,
 } = require("../controllers/excelUpload/excelStandardController");
 
+router.use(protect);
+router.use(checkPermission("standards"));
+
 router.post(
-  '/import-excel',
-  protect,     // only admin
+  "/import-excel",
   uploadExcel,
   handleUploadError,
-  importStandardsExcel
+  importStandardsExcel,
 );
 
-router.get('/next-icn', getNextIcn);
-router.get('/unique-values/:field', getUniqueFieldValues);
+router.get("/next-icn", getNextIcn);
 
-router.route('/')
-  .get(getAllStandards)
-  .post(protect, createStandard);
+router.get("/unique-values/:field", getUniqueFieldValues);
 
-router.route('/:id')
+router.route("/").get(getAllStandards).post(createStandard);
+
+router
+  .route("/:id")
   .get(getStandardById)
-  .put(protect, updateStandard)
-  .delete(protect, deleteStandard);
-
-
-
+  .put(updateStandard)
+  .delete(deleteStandard);
 
 module.exports = router;

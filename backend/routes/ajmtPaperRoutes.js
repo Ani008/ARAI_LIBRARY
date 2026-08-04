@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { uploadPaperPDF, handleUploadError, uploadExcel } = require('../middleware/upload');
 const { protect, authorize } = require('../middleware/auth');
+const { checkPermission } = require("../middleware/permissions");
+
 const {
   getAllPapers,
   getPaperById,
@@ -24,10 +26,12 @@ const {
   importAJMTPapers
 } = require("../controllers/excelUpload/excelAJMTController");
 
+router.use(protect);
+router.use(checkPermission("ajmtPapers"));
+
 
 router.post(
-  '/import-excel',
-  protect,                  
+  '/import-excel',                 
   authorize('ADMIN'),       
   uploadExcel,
   handleUploadError,

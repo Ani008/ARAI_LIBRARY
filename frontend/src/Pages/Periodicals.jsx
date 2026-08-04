@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import PeriodicalModal from "../Modal/PeriodicalModal";
 import { useNavigate } from "react-router-dom";
+import PermissionGuard from "../Components/PermissionGuard";
+import AccessDeniedOverlay from "../Components/AccessDeniedOverlay";
 
 const PeriodicalManagement = () => {
   const [periodicals, setPeriodicals] = useState([]);
@@ -357,319 +359,328 @@ const PeriodicalManagement = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      {/* Sidebar would go here */}
+    <PermissionGuard
+      module="periodicals"
+      fallback={<AccessDeniedOverlay title="Periodicals Management" />}
+    >
+      <div className="flex min-h-screen bg-slate-50">
+        {/* Sidebar would go here */}
 
-      <div className="flex-1 p-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Header Section */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                <File className="text-blue-600" />
-                Periodicals Management
-              </h1>
-              <p className="text-sm text-slate-500 mt-1">
-                Manage and track your periodicals, status & lifecycle.
-              </p>
-              {previewCount !== null && (
-                <p className="text-sm font-semibold text-blue-600 mt-2 bg-blue-50 px-3 py-1 rounded-md inline-block">
-                  Found {previewCount} Records for the selected range.
+        <div className="flex-1 p-8">
+          <div className="max-w-7xl mx-auto">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              <div>
+                <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                  <File className="text-blue-600" />
+                  Periodicals Management
+                </h1>
+                <p className="text-sm text-slate-500 mt-1">
+                  Manage and track your periodicals, status & lifecycle.
                 </p>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 flex-wrap xl:flex-nowrap">
-              <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-md border border-slate-200 shadow-sm">
-                <input
-                  type="number"
-                  placeholder="Start Year"
-                  className="w-20 px-1 py-0.5 text-xs border-none outline-none"
-                  value={startYear}
-                  onChange={(e) => {
-                    setStartYear(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                />
-                <span className="text-slate-400">-</span>
-                <input
-                  type="number"
-                  placeholder="End Year"
-                  className="w-20 px-1 py-0.5 text-xs border-none outline-none"
-                  value={endYear}
-                  onChange={(e) => setEndYear(e.target.value)}
-                />
-                <button
-                  onClick={handleBulkDisposal}
-                  disabled={!previewCount || previewCount === 0}
-                  className="px-2 py-0.5 bg-amber-500 text-white text-[11px] font-semibold rounded hover:bg-amber-600 disabled:opacity-50 transition whitespace-nowrap"
-                >
-                  Active → Disposal
-                </button>
+                {previewCount !== null && (
+                  <p className="text-sm font-semibold text-blue-600 mt-2 bg-blue-50 px-3 py-1 rounded-md inline-block">
+                    Found {previewCount} Records for the selected range.
+                  </p>
+                )}
               </div>
 
-              <button
-                onClick={() => setShowForm(true)}
-                className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition shadow-sm text-sm"
-              >
-                <Plus size={20} />
-                Add New
-              </button>
-
-              <button
-                onClick={() => navigate("/reports")}
-                className="flex items-center gap-1 px-3 py-1.5 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 transition shadow-sm text-sm"
-              >
-                <Download size={20} />
-                Report
-              </button>
-
-              <button
-                onClick={() => navigate("/uploadExcel")}
-                className="flex items-center px-3 py-1.5 border border-blue-600 text-blue-600 rounded-md hover:bg-indigo-50 transition shadow-sm text-sm"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Upload
-              </button>
-            </div>
-          </div>
-
-          {/* Notifications */}
-          {error && (
-            <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="mb-4 p-4 bg-blue-100 border border-blue-400 text-blue-700 rounded-lg">
-              {success}
-            </div>
-          )}
-
-          {/* Table Container */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            {/* Search and Filters Bar */}
-            <div className="p-6 bg-gray-50 border-b border-gray-200">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1 relative">
-                  <Search
-                    className="absolute left-3 top-3 text-gray-400"
-                    size={20}
-                  />
+              <div className="flex items-center gap-2 flex-wrap xl:flex-nowrap">
+                <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-md border border-slate-200 shadow-sm">
                   <input
-                    type="text"
-                    placeholder="Search by title, publisher, or ISSN..."
-                    value={searchTerm}
+                    type="number"
+                    placeholder="Start Year"
+                    className="w-20 px-1 py-0.5 text-xs border-none outline-none"
+                    value={startYear}
                     onChange={(e) => {
-                      setSearchTerm(e.target.value);
+                      setStartYear(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
-                </div>
-                <select
-                  value={frequencyFilter}
-                  onChange={(e) => setFrequencyFilter(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">All Frequencies</option>
-                  {frequencyOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={languageFilter}
-                  onChange={(e) => setLanguageFilter(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">All Languages</option>
-                  {languageOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">All Statuses</option>
-                  {statusOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Table */}
-            <div className="overflow-x-auto">
-              {periodicals.length > 0 ? (
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gray-50 text-gray-500 border-b border-gray-200">
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                        Title
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                        Volume
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                        Issue
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                        Month
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                        Year
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                        Frequency
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {periodicals.map((periodical, index) => (
-                      <tr
-                        key={periodical._id}
-                        className="hover:bg-blue-50/30 transition-colors"
-                      >
-                        <td className="px-6 py-4 text-sm text-gray-800 font-medium">
-                          {periodical.title}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {periodical.volume || "-"}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {periodical.issue || "-"}
-                        </td>
-                        <td className="px-6 py-4 text-sm">
-                          {periodical.month ||
-                            periodical.periodicalMonth ||
-                            "-"}
-                        </td>
-
-                        <td className="px-6 py-4 text-sm">
-                          {periodical.year || periodical.periodicalYear || "-"}
-                        </td>
-
-                        <td className="px-6 py-4 text-sm">
-                          {periodical.frequency || "-"}
-                        </td>
-                        <td className="px-6 py-4 text-sm">
-                          <div className="flex gap-3 justify-center">
-                            <button
-                              onClick={() => handleEdit(periodical)}
-                              className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition"
-                              title="Edit"
-                            >
-                              <Edit2 size={18} />
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleDelete(periodical._id, periodical.title)
-                              }
-                              className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition"
-                              title="Delete"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <div className="p-12 text-center text-gray-500">
-                  {loading ? "Loading periodicals..." : "No periodicals found."}
-                </div>
-              )}
-            </div>
-
-            {/* Updated Pagination Logic */}
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4 py-6 px-6 bg-gray-50 border-t border-gray-200">
-              {/* Records Dropdown */}
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <span>Show</span>
-                <select
-                  value={limit}
-                  onChange={(e) => setLimit(Number(e.target.value))}
-                  className="border border-gray-300 px-2 py-1 rounded bg-white outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </select>
-                <span>records</span>
-              </div>
-
-              {/* Page Controls */}
-              <div className="flex items-center gap-2">
-                <button
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((prev) => prev - 1)}
-                  className="px-3 py-1 border border-gray-300 rounded bg-white text-sm disabled:opacity-40 hover:bg-gray-100 transition"
-                >
-                  Prev
-                </button>
-
-                {getVisiblePages().map((page) => (
+                  <span className="text-slate-400">-</span>
+                  <input
+                    type="number"
+                    placeholder="End Year"
+                    className="w-20 px-1 py-0.5 text-xs border-none outline-none"
+                    value={endYear}
+                    onChange={(e) => setEndYear(e.target.value)}
+                  />
                   <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`px-3 py-1 border rounded text-sm transition ${
-                      currentPage === page
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-white text-slate-600 border-gray-300 hover:bg-gray-100"
-                    }`}
+                    onClick={handleBulkDisposal}
+                    disabled={!previewCount || previewCount === 0}
+                    className="px-2 py-0.5 bg-amber-500 text-white text-[11px] font-semibold rounded hover:bg-amber-600 disabled:opacity-50 transition whitespace-nowrap"
                   >
-                    {page}
+                    Active → Disposal
                   </button>
-                ))}
+                </div>
 
                 <button
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((prev) => prev + 1)}
-                  className="px-3 py-1 border border-gray-300 rounded bg-white text-sm disabled:opacity-40 hover:bg-gray-100 transition"
+                  onClick={() => setShowForm(true)}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition shadow-sm text-sm"
                 >
-                  Next
+                  <Plus size={20} />
+                  Add New
                 </button>
+
+                <button
+                  onClick={() => navigate("/reports")}
+                  className="flex items-center gap-1 px-3 py-1.5 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 transition shadow-sm text-sm"
+                >
+                  <Download size={20} />
+                  Report
+                </button>
+
+                <button
+                  onClick={() => navigate("/uploadExcel")}
+                  className="flex items-center px-3 py-1.5 border border-blue-600 text-blue-600 rounded-md hover:bg-indigo-50 transition shadow-sm text-sm"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload
+                </button>
+              </div>
+            </div>
+
+            {/* Notifications */}
+            {error && (
+              <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                {error}
+              </div>
+            )}
+            {success && (
+              <div className="mb-4 p-4 bg-blue-100 border border-blue-400 text-blue-700 rounded-lg">
+                {success}
+              </div>
+            )}
+
+            {/* Table Container */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+              {/* Search and Filters Bar */}
+              <div className="p-6 bg-gray-50 border-b border-gray-200">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1 relative">
+                    <Search
+                      className="absolute left-3 top-3 text-gray-400"
+                      size={20}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Search by title, publisher, or ISSN..."
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <select
+                    value={frequencyFilter}
+                    onChange={(e) => setFrequencyFilter(e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">All Frequencies</option>
+                    {frequencyOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={languageFilter}
+                    onChange={(e) => setLanguageFilter(e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">All Languages</option>
+                    {languageOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">All Statuses</option>
+                    {statusOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Table */}
+              <div className="overflow-x-auto">
+                {periodicals.length > 0 ? (
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-gray-50 text-gray-500 border-b border-gray-200">
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                          Title
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                          Volume
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                          Issue
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                          Month
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                          Year
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                          Frequency
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {periodicals.map((periodical, index) => (
+                        <tr
+                          key={periodical._id}
+                          className="hover:bg-blue-50/30 transition-colors"
+                        >
+                          <td className="px-6 py-4 text-sm text-gray-800 font-medium">
+                            {periodical.title}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            {periodical.volume || "-"}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            {periodical.issue || "-"}
+                          </td>
+                          <td className="px-6 py-4 text-sm">
+                            {periodical.month ||
+                              periodical.periodicalMonth ||
+                              "-"}
+                          </td>
+
+                          <td className="px-6 py-4 text-sm">
+                            {periodical.year ||
+                              periodical.periodicalYear ||
+                              "-"}
+                          </td>
+
+                          <td className="px-6 py-4 text-sm">
+                            {periodical.frequency || "-"}
+                          </td>
+                          <td className="px-6 py-4 text-sm">
+                            <div className="flex gap-3 justify-center">
+                              <button
+                                onClick={() => handleEdit(periodical)}
+                                className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+                                title="Edit"
+                              >
+                                <Edit2 size={18} />
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleDelete(periodical._id, periodical.title)
+                                }
+                                className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition"
+                                title="Delete"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="p-12 text-center text-gray-500">
+                    {loading
+                      ? "Loading periodicals..."
+                      : "No periodicals found."}
+                  </div>
+                )}
+              </div>
+
+              {/* Updated Pagination Logic */}
+              <div className="flex flex-col md:flex-row justify-between items-center gap-4 py-6 px-6 bg-gray-50 border-t border-gray-200">
+                {/* Records Dropdown */}
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <span>Show</span>
+                  <select
+                    value={limit}
+                    onChange={(e) => setLimit(Number(e.target.value))}
+                    className="border border-gray-300 px-2 py-1 rounded bg-white outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                  <span>records</span>
+                </div>
+
+                {/* Page Controls */}
+                <div className="flex items-center gap-2">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage((prev) => prev - 1)}
+                    className="px-3 py-1 border border-gray-300 rounded bg-white text-sm disabled:opacity-40 hover:bg-gray-100 transition"
+                  >
+                    Prev
+                  </button>
+
+                  {getVisiblePages().map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 border rounded text-sm transition ${
+                        currentPage === page
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "bg-white text-slate-600 border-gray-300 hover:bg-gray-100"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage((prev) => prev + 1)}
+                    className="px-3 py-1 border border-gray-300 rounded bg-white text-sm disabled:opacity-40 hover:bg-gray-100 transition"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Modal Component - Placed outside main content but inside root div */}
-      <PeriodicalModal
-        showForm={showForm}
-        setShowForm={setShowForm}
-        formData={formData}
-        setFormData={setFormData}
-        handleSubmit={handleSubmit}
-        handleInputChange={handleInputChange}
-        handleNestedChange={handleNestedChange}
-        handleAuthorsChange={handleAuthorsChange}
-        loading={loading}
-        editingId={editingId}
-        resetForm={resetForm}
-        frequencyOptions={frequencyOptions}
-        languageOptions={languageOptions}
-        departmentOptions={departmentOptions}
-        modeOptions={modeOptions}
-        suggestions={suggestions}
-        fetchFieldSuggestions={fetchFieldSuggestions}
-      />
-    </div>
+        {/* Modal Component - Placed outside main content but inside root div */}
+        <PeriodicalModal
+          showForm={showForm}
+          setShowForm={setShowForm}
+          formData={formData}
+          setFormData={setFormData}
+          handleSubmit={handleSubmit}
+          handleInputChange={handleInputChange}
+          handleNestedChange={handleNestedChange}
+          handleAuthorsChange={handleAuthorsChange}
+          loading={loading}
+          editingId={editingId}
+          resetForm={resetForm}
+          frequencyOptions={frequencyOptions}
+          languageOptions={languageOptions}
+          departmentOptions={departmentOptions}
+          modeOptions={modeOptions}
+          suggestions={suggestions}
+          fetchFieldSuggestions={fetchFieldSuggestions}
+        />
+      </div>
+    </PermissionGuard>
   );
 };
 

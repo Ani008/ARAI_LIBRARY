@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../services/api";
 import {
   X,
   Plus,
@@ -13,7 +13,6 @@ import {
   User,
 } from "lucide-react";
 
-const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api/kcmembers`;
 
 const SUBSCRIPTION_MAP = {
   "Automotive Abstract": ["Subscribers", "Exchange", "GOI"],
@@ -52,7 +51,7 @@ const KCModal = ({ onClose, editingId, refreshData }) => {
     if (editingId) {
       const fetchSingle = async () => {
         try {
-          const res = await axios.get(`${API_BASE_URL}/${editingId}`);
+          const res = await api.get(`/kcmembers/${editingId}`);
           const item = res.data.data;
 
           // Formatting dates for HTML input (YYYY-MM-DD)
@@ -77,7 +76,7 @@ const KCModal = ({ onClose, editingId, refreshData }) => {
   const fetchIdPreview = async (mType, sType) => {
     if (!mType || !sType) return;
     try {
-      const res = await axios.get(`${API_BASE_URL}/preview-id`, {
+      const res = await api.get("/kcmembers/preview-id", {
         params: { membershipType: mType, subscriptionType: sType },
       });
       setFormData((prev) => ({ ...prev, membershipId: res.data.previewId }));
@@ -107,7 +106,7 @@ const KCModal = ({ onClose, editingId, refreshData }) => {
     // instead of waiting for formData state to update
     if (!editingId && selectedSub && formData.membershipType) {
       try {
-        const res = await axios.get(`${API_BASE_URL}/preview-id`, {
+        const res = await api.get("/kcmembers/preview-id", {
           params: {
             membershipType: formData.membershipType,
             subscriptionType: selectedSub,
@@ -134,9 +133,9 @@ const KCModal = ({ onClose, editingId, refreshData }) => {
       }
 
       if (editingId) {
-        await axios.put(`${API_BASE_URL}/${editingId}`, formData);
+        await api.put(`/kcmembers/${editingId}`, formData);
       } else {
-        await axios.post(API_BASE_URL, formData);
+        await api.post("/kcmembers", formData);
       }
       refreshData();
       onClose();

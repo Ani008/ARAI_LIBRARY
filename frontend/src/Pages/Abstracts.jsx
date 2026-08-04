@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+import PermissionGuard from "../components/PermissionGuard";
+import AccessDeniedOverlay from "../Components/AccessDeniedOverlay";
 
-import axios from "axios";
+import api from "../services/api";
 import {
   Plus,
   Edit3,
@@ -16,8 +18,6 @@ import {
 import * as XLSX from "xlsx";
 import AbstractModal from "../Modal/AbstractModal"; // Pointing to your new modal
 import { useNavigate } from "react-router-dom";
-
-const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api/abstracts`;
 
 const Abstracts = () => {
   const [abstracts, setAbstracts] = useState([]);
@@ -39,7 +39,8 @@ const Abstracts = () => {
 
   const fetchAbstracts = async () => {
     try {
-      const response = await axios.get(API_BASE_URL, {
+      const response = await api.get("/abstracts", {
+        
         params: {
           page: currentPage,
           limit: limit,
@@ -58,9 +59,10 @@ const Abstracts = () => {
         setAbstracts([]);
       }
     } catch (error) {
-      console.error("Error fetching standards:", error);
-      setStandards([]);
+      console.error("Error fetching abstracts:", error);
+      setAbstracts([]);
     }
+    console.log(response.data);
   };
 
   useEffect(() => {
@@ -74,7 +76,7 @@ const Abstracts = () => {
   useEffect(() => {
     const fetchAAList = async () => {
       try {
-        const res = await axios.get(`${API_BASE_URL}/published-aa-list`);
+        const res = await api.get("/abstracts/published-aa-list");
         setPublishedAAList(res.data || []);
       } catch (err) {
         console.error("Failed to fetch AA list", err);
@@ -115,7 +117,7 @@ const Abstracts = () => {
 
     try {
       // Calling the unprotected route
-      const response = await axios.post(`${API_BASE_URL}/export-data`, {
+      const response = await api.post("/abstracts/export-data", {
         ids: selectedIds,
       });
 
@@ -166,7 +168,7 @@ const Abstracts = () => {
       window.confirm("Are you sure you want to delete this research abstract?")
     ) {
       try {
-        await axios.delete(`${API_BASE_URL}/${id}`);
+        await api.delete(`/abstracts/${id}`);
         fetchAbstracts();
       } catch (error) {
         alert("Failed to delete record.");
@@ -187,23 +189,11 @@ const Abstracts = () => {
     return pages;
   };
 
-  const filteredAbstracts = abstracts.filter((item) => {
-    if (
-      search &&
-      !(
-        item.title?.toLowerCase().includes(search.toLowerCase()) ||
-        item.journal?.toLowerCase().includes(search.toLowerCase()) ||
-        item.authors?.join(", ").toLowerCase().includes(search.toLowerCase())
-      )
-    )
-      return false;
-
-    if (statusFilter && item.status !== statusFilter) return false;
-
-    return true;
-  });
-
   return (
+    <PermissionGuard
+    module="abstracts"
+    fallback={<AccessDeniedOverlay title="Automotive Abstract Management" />}
+>
     <div className="p-8 bg-gray-50 min-h-screen space-y-6">
       {/* ================= HEADER (NO WHITE BG) ================= */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -489,6 +479,7 @@ const Abstracts = () => {
         />
       )}
     </div>
+    </PermissionGuard>
   );
 };
 

@@ -9,9 +9,7 @@ import {
   Tag,
   AlertCircle,
 } from "lucide-react";
-import axios from "axios";
-
-const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api`;
+import api from "../services/api";
 
 const getAutoNewsSubject = () => {
   const date = new Date();
@@ -169,10 +167,10 @@ const NewArrivalsAndNewsModal = ({
     try {
       const html = generateEmailHTML(formData);
 
-      await axios.post(`${API_BASE_URL}/arrivals-news/send-email`, {
+      await api.post("/arrivals-news/send-email", {
         email,
-        subject, // ✅ send subject
-        html, // ✅ send generated HTML
+        subject,
+        html,
       });
 
       alert("Email sent successfully");
@@ -188,28 +186,17 @@ const NewArrivalsAndNewsModal = ({
     setLoading(true);
 
     try {
-      const url = itemToEdit
-        ? `${API_BASE_URL}/arrivals-news/${itemToEdit._id}`
-        : `${API_BASE_URL}/arrivals-news`;
-
-      const method = itemToEdit ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        onSuccess();
-        onClose();
+      if (itemToEdit) {
+        await api.put(`/arrivals-news/${itemToEdit._id}`, formData);
+      } else {
+        await api.post("/arrivals-news", formData);
       }
+
+      onSuccess();
+      onClose();
     } catch (err) {
       console.error(err);
+      alert(err.response?.data?.message || "Failed to save record.");
     }
 
     setLoading(false);

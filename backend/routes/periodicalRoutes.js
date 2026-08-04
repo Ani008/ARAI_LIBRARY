@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth');
+const { checkPermission } = require("../middleware/permissions");
 
 const {
   getAllPeriodicals,
@@ -19,6 +20,9 @@ const {
   importPeriodicalsExcel,
 } = require("../controllers/excelUpload/excelPeriodicalController");
 
+router.use(protect);
+router.use(checkPermission("periodicals"));
+
 router.get('/suggestions', getPeriodicalSuggestions);
 
 router.patch('/bulk-disposal', bulkDisposalByYear);
@@ -27,7 +31,6 @@ router.get('/disposal-preview', getDisposalPreviewCount);
 
 router.post(
   '/import-excel',
-  protect, // any logged in user
   uploadExcel,
   handleUploadError,
   importPeriodicalsExcel
@@ -35,11 +38,11 @@ router.post(
 
 router.route('/')
   .get(getAllPeriodicals)
-  .post(protect, createPeriodical);
+  .post(createPeriodical);
 
 router.route('/:id')
   .get(getPeriodicalById)
-  .put(protect, updatePeriodical)
-  .delete(protect, deletePeriodical);
+  .put(updatePeriodical)
+  .delete(deletePeriodical);
 
 module.exports = router;

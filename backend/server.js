@@ -17,6 +17,8 @@ const reportRoutes = require('./routes/reportRoutes');
 const ajmtPaperRoutes = require('./routes/ajmtPaperRoutes');
 const arrivalsAndNewsRoutes = require('./routes/arrivalsAndNewsRoutes');
 
+const userRoutes = require("./routes/userRoutes");
+
 
 dotenv.config();
 
@@ -41,6 +43,8 @@ app.use('/api/activitylogs', activitylogs);
 app.use('/api/reports', reportRoutes);
 app.use('/api/ajmtpapers', ajmtPaperRoutes);
 app.use('/api/arrivals-news', arrivalsAndNewsRoutes);
+
+app.use("/api/users", userRoutes);
 
 
 

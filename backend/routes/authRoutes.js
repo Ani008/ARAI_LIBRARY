@@ -6,7 +6,7 @@ const { protect, authorize } = require("../middleware/auth");
 const ActivityLog = require("../models/ActivityLog");
 
 const generateToken = (id, role) => {
-  return jwt.sign({id, role}, process.env.JWT_SECRET, {
+  return jwt.sign({ id, role }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE,
   });
 };
@@ -23,7 +23,9 @@ router.post("/login", async (req, res) => {
       });
     }
 
+    console.log("Incoming Role:", role);
     const user = await User.findOne({ role }).select("+password");
+    console.log("Found User:", user?.role);
 
     if (!user || !(await user.matchPassword(password))) {
       return res
@@ -59,6 +61,7 @@ router.post("/login", async (req, res) => {
       user: {
         id: user._id,
         role: user.role,
+        permissions: user.permissions,
       },
     });
   } catch (error) {

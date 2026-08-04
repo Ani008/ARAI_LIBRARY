@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { sendArrivalNewsEmail } = require('../controllers/emailController');
+const { checkPermission } = require("../middleware/permissions");
+const { protect } = require('../middleware/auth');
 
 const {
   getAllArrivalsAndNews,
@@ -11,6 +13,9 @@ const {
   deleteArrivalsAndNews,
   getArrivalsAndNewsStatistics
 } = require('../controllers/arrivalsAndNewsController');
+
+router.use(protect);
+router.use(checkPermission("arrivalsNews"));
 
 
 

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../services/api";
+import PermissionGuard from "../Components/PermissionGuard";
+import AccessDeniedOverlay from "../Components/AccessDeniedOverlay";
 import {
   Plus,
   Edit3,
@@ -11,8 +13,6 @@ import {
   RefreshCw,
 } from "lucide-react";
 import NewArrivalsAndNewsModal from "../Modal/NewArrivalsAndNewsModal";
-
-const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api`;
 
 const NewArrivalsAndNews = () => {
   const [items, setItems] = useState([]);
@@ -33,18 +33,14 @@ const NewArrivalsAndNews = () => {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem("token");
 
-      const response = await axios.get(`${API_BASE_URL}/arrivals-news`, {
+      const response = await api.get("/arrivals-news", {
         params: {
           page,
           limit,
           search: searchTerm,
           startDate,
           endDate,
-        },
-        headers: {
-          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -57,7 +53,7 @@ const NewArrivalsAndNews = () => {
       }
 
       // Keep dropdown options separate
-      const optionsRes = await axios.get(`${API_BASE_URL}/options`);
+      const optionsRes = await api.get("/options");
       setDropdownOptions(optionsRes.data.data);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -88,7 +84,7 @@ const NewArrivalsAndNews = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this entry?")) {
       try {
-        await axios.delete(`${API_BASE_URL}/arrivals-news/${id}`);
+        await api.delete(`/arrivals-news/${id}`);
         fetchItems();
       } catch (error) {
         alert("Failed to delete the record.");
@@ -97,6 +93,10 @@ const NewArrivalsAndNews = () => {
   };
 
   return (
+    <PermissionGuard
+    module="arrivalsNews"
+    fallback={<AccessDeniedOverlay title="New Arrivals & News" />}
+>
     <div className="p-8 bg-gray-50 min-h-screen font-sans">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
@@ -283,6 +283,7 @@ const NewArrivalsAndNews = () => {
         />
       )}
     </div>
+  </PermissionGuard>
   );
 };
 

@@ -1,23 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { X, Save, AlertCircle, Check } from 'lucide-react';
-import api from "../utils/api";
+import React, { useState, useEffect } from "react";
+import { X, Save, AlertCircle, Check } from "lucide-react";
+import api from "../services/api";
 
 const ReviewModal = ({ isOpen, onClose, reviewer, paperId, onReviewAdded }) => {
   const [formData, setFormData] = useState({
-    plagiarismPercentage: '',
-    sentDate: '',
-    remarks: ''
+    plagiarismPercentage: "",
+    sentDate: "",
+    remarks: "",
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
-
-
-
-  // const API_BASE_URL = 'http://localhost:5000/api/ajmtpapers';
-  const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api/ajmtpapers`;
 
   // Check if reviewer already has a review
   const hasExistingReview = reviewer?.reviews && reviewer.reviews.length > 0;
@@ -26,25 +21,25 @@ const ReviewModal = ({ isOpen, onClose, reviewer, paperId, onReviewAdded }) => {
   useEffect(() => {
     if (isOpen && reviewer) {
       // Set default date to today
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split("T")[0];
       setFormData({
-        plagiarismPercentage: '',
+        plagiarismPercentage: "",
         sentDate: today,
-        remarks: ''
+        remarks: "",
       });
-      setError('');
-      setSuccess('');
+      setError("");
+      setSuccess("");
       setFieldErrors({});
     }
   }, [isOpen, reviewer]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
     // Clear field error
     if (fieldErrors[name]) {
-      setFieldErrors(prev => ({ ...prev, [name]: '' }));
+      setFieldErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
@@ -53,19 +48,19 @@ const ReviewModal = ({ isOpen, onClose, reviewer, paperId, onReviewAdded }) => {
 
     // Plagiarism percentage validation
     if (!formData.plagiarismPercentage && formData.plagiarismPercentage !== 0) {
-      errors.plagiarismPercentage = 'Plagiarism percentage is required';
+      errors.plagiarismPercentage = "Plagiarism percentage is required";
     } else {
       const value = parseFloat(formData.plagiarismPercentage);
       if (isNaN(value)) {
-        errors.plagiarismPercentage = 'Must be a valid number';
+        errors.plagiarismPercentage = "Must be a valid number";
       } else if (value < 0 || value > 100) {
-        errors.plagiarismPercentage = 'Must be between 0 and 100';
+        errors.plagiarismPercentage = "Must be between 0 and 100";
       }
     }
 
     // Date validation
     if (!formData.sentDate) {
-      errors.sentDate = 'Review date is required';
+      errors.sentDate = "Review date is required";
     }
 
     setFieldErrors(errors);
@@ -77,40 +72,34 @@ const ReviewModal = ({ isOpen, onClose, reviewer, paperId, onReviewAdded }) => {
 
     // Check if already has review
     if (hasExistingReview) {
-      setError('This reviewer has already submitted a review. Only one review per reviewer is allowed.');
+      setError(
+        "This reviewer has already submitted a review. Only one review per reviewer is allowed.",
+      );
       return;
     }
 
     if (!validateForm()) {
-      setError('Please fix the errors before submitting');
+      setError("Please fix the errors before submitting");
       return;
     }
 
     setLoading(true);
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/${paperId}/reviewers/${reviewer._id}/reviews`,
+      const response = await api.post(
+        `/ajmtpapers/${paperId}/reviewers/${reviewer._id}/reviews`,
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            plagiarismPercentage: parseFloat(formData.plagiarismPercentage),
-            sentDate: formData.sentDate,
-            remarks: formData.remarks
-          })
-        }
+          plagiarismPercentage: parseFloat(formData.plagiarismPercentage),
+          sentDate: formData.sentDate,
+          remarks: formData.remarks,
+        },
       );
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to add review');
-      }
-
-      setSuccess('Review added successfully!');
+      setSuccess("Review added successfully!");
 
       // Notify parent component
       if (onReviewAdded) {
@@ -121,7 +110,6 @@ const ReviewModal = ({ isOpen, onClose, reviewer, paperId, onReviewAdded }) => {
       setTimeout(() => {
         onClose();
       }, 1500);
-
     } catch (err) {
       setError(err.message);
     } finally {
@@ -173,7 +161,9 @@ const ReviewModal = ({ isOpen, onClose, reviewer, paperId, onReviewAdded }) => {
             <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg flex items-start">
               <AlertCircle size={18} className="mr-2 mt-0.5 flex-shrink-0" />
               <div>
-                <strong>Note:</strong> This reviewer has already submitted a review. Only one review per reviewer is allowed. You can edit the existing review instead.
+                <strong>Note:</strong> This reviewer has already submitted a
+                review. Only one review per reviewer is allowed. You can edit
+                the existing review instead.
               </div>
             </div>
           )}
@@ -194,14 +184,18 @@ const ReviewModal = ({ isOpen, onClose, reviewer, paperId, onReviewAdded }) => {
                 step="0.1"
                 disabled={loading || hasExistingReview}
                 className={`flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                  fieldErrors.plagiarismPercentage ? 'border-red-500' : 'border-gray-300'
+                  fieldErrors.plagiarismPercentage
+                    ? "border-red-500"
+                    : "border-gray-300"
                 }`}
                 placeholder="e.g., 5.5"
               />
               <span className="text-sm font-medium text-gray-600">%</span>
             </div>
             {fieldErrors.plagiarismPercentage && (
-              <p className="mt-1 text-sm text-red-600">{fieldErrors.plagiarismPercentage}</p>
+              <p className="mt-1 text-sm text-red-600">
+                {fieldErrors.plagiarismPercentage}
+              </p>
             )}
             <p className="mt-1 text-xs text-gray-500">
               Enter the plagiarism percentage detected (0-100)
@@ -220,11 +214,13 @@ const ReviewModal = ({ isOpen, onClose, reviewer, paperId, onReviewAdded }) => {
               onChange={handleInputChange}
               disabled={loading || hasExistingReview}
               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                fieldErrors.sentDate ? 'border-red-500' : 'border-gray-300'
+                fieldErrors.sentDate ? "border-red-500" : "border-gray-300"
               }`}
             />
             {fieldErrors.sentDate && (
-              <p className="mt-1 text-sm text-red-600">{fieldErrors.sentDate}</p>
+              <p className="mt-1 text-sm text-red-600">
+                {fieldErrors.sentDate}
+              </p>
             )}
             <p className="mt-1 text-xs text-gray-500">
               Date when the review was received
@@ -255,14 +251,26 @@ const ReviewModal = ({ isOpen, onClose, reviewer, paperId, onReviewAdded }) => {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  <svg
+                    className="h-5 w-5 text-blue-600"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <h4 className="text-sm font-semibold text-blue-800">One Review Per Reviewer</h4>
+                  <h4 className="text-sm font-semibold text-blue-800">
+                    One Review Per Reviewer
+                  </h4>
                   <p className="text-sm text-blue-700 mt-1">
-                    Each reviewer can only submit one review. After saving, you can edit this review if needed, but cannot add additional reviews from the same reviewer.
+                    Each reviewer can only submit one review. After saving, you
+                    can edit this review if needed, but cannot add additional
+                    reviews from the same reviewer.
                   </p>
                 </div>
               </div>

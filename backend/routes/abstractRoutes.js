@@ -1,5 +1,6 @@
-const express = require('express');
-const { protect, authorize } = require('../middleware/auth');
+const express = require("express");
+const { protect, authorize } = require("../middleware/auth");
+const { checkPermission } = require("../middleware/permissions");
 const router = express.Router();
 const {
   getAllAbstracts,
@@ -9,30 +10,30 @@ const {
   deleteAbstract,
   getAbstractsByIds,
   getPublishedAAList,
-} = require('../controllers/abstractController');
+} = require("../controllers/abstractController");
 
-const { uploadExcel, handleUploadError } = require('../middleware/upload');
+const { uploadExcel, handleUploadError } = require("../middleware/upload");
 const {
-  importAbstractsExcel
+  importAbstractsExcel,
 } = require("../controllers/excelUpload/excelAbstractController");
 
-router.post('/export-data', getAbstractsByIds);
+router.use(protect);
+router.use(checkPermission("abstracts"));
+
+router.post("/export-data", getAbstractsByIds);
 router.get("/published-aa-list", getPublishedAAList);
 
 router.post(
-  '/import-excel',
-  protect,                  // only logged in
-  authorize('ADMIN'),       // only admin
+  "/import-excel",
   uploadExcel,
   handleUploadError,
-  importAbstractsExcel
+  importAbstractsExcel,
 );
 
-router.route('/')
-  .get(getAllAbstracts)
-  .post(createAbstract);
+router.route("/").get(getAllAbstracts).post(createAbstract);
 
-router.route('/:id')
+router
+  .route("/:id")
   .get(getAbstractById)
   .put(updateAbstract)
   .delete(deleteAbstract);

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { X, ClipboardList, BookOpen, PlusCircle } from "lucide-react";
-import api from "../utils/api";
+import api from "../services/api";
 
 const StandardModal = ({ onClose, editingId, refreshData }) => {
   const [formData, setFormData] = useState({

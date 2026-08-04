@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../services/api";
 import {
   X,
   Plus,
@@ -11,8 +11,6 @@ import {
   Tag,
 } from "lucide-react";
 
-// Adjusted to match common naming conventions for your Abstract model
-const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api/abstracts`;
 
 const AbstractModal = ({ onClose, editingId, refreshData }) => {
   const [formData, setFormData] = useState({
@@ -37,7 +35,7 @@ const AbstractModal = ({ onClose, editingId, refreshData }) => {
     if (editingId) {
       const fetchSingle = async () => {
         try {
-          const res = await axios.get(`${API_BASE_URL}/${editingId}`);
+          const res = await api.get(`/abstracts/${editingId}`);
           const item = res.data.data;
 
           // Ensure authors is an array for the dynamic inputs
@@ -121,9 +119,9 @@ const AbstractModal = ({ onClose, editingId, refreshData }) => {
       };
 
       if (editingId) {
-        await axios.put(`${API_BASE_URL}/${editingId}`, submissionData);
+        await api.put(`/abstracts/${editingId}`, submissionData);
       } else {
-        await axios.post(API_BASE_URL, submissionData);
+        await api.post(`/abstracts`, submissionData);
       }
       refreshData();
       onClose();

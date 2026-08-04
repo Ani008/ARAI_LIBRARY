@@ -274,3 +274,22 @@ exports.deleteKCMember = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.getMembershipCounts = async (req, res) => {
+  const counts = await KCMember.aggregate([
+    {
+      $group: {
+        _id: "$membershipType",
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  res.json({
+    success: true,
+    data: counts.map((item) => ({
+      type: item._id,
+      count: item.count,
+    })),
+  });
+};

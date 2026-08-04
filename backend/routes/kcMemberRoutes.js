@@ -1,31 +1,30 @@
 const express = require('express');
 const { protect, authorize } = require('../middleware/auth');
+const { checkPermission } = require("../middleware/permissions");
 
 const router = express.Router();
 
-// Import the main KC Member controllers
 const {
   getAllKCMembers,
   getKCMemberById,
   createKCMember,
   updateKCMember,
   deleteKCMember,
-  getMembershipIdPreview 
+  getMembershipIdPreview,
+  getMembershipCounts
 } = require('../controllers/kcMemberController');
 
-// Import the upload middleware
 const { uploadExcel, handleUploadError } = require('../middleware/upload');
 
-// Import the specific Excel import controller
 const {
   importKCMembers
 } = require("../controllers/excelUpload/excelKcMembershipController");
 
-// 1. Specialized / Action Routes
+router.use(protect);
+router.use(checkPermission("kcMembers"));
+
 router.post(
-  '/import-excel', 
-  protect, 
-  authorize('ADMIN'), 
+  '/import-excel',
   uploadExcel,
   handleUploadError,
   importKCMembers
@@ -33,6 +32,9 @@ router.post(
 
 // Route to preview the next generated ID (if you have this logic in your controller)
 router.get('/preview-id',getMembershipIdPreview);
+
+// Route to get membership counts
+router.get('/counts', getMembershipCounts);
 
 // 2. Collection Routes
 router.route('/')

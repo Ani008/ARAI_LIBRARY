@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
+
+import PermissionModal from "./PermissionModal";
 
 import { useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
-import { Bell, Mail, ChevronDown } from "lucide-react";
+import { Bell, Mail, ChevronDown, ShieldCheck } from "lucide-react";
 import ActivityDropdown from "./ActivityDropdown"; // Make sure the path is correct
 
 const Layout = ({ children }) => {
@@ -13,6 +15,7 @@ const Layout = ({ children }) => {
   const navigate = useNavigate();
   const [isChecking, setIsChecking] = useState(true);
 
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -48,8 +51,8 @@ const Layout = ({ children }) => {
       <main className="flex-1 overflow-y-auto bg-gray-50">
         {/* Navbar */}
         <header className="px-8 py-4 flex justify-end items-center gap-6 border-b border-gray-100 bg-white">
-          <div className="flex gap-4 text-gray-400">
-            {/* Bell Icon with Hover and Click Logic */}
+          <div className="flex items-center gap-4">
+            {/* Bell */}
             <div
               className="relative"
               onMouseEnter={() => setShowNotifications(true)}
@@ -63,13 +66,26 @@ const Layout = ({ children }) => {
                   size={20}
                   className="cursor-pointer hover:text-gray-600 transition-colors"
                 />
-                {/* Red Notification Dot */}
+
                 <span className="absolute -top-1 -right-0.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
               </button>
 
-              {/* Show Dropdown on Hover */}
               {showNotifications && <ActivityDropdown />}
             </div>
+
+            {/* Manage Access Button */}
+            {role === "ADMIN" && (
+              <button
+                onClick={() => setShowPermissionModal(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-300 transition-all shadow-sm"
+              >
+                <ShieldCheck size={18} className="text-blue-600" />
+
+                <span className="text-sm font-medium text-gray-700">
+                  Manage Access
+                </span>
+              </button>
+            )}
           </div>
 
           <div className="relative">
@@ -80,7 +96,9 @@ const Layout = ({ children }) => {
               <div className="w-8 h-8 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center font-bold text-xs">
                 {role.charAt(0)}
               </div>
-              <span className="text-sm font-semibold text-gray-700">{role || "User"}</span>
+              <span className="text-sm font-semibold text-gray-700">
+                {role || "User"}
+              </span>
 
               <ChevronDown
                 size={16}
@@ -101,6 +119,10 @@ const Layout = ({ children }) => {
               </div>
             )}
           </div>
+          <PermissionModal
+            isOpen={showPermissionModal}
+            onClose={() => setShowPermissionModal(false)}
+          />
         </header>
 
         {/* Page Content */}

@@ -13,12 +13,11 @@ import {
   Calendar,
 } from "lucide-react";
 import EmailPreviewModal from "./EmailpreviewModal";
-import axios from "axios";
+import api from "../services/api";
 
 const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
   const editableRef = useRef(null);
   const isEditMode = mode === "edit" && paper !== null;
-  const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api/ajmtpapers`;
 
   // Form Data State
   const [formData, setFormData] = useState({
@@ -226,15 +225,16 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
     if (!paper?._id) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/${paper._id}/download`);
-      if (!response.ok) throw new Error("Download failed");
+      const response = await api.get(`/ajmtpapers/${paper._id}/download`, {
+        responseType: "blob",
+      });
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      const url = window.URL.createObjectURL(response.data);
 
       const link = document.createElement("a");
       link.href = url;
       link.download = pdfFileName || "paper.pdf";
+
       document.body.appendChild(link);
       link.click();
 
@@ -292,14 +292,7 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
     const reviewer = reviewers[index];
     if (isEditMode && reviewer._id) {
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/${paper._id}/reviewers/${reviewer._id}`,
-          { method: "DELETE" },
-        );
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.message || "Failed to delete reviewer");
-        }
+        await api.delete(`/ajmtpapers/${paper._id}/reviewers/${reviewer._id}`);
       } catch (err) {
         setError(err.message);
         return;
@@ -347,7 +340,7 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
     const finalHtml = editableRef.current.innerHTML; // ✅ KEY FIX
 
     try {
-      await axios.post(`${API_BASE_URL}/${paper._id}/send-authors-email`, {
+      await api.post(`/ajmtpapers/${paper._id}/send-authors-email`, {
         emails,
         paper: formData,
         html: finalHtml,
@@ -464,26 +457,19 @@ Tel: 202-6762-1126
 
     if (pdfFile) formDataToSend.append("paperFile", pdfFile);
 
-    const response = await fetch(API_BASE_URL, {
-      method: "POST",
-      body: formDataToSend,
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Failed to create paper");
+    const response = await api.post("/ajmtpapers", formDataToSend);
+
+    const data = response.data;
 
     if (reviewers.length > 0) {
       const paperId = data.data._id;
       for (const reviewer of reviewers) {
         if (reviewer.reviewerName && reviewer.reviewerEmail) {
           try {
-            await fetch(`${API_BASE_URL}/${paperId}/reviewers`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                reviewerNumber: reviewer.reviewerNumber,
-                reviewerName: reviewer.reviewerName,
-                reviewerEmail: reviewer.reviewerEmail,
-              }),
+            await api.post(`/ajmtpapers/${paperId}/reviewers`, {
+              reviewerNumber: reviewer.reviewerNumber,
+              reviewerName: reviewer.reviewerName,
+              reviewerEmail: reviewer.reviewerEmail,
             });
           } catch (err) {
             console.error("Error adding reviewer:", err);
@@ -511,53 +497,35 @@ Tel: 202-6762-1126
       return;
     }
 
-    const response = await fetch(`${API_BASE_URL}/${paper._id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates),
-    });
-
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Failed to update paper");
+    await api.put(`/ajmtpapers/${paper._id}`, updates);
 
     if (pdfFile) {
       const pdfFormData = new FormData();
       pdfFormData.append("paperFile", pdfFile);
-      await fetch(`${API_BASE_URL}/${paper._id}/upload-pdf`, {
-        method: "POST",
-        body: pdfFormData,
-      });
+      await api.post(`/ajmtpapers/${paper._id}/upload-pdf`, pdfFormData);
     }
 
     for (const reviewer of reviewers) {
       try {
         // UPDATE EXISTING REVIEWER
         if (reviewer._id) {
-          await fetch(
-            `${API_BASE_URL}/${paper._id}/reviewers/${reviewer._id}`,
-            {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(reviewer),
-            },
+          await api.put(
+            `/ajmtpapers/${paper._id}/reviewers/${reviewer._id}`,
+            reviewer,
           );
         }
 
         // ADD NEW REVIEWER
         else if (reviewer.reviewerName && reviewer.reviewerEmail) {
-          await fetch(`${API_BASE_URL}/${paper._id}/reviewers`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              reviewerNumber: reviewer.reviewerNumber,
-              reviewerName: reviewer.reviewerName,
-              reviewerEmail: reviewer.reviewerEmail,
-              dateOfSubmission: reviewer.dateOfSubmission,
-              dateOfReceived: reviewer.dateOfReceived,
-              reviewerScore: reviewer.reviewerScore,
-              reviewerRemarks: reviewer.reviewerRemarks,
-              reviewerComments: reviewer.reviewerComments,
-            }),
+          await api.post(`/ajmtpapers/${paper._id}/reviewers`, {
+            reviewerNumber: reviewer.reviewerNumber,
+            reviewerName: reviewer.reviewerName,
+            reviewerEmail: reviewer.reviewerEmail,
+            dateOfSubmission: reviewer.dateOfSubmission,
+            dateOfReceived: reviewer.dateOfReceived,
+            reviewerScore: reviewer.reviewerScore,
+            reviewerRemarks: reviewer.reviewerRemarks,
+            reviewerComments: reviewer.reviewerComments,
           });
         }
       } catch (err) {
