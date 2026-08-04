@@ -121,7 +121,6 @@ const EmailPreviewModal = ({
 
 <p style="margin:5px 0 0 0;">
   <strong>Dr A. Madhava Rao</strong><br/>
-  Sr. Manager, Knowledge Centres (Kothrud & Chakan)<br/>
   Assistant Editor (ARAI Journal of Mobility Technology)<br/>
   The Automotive Research Association of India<br/>
   Pune - Maharashtra<br/>
