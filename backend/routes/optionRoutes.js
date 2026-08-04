@@ -7,7 +7,7 @@ router.get('/', (req, res) => {
     data: {
       departments: ['Mechanical', 'Civil', 'Computer', 'Electrical', 'Automotive'],
       categories: ['ASTM', 'BIS', 'DIN', 'ISO', 'SAE'],
-      frequencies: ['Daily', 'Monthly', 'Quarterly', 'Bi-Monthly', 'Annual'],
+      frequencies: ['Daily', 'Weekly', 'FortNightly', 'Monthly', 'Quarterly', 'Bi-Monthly', 'Annual'],
       modes: ['Subscription', 'Exchange', 'Free', 'Membership'],
       languages: ['ENGLISH', 'MARATHI', 'HINDI'],
       statuses: ['Active', 'Disposal'],

@@ -60,7 +60,7 @@ const periodicalSchema = new mongoose.Schema({
   },
   frequency: {
     type: String,
-    enum: ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Bi-Monthly', 'Annual', ''],
+    enum: ['Daily', 'Weekly', 'FortNightly', 'Monthly', 'Quarterly', 'Bi-Monthly', 'Annual', ''],
     default: ''
   },
   receiptDate: {

@@ -150,11 +150,15 @@ const EmailPreviewModal = ({
     setSending(true);
     setError("");
     try {
+      const token = localStorage.getItem("token");
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/api/ajmtpapers/${paperId}/send-email/${reviewer.reviewerNumber}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             customSubject: emailSubject,
             customBody: editableContent + beforeEditable + afterEditable,

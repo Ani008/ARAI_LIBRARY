@@ -249,6 +249,7 @@ const PeriodicalManagement = () => {
   const frequencyOptions = [
     "Daily",
     "Weekly",
+    "FortNightly",
     "Monthly",
     "Quarterly",
     "Bi-Monthly",
@@ -549,6 +550,9 @@ const PeriodicalManagement = () => {
                         >
                           <td className="px-6 py-4 text-sm text-gray-800 font-medium">
                             {periodical.title}
+                            <div className="text-xs text-gray-500 font-normal mt-0.5">
+                              Date - [{formatDate(periodical.receiptDate) || "-"}]
+                            </div>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-600">
                             {periodical.volume || "-"}

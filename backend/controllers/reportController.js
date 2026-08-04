@@ -891,6 +891,9 @@ exports.periodicalsMissingIssuesReport = async (req, res, next) => {
         case "Weekly":
           expectedNextDate.setDate(expectedNextDate.getDate() + 7);
           break;
+        case "FortNightly":
+          expectedNextDate.setDate(expectedNextDate.getDate() + 14);
+          break;
         case "Monthly":
           expectedNextDate.setMonth(expectedNextDate.getMonth() + 1);
           break;
