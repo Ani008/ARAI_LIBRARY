@@ -12,6 +12,7 @@ const standardSchema = new mongoose.Schema(
     pr_no: { type: String, trim: true, default: "" },
     po_no: { type: String, trim: true, default: "" },
     amount: { type: Number, default: 0 },
+    
     date_received: { type: Date },
 
     standardNumber: {

@@ -167,6 +167,11 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
       hardcopyDate: "",
       status: "Draft",
       remarks: "",
+      plagiarismPercentage: "",
+      aiPlagiarismPercentage: "",
+      manuscriptReceivedDate: "",
+      copyrightReceived: "",
+      plagiarismRemarks: "",
     });
     setAuthors([
       {
@@ -358,13 +363,16 @@ const AJMTPaperModal = ({ isOpen, onClose, paper = null, mode = "create" }) => {
 <p>Dear Author/s,</p>
 
 <br/>
+<b>Paper ID - ${formData.uniqueId}</b><br/>
+<b>Paper Title - ${formData.paperTitle}</b><br/>
+<b>Submission Date - ${formData.date}</b><br/>
+<br/>
 
 <p>
 The plagiarism check was performed on your submitted paper by eliminating all references 
-and author contact information. The plagiarism report displays <b>${formData.plagiarismPercentage || "NA"}%</b> and 
+and author contact information. The plagiarism report displays <b>${formData.plagiarismPercentage || "NA"}%</b>,
 The AI plagiarism report displays <b>${formData.aiPlagiarismPercentage || "NA"}%</b>.
-We confirm that the similarity index is below our predetermined limit and are 
-submitting the paper for peer review. The peer review might take up to two months. 
+The AI plagiarism review says <b>${formData.plagiarismRemarks || "NA"}</b>. The peer review might take up to two months. 
 We will notify you via email once we receive the review copy.
 </p>
 
@@ -394,7 +402,13 @@ ARAI, Kothrud<br/>
 Tel: 202-6762-1126
 </p>
 `);
-  }, [formData.plagiarismPercentage]);
+  }, [
+    formData.uniqueId,
+    formData.paperTitle,
+    formData.date,
+    formData.plagiarismPercentage,
+    formData.aiPlagiarismPercentage,
+  ]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -918,7 +932,7 @@ Tel: 202-6762-1126
                     </label>
                     <select
                       name="copyrightReceived"
-                      value={formData.copyrightReceived}
+                      value={formData.copyrightReceived || ""}
                       onChange={handleInputChange}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                     >
@@ -1491,8 +1505,6 @@ Tel: 202-6762-1126
             .join(", ")}
           onEmailSent={handleEmailSent}
           plagiarismPercentage={formData.plagiarismPercentage}
-          aiPlagiarismPercentage={formData.aiPlagiarismPercentage}
-          dateOfReceived={formData.dateOfReceived}
         />
       )}
     </div>

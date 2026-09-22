@@ -226,6 +226,7 @@ const StandardModal = ({ onClose, editingId, refreshData }) => {
                   }
                 />
               </div>
+              
             </div>
           </section>
 
